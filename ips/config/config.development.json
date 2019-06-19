@@ -1,0 +1,17 @@
+{
+  "debug": true,
+
+  "database": {
+    "server": "localhost",
+    "user": "ips",
+    "password": "ips",
+    "database": "ips",
+    "verbose": false,
+
+    "ConnectionPool": {
+      "maxPoolSize": 10,
+      "maxIdleConnections": 2,
+      "maxLifetimeSeconds": 0
+    }
+  }
+}
