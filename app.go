@@ -4,8 +4,8 @@ import (
 	"pds-go/ips/config"
 	_ "pds-go/ips/config"
 
-	"pds-go/ips/services"
 	log "github.com/sirupsen/logrus"
+	"pds-go/ips/services"
 )
 
 func main() {
@@ -21,9 +21,8 @@ func main() {
 		log.Info("ID: ", b.ID)
 		log.Info("User: ", b.USERNAME.String)
 		log.Info("Password: ", b.PASSWORD.String)
-
 	}
-	
+
 	//sub := services.GetSurveySubsample()
 	//for _, b := range sub {
 	//	fmt.Printf("Serial: %12.0f\n", b.SERIAL)
