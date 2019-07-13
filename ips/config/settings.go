@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
@@ -26,7 +27,7 @@ func init() {
 	err := gonfig.GetConf(getFileName(), &Config)
 
 	if err != nil {
-		log.Fatal("Cannot read Config.")
+		log.Fatal(fmt.Errorf("cannot read configurstion %v", err))
 	}
 
 	DBServer = Config.Database.Server

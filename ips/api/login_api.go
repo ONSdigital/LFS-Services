@@ -18,7 +18,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	password := vars["password"]
 
 	db := loginDatabase()
-	log.Info(fmt.Printf("Checking User: %s, password: %s\n", vars["user"], vars["password"] ))
+	log.Info(fmt.Printf("Checking User: %s, password: %s\n", vars["user"], vars["password"]))
 	getUsers(user, password, db)
 
 	w.WriteHeader(http.StatusOK)
@@ -54,7 +54,7 @@ func getUsers(user string, password string, db *sql.DB) {
 			log.Warn(fmt.Errorf("received error on rows.Close() %v", err))
 		}
 	}()
-	
+
 	for rows.Next() {
 		err := rows.Scan(&userName, &userPassword)
 
@@ -62,16 +62,6 @@ func getUsers(user string, password string, db *sql.DB) {
 			log.Error(fmt.Errorf("users table empty? %v", err))
 		}
 
-		s := strings.Split(userPassword, "$")
-		salt := s[1]
-		pw := s[2]
-		log.Println("password: ", pw)
-
-		pass := p.NewPassword(sha256.New, len(salt), len(pw), 150000)
-		hashed := p.HashResult{CipherText: pw, Salt: salt}
-
-		isValid := pass.VerifyPassword(password, hashed.CipherText, hashed.Salt)
-
-		log.Println("Password is valid: ", isValid)
+		// check password
 	}
 }

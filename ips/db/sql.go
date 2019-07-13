@@ -1,12 +1,12 @@
 package db
 
 import (
-	"pds-go/ips/config"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	log "github.com/sirupsen/logrus"
+	"pds-go/ips/config"
 	"time"
 )
 
@@ -29,10 +29,10 @@ func init() {
 	DB, err = gorm.Open("mysql", connectionString)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("cannot open database connection %v", err))
 	}
 
-	log.Debug(fmt.Sprintf("Connected to database: %s", dbName ))
+	log.Debug(fmt.Sprintf("Connected to database: %s", dbName))
 
 	if verbose {
 		DB.LogMode(true)
@@ -42,7 +42,7 @@ func init() {
 
 	err = conn.Ping()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("cannot ping database %v", err))
 	}
 
 	poolSize := config.Config.Database.ConnectionPool.MaxPoolSize

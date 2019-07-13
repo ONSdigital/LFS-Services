@@ -1,12 +1,12 @@
 package services
 
 import (
-	"pds-go/ips/db"
-	_ "pds-go/ips/db"
-	"pds-go/ips/db/model"
 	"fmt"
 	"hash"
 	"log"
+	"pds-go/ips/db"
+	_ "pds-go/ips/db"
+	"pds-go/ips/db/model"
 )
 
 func GetUsers() []model.USER {
@@ -22,10 +22,8 @@ func GetUsers() []model.USER {
 }
 
 type Password struct {
-	Diggest    func() hash.Hash
+	Digest     func() hash.Hash
 	SaltSize   int
 	KeyLen     int
 	Iterations int
 }
-
-
