@@ -1,6 +1,6 @@
 package config
 
-type Configuration struct {
-	Debug bool
+type configuration struct {
+	Debug    bool
 	Database DatabaseConfiguration
 }

@@ -14,11 +14,10 @@ var DB *gorm.DB
 
 func init() {
 	log.Info("initialising DB")
-
-	server := config.DBServer
-	user := config.DBUser
-	pass := config.DBPassword
-	dbName := config.DBName
+	server := config.Config.Database.Server
+	user := config.Config.Database.User
+	pass := config.Config.Database.Password
+	dbName := config.Config.Database.Database
 	verbose := config.Config.Database.Verbose
 
 	connectionString := user + ":" + pass + "@tcp(" + server + ")/" + dbName + "?charset=utf8&parseTime=True"

@@ -9,7 +9,7 @@ VERSION=$(shell git describe --tags --always --long --dirty)
 all: test build ## Build and run tests
 
 test: ## Run unit tests
-	./scripts/test_unit.sh
+	go test
 
 build: windows linux darwin ## Build binaries
 	@echo version: $(VERSION)

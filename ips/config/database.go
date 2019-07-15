@@ -9,10 +9,10 @@ type Pool struct {
 }
 
 type DatabaseConfiguration struct {
-	Server         string `env:"DB_SERVER"`
-	User           string `env:"DB_USER_NAME"`
-	Password       string `env:"DB_PASSWORD"`
-	Database       string `env:"DB_NAME"`
+	Server         string
+	User           string
+	Password       string
+	Database       string
 	Verbose        bool
 	ConnectionPool Pool
 }

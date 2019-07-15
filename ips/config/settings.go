@@ -3,40 +3,33 @@ package config
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/tkanos/gonfig"
+	"github.com/pelletier/go-toml"
 )
 
-var (
-	Config     Configuration
-	DBServer   string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	Debug      bool
-)
+var Config configuration
 
 func init() {
-
-	Config = Configuration{}
-	err := gonfig.GetConf(getFileName(), &Config)
+	configFile, err := ioutil.ReadFile(fileName())
 
 	if err != nil {
-		log.Fatal(fmt.Errorf("cannot read configurstion %v", err))
+		log.Fatal(fmt.Errorf("cannot read configuration %v", err))
 	}
 
-	DBServer = Config.Database.Server
-	DBUser = Config.Database.User
-	DBPassword = Config.Database.Password
-	DBName = Config.Database.Database
-	Debug = Config.Debug
+	Config = configuration{}
 
-	if Debug {
+	err = toml.Unmarshal(configFile, &Config)
+	if err != nil {
+		log.Fatal(fmt.Errorf("cannot unmarshall configuration file %v", err))
+	}
+
+	if Config.Debug {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		log.SetLevel(log.WarnLevel)
@@ -46,14 +39,14 @@ func init() {
 
 }
 
-func getFileName() string {
+func fileName() string {
 	env := os.Getenv("ENV")
 
 	if len(env) == 0 {
 		env = "development"
 	}
 
-	filename := []string{"config.", env, ".json"}
+	filename := []string{"config.", env, ".toml"}
 	_, dirname, _, _ := runtime.Caller(0)
 	filePath := path.Join(filepath.Dir(dirname), strings.Join(filename, ""))
 
