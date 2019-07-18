@@ -1,18 +1,18 @@
 package main
 
 import (
-	"pds-go/ips/config"
-	_ "pds-go/ips/config"
+	"pds-go/lfs/config"
+	_ "pds-go/lfs/config"
 
 	log "github.com/sirupsen/logrus"
-	"pds-go/ips/services"
+	"pds-go/lfs/services"
 )
 
 func main() {
 
 	verbose := config.Config.Database.Verbose
 
-	log.Info("Debug Flag: ", config.Debug)
+	log.Info("Debug Flag: ", config.Config.Debug)
 	log.Debug("Database logging: ", verbose)
 
 	res := services.GetUsers()
