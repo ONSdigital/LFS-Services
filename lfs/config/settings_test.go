@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestServer(t *testing.T) {
+func TestConfig(t *testing.T) {
 	server := Config.Database.Server
 	if server != "localhost" {
 		t.Errorf("server = %s; want localhost", server)

@@ -7,68 +7,30 @@ package sav
 import "C"
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"unsafe"
 )
 
-const (
-	ReadstatTypeString    = iota
-	ReadstatTypeInt8      = iota
-	ReadstatTypeInt16     = iota
-	ReadstatTypeInt32     = iota
-	ReadstatTypeFloat     = iota
-	ReadstatTypeDouble    = iota
-	ReadstatTypeStringRef = iota
-)
-
-type headerLine struct {
-	name  string
-	vType int
+type Items struct {
+	Shiftno float64 `json:"Shiftno"`
+	Serial  float64 `json:"Serial"`
+	Version string  `json:"Version"`
 }
 
-//type itemLine struct {
-//	val string
-//}
-
-var headerItems = make(map[int]headerLine)
-
-//var lineItems = make(map[int]itemLine)
+var items []Items
 
 //export goAddLine
 func goAddLine(str *C.char) {
 	gostr := C.GoString(str)
-	println(gostr)
-}
 
-//export goAddHeaderLine
-func goAddHeaderLine(pos C.int, name *C.char, varType C.int, end C.int) {
-	if int(end) == 1 { // we are done
-		printHeader()
-	} else {
-		headerItems[int(pos)] = headerLine{C.GoString(name), int(varType)}
+	err := json.Unmarshal([]byte(gostr), &items)
+	if err != nil {
+		log.Println(err)
 	}
-}
 
-func printHeader() {
-	for k := range headerItems {
-		fmt.Printf("key[%d] -> title[%s] ", k, headerItems[k].name)
-		switch headerItems[k].vType {
-		case ReadstatTypeString:
-			fmt.Printf(" -> type[string]\n")
-		case ReadstatTypeInt8:
-			fmt.Printf(" -> type[int8]\n")
-		case ReadstatTypeInt16:
-			fmt.Printf(" -> type[int16]\n")
-		case ReadstatTypeInt32:
-			fmt.Printf(" -> type[int32]\n")
-		case ReadstatTypeFloat:
-			fmt.Printf(" -> type[float]\n")
-		case ReadstatTypeDouble:
-			fmt.Printf(" -> type[double]\n")
-		case ReadstatTypeStringRef:
-			fmt.Printf(" -> type[string ref]\n")
-		}
-	}
+	fmt.Printf("Number of items: %d, size of buffer: %d, size struct %d\n", len(items), len(gostr), len(items))
 }
 
 func Import(fileName string) int {

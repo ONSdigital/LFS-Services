@@ -3,11 +3,11 @@ debug = true
 
 [database]
 
-server = "localhost"
-user = "ips"
-password = "ips"
+server = "" # set by environment variables
+user = "" # set by environment variables
+password = "" # set by environment variables
 verbose = false
-database = "ips"
+database = "" # set by environment variables
 
     [database.pool]
 

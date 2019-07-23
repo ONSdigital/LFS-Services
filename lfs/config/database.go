@@ -1,6 +1,8 @@
 package config
 
-import "time"
+import (
+	"time"
+)
 
 type Pool struct {
 	MaxPoolSize        int
@@ -9,10 +11,10 @@ type Pool struct {
 }
 
 type DatabaseConfiguration struct {
-	Server         string
-	User           string
-	Password       string
-	Database       string
+	Server         string `env:"DB_SERVER" envDefault:"localhost"`
+	User           string `env:"DB_USER"`
+	Password       string `env:"DB_PASSWORD"`
+	Database       string `env:"DB_DATABASE"`
 	Verbose        bool
 	ConnectionPool Pool
 }

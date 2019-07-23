@@ -12,7 +12,7 @@ func TestECOURF16(t *testing.T) {
 	resolve.AllowFloat = true
 	resolve.AllowLambda = true
 
-	thread := &starlark.Thread{Name: "my thread"}
+	thread := &starlark.Thread{Name: "ECOURF16"}
 	globals, err := starlark.ExecFile(thread, "ECOURF16.star", nil, nil)
 
 	if err != nil {
