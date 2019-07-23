@@ -9,7 +9,7 @@ import (
 	"pds-go/lfs/db/model"
 )
 
-func GetUsers() []model.USER {
+func Users() []model.USER {
 	var rr []model.USER
 	var conn = db.DB
 

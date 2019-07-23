@@ -15,7 +15,7 @@ func main() {
 	log.Info("Debug Flag: ", config.Config.Debug)
 	log.Debug("Database logging: ", verbose)
 
-	res := services.GetUsers()
+	res := services.Users()
 
 	for _, b := range res {
 		log.Info("ID: ", b.ID)
