@@ -1,9 +1,10 @@
-package r_times
+package r_times_test
 
 import (
 	"fmt"
 	"log"
 	"pds-go/lfs/r"
+	times "pds-go/lfs/r/r_times"
 	"testing"
 )
 
@@ -21,7 +22,7 @@ func Test_times(t *testing.T) {
 
 	i.LoadRSource("times.R")
 
-	res, err := Times(5.78, 9.23)
+	res, err := times.Times(5.78, 9.23)
 
 	if err != nil {
 		log.Printf("Call to R failed: %s", err)
