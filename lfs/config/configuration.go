@@ -1,6 +1,7 @@
 package config
 
 type configuration struct {
-	Debug    bool
-	Database DatabaseConfiguration
+	Debug         bool
+	TestDirectory string
+	Database      DatabaseConfiguration
 }

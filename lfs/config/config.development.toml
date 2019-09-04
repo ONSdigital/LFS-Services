@@ -1,6 +1,8 @@
 
 debug = true
 
+testDirectory = "/Users/paul/go/src/pds-go/testdata/"
+
 [database]
 
 server = "" # set by environment variables
@@ -10,7 +12,6 @@ verbose = false
 database = "" # set by environment variables
 
     [database.pool]
-
        maxPoolSize = 10
        maxIdleConnections = 2
        maxLifetimeSeconds = 0
