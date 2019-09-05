@@ -135,7 +135,26 @@ type TestDataset struct {
 	DVPortName   string  `spss:"DVPortName"`
 }
 
-func TestReadSav(t *testing.T) {
+func TestFromCSV(t *testing.T) {
+
+	logger := log.New(os.Stdout, "LFS ", log.LstdFlags|log.Lshortfile)
+
+	d, err := NewDataset("test", logger)
+	if err != nil {
+		logger.Panic(err)
+	}
+
+	dataset, err := d.FromCSV(testDirectory()+"out.csv", TestDataset{})
+	if err != nil {
+		logger.Panic(err)
+	}
+	defer dataset.Close()
+
+	logger.Printf("dataset contains %d row(s)\n", dataset.NumRows())
+	_ = dataset.Head(5)
+}
+
+func TestFromSav(t *testing.T) {
 
 	logger := log.New(os.Stdout, "LFS ", log.LstdFlags|log.Lshortfile)
 
@@ -154,7 +173,11 @@ func TestReadSav(t *testing.T) {
 	_ = dataset.Head(5)
 }
 
-func TestWriteCSV(t *testing.T) {
+func TestToSav(t *testing.T) {
+
+}
+
+func TestToCSV(t *testing.T) {
 
 	logger := log.New(os.Stdout, "LFS ", log.LstdFlags|log.Lshortfile)
 

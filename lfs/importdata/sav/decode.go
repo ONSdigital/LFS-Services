@@ -12,16 +12,6 @@ type Reader interface {
 	Read(rows interface{}) error
 }
 
-// Example buffered implementation
-type BufferInput struct {
-	inputType string
-}
-
-// Example buffered implementation
-func (b BufferInput) Read(rows interface{}) error {
-	return nil
-}
-
 type FileInput struct {
 	inputType string
 }

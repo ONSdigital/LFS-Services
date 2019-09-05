@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	im_csv "pds-go/lfs/importdata/csv"
 	"pds-go/lfs/importdata/sav"
 	"pds-go/lfs/io/spss"
 	"reflect"
@@ -376,6 +377,10 @@ func (d Dataset) DeleteWhere(where ...interface{}) (err error) {
 	return
 }
 
+func (d Dataset) ToSpss(fileName string) error {
+	return nil
+}
+
 func (d Dataset) ToCSV(fileName string) error {
 	f, err := os.Create(fileName)
 	if err != nil {
@@ -487,9 +492,27 @@ func (d *Dataset) FromCSV(fileName string, out interface{}) (dataset Dataset, er
 	return d.logLoad(d.readCSV)(fileName, out)
 }
 
-// TODO: Implement Me
 func (d *Dataset) readCSV(in string, out interface{}) (dataset Dataset, err error) {
-	return Dataset{}, nil
+	// ensure out is a struct
+	if reflect.ValueOf(out).Kind() != reflect.Struct {
+		return Dataset{}, fmt.Errorf(" -> FromCSV: %T is not a struct type", out)
+	}
+
+	records, err := im_csv.ImportCSVToSlice(in)
+	if err != nil {
+		return Dataset{}, fmt.Errorf(" -> FromCSV: cannot import CSV file %w", err)
+	}
+
+	if len(records) == 0 {
+		return Dataset{}, fmt.Errorf(" -> FromCSV: csv file: %s is empty", in)
+	}
+
+	i, er := d.createDataset(in)(records, out)
+	if er != nil {
+		return Dataset{}, err
+	}
+
+	return i, nil
 }
 
 func (d *Dataset) FromSav(fileName string, out interface{}) (dataset Dataset, err error) {
@@ -498,97 +521,111 @@ func (d *Dataset) FromSav(fileName string, out interface{}) (dataset Dataset, er
 
 func (d *Dataset) readSav(in string, out interface{}) (dataset Dataset, err error) {
 
-	var empty Dataset
-
 	// ensure out is a struct
 	if reflect.ValueOf(out).Kind() != reflect.Struct {
-		return empty, fmt.Errorf(" -> FromSav: %T is not a struct type", out)
+		return Dataset{}, fmt.Errorf(" -> FromSav: %T is not a struct type", out)
 	}
 
-	spssRows, err := sav.ImportSav(in)
+	records, err := sav.ImportSav(in)
 	if err != nil {
-		return empty, err
-	}
-	if len(spssRows) == 0 {
-		return empty, fmt.Errorf(" -> FromSav: spss file: %s is empty", in)
+		return Dataset{}, err
 	}
 
-	_, file := filepath.Split(in)
+	if len(records) == 0 {
+		return Dataset{}, fmt.Errorf(" -> createDataset: spss file: %s is empty", in)
+	}
+
+	i, er := d.createDataset(in)(records, out)
+	if er != nil {
+		return Dataset{}, err
+	}
+
+	return i, nil
+}
+
+func (d *Dataset) createDataset(fileName string) func(rows [][]string, out interface{}) (Dataset, error) {
+
+	_, file := filepath.Split(fileName)
 	var extension = filepath.Ext(file)
 	var name = file[0 : len(file)-len(extension)]
-
 	d, er := NewDataset(name, d.logger)
+
 	if er != nil {
-		return empty, fmt.Errorf(" -> FromSav: cannot create a new DataSet: %s", er)
-	}
-
-	d.logger.Println("starting SAV file importdata")
-
-	tx, err := d.DB.NewTx(nil)
-	if err != nil {
-		return empty, fmt.Errorf(" -> FromSav: cannot create a transaction: %s", err)
-	}
-
-	t1 := reflect.TypeOf(out)
-
-	d.tableMeta = make(map[string]reflect.Kind)
-
-	for i := 0; i < t1.NumField(); i++ {
-		a := t1.Field(i)
-		d.tableMeta[a.Name] = a.Type.Kind()
-
-		var spssType spss.ColumnTypes
-
-		switch a.Type.Kind() {
-		case reflect.String:
-			spssType = spss.STRING
-		case reflect.Int8, reflect.Uint8:
-			spssType = spss.INT
-		case reflect.Int, reflect.Int32, reflect.Uint32:
-			spssType = spss.INT
-		case reflect.Int64, reflect.Uint64:
-			spssType = spss.INT
-		case reflect.Float32:
-			spssType = spss.FLOAT
-		case reflect.Float64:
-			spssType = spss.DOUBLE
-		default:
-			return empty, fmt.Errorf(" -> FromSav: cannot convert struct variable type from SPSS type")
+		return func(rows [][]string, out interface{}) (Dataset, error) {
+			return Dataset{}, fmt.Errorf(" -> createDataset: cannot create a new DataSet: %s", er)
 		}
+	}
 
-		err = d.AddColumn(a.Name, spssType)
+	return func(rows [][]string, out interface{}) (Dataset, error) {
+
+		d.logger.Println("starting import into Dataset")
+
+		tx, err := d.DB.NewTx(nil)
 		if err != nil {
-			return empty, fmt.Errorf(" -> FromSav: cannot create column %s, of type %s", name, spssType)
-		}
-	}
-
-	headers := spssRows[0]
-	body := spssRows[1:]
-	for _, spssRow := range body {
-		row := make(map[string]interface{})
-
-		for j := 0; j < len(spssRow)-1; j++ {
-			if len(spssRow) != len(headers) {
-				return empty, fmt.Errorf(" -> FromSav: header is out of alignment with row. row size: %d, column size: %d\n", len(spssRow), len(headers))
-			}
-			header := headers[j]
-			// extract the columns we are interested in
-			if _, ok := d.tableMeta[headers[j]]; !ok {
-				continue
-			}
-			row[header] = spssRow[j]
+			return Dataset{}, fmt.Errorf(" -> createDataset: cannot create a transaction: %s", err)
 		}
 
-		err = d.Insert(row)
+		t1 := reflect.TypeOf(out)
+		d.tableMeta = make(map[string]reflect.Kind)
+
+		for i := 0; i < t1.NumField(); i++ {
+			a := t1.Field(i)
+			d.tableMeta[a.Name] = a.Type.Kind()
+
+			var spssType spss.ColumnTypes
+
+			switch a.Type.Kind() {
+			case reflect.String:
+				spssType = spss.STRING
+			case reflect.Int8, reflect.Uint8:
+				spssType = spss.INT
+			case reflect.Int, reflect.Int32, reflect.Uint32:
+				spssType = spss.INT
+			case reflect.Int64, reflect.Uint64:
+				spssType = spss.INT
+			case reflect.Float32:
+				spssType = spss.FLOAT
+			case reflect.Float64:
+				spssType = spss.DOUBLE
+			default:
+				return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert struct variable type from SPSS type")
+			}
+
+			err = d.AddColumn(a.Name, spssType)
+			if err != nil {
+				return Dataset{}, fmt.Errorf(" -> createDataset: cannot create column %s, of type %s", name, spssType)
+			}
+		}
+
+		headers := rows[0]
+		body := rows[1:]
+
+		for _, spssRow := range body {
+			row := make(map[string]interface{})
+
+			for j := 0; j < len(spssRow); j++ {
+				if len(spssRow) != len(headers) {
+					return Dataset{}, fmt.Errorf(" -> createDataset: header is out of alignment with row. row size: %d, column size: %d\n", len(spssRow), len(headers))
+				}
+				header := headers[j]
+				// extract the columns we are interested in
+				if _, ok := d.tableMeta[headers[j]]; !ok {
+					continue
+				}
+				row[header] = spssRow[j]
+			}
+
+			err = d.Insert(row)
+			if err != nil {
+				return Dataset{}, fmt.Errorf(" -> createDataset: cannot create row: %s", err)
+			}
+		}
+
+		err = tx.Commit()
 		if err != nil {
-			return empty, fmt.Errorf(" -> FromSav: cannot create row: %s", err)
+			return Dataset{}, fmt.Errorf(" -> createDataset: commit transaction failed: %s", err)
 		}
-	}
 
-	err = tx.Commit()
-	if err != nil {
-		return empty, fmt.Errorf(" -> FromSav: commit transaction failed: %s", err)
+		return *d, nil
 	}
-
-	return *d, nil
 }

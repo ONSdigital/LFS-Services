@@ -1,12 +1,7 @@
 package exportdata
 
 import "pds-go/lfs/exportdata/sav"
-
-type savFileExport struct{}
-
-func (savFileExport) Export(out string, in interface{}) error {
-	return sav.SpssWriter(out).Write(in)
-}
+import "pds-go/lfs/exportdata/csv"
 
 type ExportFunction func(fileName string, out interface{}) error
 
@@ -20,4 +15,5 @@ func exportFile(i ExportData) ExportFunction {
 	}
 }
 
-var ExportSavFile = exportFile(savFileExport{})
+var ExportSavFile = exportFile(sav.ExportSavFile{})
+var ExportCSVFile = exportFile(csv.ExportCSVFile{})

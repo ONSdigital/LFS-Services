@@ -1,6 +1,9 @@
 package importdata
 
-import "pds-go/lfs/importdata/sav"
+import (
+	"pds-go/lfs/importdata/csv"
+	"pds-go/lfs/importdata/sav"
+)
 
 type ImportFunction func(fileName string, out interface{}) error
 
@@ -15,3 +18,4 @@ func importFile(i ImportData) ImportFunction {
 }
 
 var ImportSavFile = importFile(sav.SavFileImport{})
+var ImportCSVFile = importFile(csv.ImportCSV{})
