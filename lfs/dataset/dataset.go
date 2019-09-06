@@ -430,7 +430,7 @@ func (d Dataset) ToSpss(fileName string) error {
 			kind := d.tableMeta[name]
 			switch kind {
 			case reflect.String:
-				dataItem.Value = append(dataItem.Value, value)
+				dataItem.Value = append(dataItem.Value, fmt.Sprintf("%s", value))
 			case reflect.Int8, reflect.Uint8:
 				dataItem.Value = append(dataItem.Value, value.(int))
 			case reflect.Int, reflect.Int32, reflect.Uint32:
@@ -442,7 +442,6 @@ func (d Dataset) ToSpss(fileName string) error {
 			default:
 				return fmt.Errorf(" -> ToSpss: unknown type - possible corruption")
 			}
-			dataItem.Value = append(dataItem.Value, value)
 		}
 		data = append(data, dataItem)
 	}
