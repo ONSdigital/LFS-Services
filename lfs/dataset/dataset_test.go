@@ -174,7 +174,23 @@ func TestFromSav(t *testing.T) {
 }
 
 func TestToSav(t *testing.T) {
+	logger := log.New(os.Stdout, "LFS ", log.LstdFlags|log.Lshortfile)
 
+	d, err := NewDataset("test", logger)
+	if err != nil {
+		logger.Panic(err)
+	}
+
+	dataset, err := d.FromSav(testDirectory()+"ips1710bv2.sav", TestDataset{})
+	if err != nil {
+		logger.Panic(err)
+	}
+	defer dataset.Close()
+
+	err = dataset.ToSpss(testDirectory() + "dataset-export.sav")
+	if err != nil {
+		logger.Panic(err)
+	}
 }
 
 func TestToCSV(t *testing.T) {

@@ -10,6 +10,7 @@ package sav
 // #include <stdlib.h>
 import "C"
 import (
+	"fmt"
 	"pds-go/lfs/io/spss"
 	"unsafe"
 )
@@ -85,6 +86,7 @@ func Export(fileName string, label string, headers []Header, data []DataItem) in
 
 			case spss.ReadstatTypeDouble:
 				if _, ok := col.(float64); !ok {
+					fmt.Printf("Invalid type, double expected: %s\n", col)
 					panic("Invalid type, double expected")
 				}
 				(*dataItem).double_value = C.double(col.(float64))

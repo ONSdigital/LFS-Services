@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	di "pds-go/lfs/exportdata/sav"
 	im_csv "pds-go/lfs/importdata/csv"
 	"pds-go/lfs/importdata/sav"
 	"pds-go/lfs/io/spss"
@@ -372,13 +373,97 @@ func (d Dataset) DeleteWhere(where ...interface{}) (err error) {
 	q := d.DB.DeleteFrom(d.tableName).Where(where)
 	_, err = q.Exec()
 	if err != nil {
-		return fmt.Errorf(" -> DeleteWhere: Exec failed: %s", err)
+		return fmt.Errorf(" -> DeleteWhere: Exec failed: %w", err)
 	}
 	return
 }
 
 func (d Dataset) ToSpss(fileName string) error {
+	//var keys = d.getKeys(d.orderedColumns())
+	var header []di.Header
+	var cols = d.orderedColumns()
+
+	for i := 0; i < len(cols); i++ {
+		if cols[i].Name == "Row" {
+			continue
+		}
+
+		var spssType spss.ColumnType = 0
+
+		switch d.tableMeta[cols[i].Name] {
+		case reflect.String:
+			spssType = spss.ReadstatTypeString
+		case reflect.Int8, reflect.Uint8:
+			spssType = spss.ReadstatTypeInt8
+		case reflect.Int, reflect.Int32, reflect.Uint32:
+			spssType = spss.ReadstatTypeInt32
+		case reflect.Float32:
+			spssType = spss.ReadstatTypeFloat
+		case reflect.Float64:
+			spssType = spss.ReadstatTypeDouble
+		default:
+			return fmt.Errorf("cannot convert type for struct variable %s into SPSS type", cols[i].Name)
+		}
+		header = append(header, di.Header{spssType, cols[i].Name, cols[i].Name})
+	}
+
+	col := d.DB.Collection(d.tableName)
+	res := col.Find()
+
+	defer func() {
+		_ = res.Close()
+	}()
+
+	var data []di.DataItem
+	var dat map[string]interface{}
+
+	for res.Next(&dat) {
+		var dataItem di.DataItem
+		dataItem.Value = make([]interface{}, 0)
+
+		for i := 0; i < len(cols); i++ {
+			name := cols[i].Name
+			if name == "Row" {
+				continue
+			}
+			value := dat[name]
+			kind := d.tableMeta[name]
+			switch kind {
+			case reflect.String:
+				dataItem.Value = append(dataItem.Value, value)
+			case reflect.Int8, reflect.Uint8:
+				dataItem.Value = append(dataItem.Value, value.(int))
+			case reflect.Int, reflect.Int32, reflect.Uint32:
+				dataItem.Value = append(dataItem.Value, value.(int32))
+			case reflect.Int64, reflect.Uint64:
+				dataItem.Value = append(dataItem.Value, value.(int64))
+			case reflect.Float32, reflect.Float64:
+				dataItem.Value = append(dataItem.Value, value.(float64))
+			default:
+				return fmt.Errorf(" -> ToSpss: unknown type - possible corruption")
+			}
+			dataItem.Value = append(dataItem.Value, value)
+		}
+		data = append(data, dataItem)
+	}
+
+	val := di.Export(fileName, d.tableName, header, data)
+
+	if val != 0 {
+		return fmt.Errorf(" -> spss export to %s failed", fileName)
+	}
+
 	return nil
+}
+
+func (d Dataset) getKeys(columns orderedColumns) []string {
+	var keys []string
+	for i := 0; i < len(columns); i++ {
+		if columns[i].Name != "Row" {
+			keys = append(keys, columns[i].Name)
+		}
+	}
+	return keys
 }
 
 func (d Dataset) ToCSV(fileName string) error {
