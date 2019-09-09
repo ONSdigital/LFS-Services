@@ -19,6 +19,7 @@ int save_sav(const char *output_file, const char *label, file_header **sav_heade
     readstat_writer_t *writer = readstat_writer_init();
     readstat_set_data_writer(writer, &write_bytes);
     readstat_writer_set_file_label(writer, label);
+    readstat_writer_set_compression(writer, READSTAT_COMPRESS_BINARY);
 
     for (int i = 0; i < column_cnt; i++) {
         unsigned long cnt = 0;
