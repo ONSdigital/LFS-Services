@@ -123,19 +123,19 @@ func TestMean(t *testing.T) {
 
 }
 
-type TestDataset struct {
-	Shiftno      float64 `spss:"Shiftno"`
-	Serial       float64 `spss:"Serial"`
-	Version      string  `spss:"Version"`
-	PortRoute2   float64 `spss:"PortRoute2"`
-	Baseport     string  `spss:"Baseport"`
-	PRouteLatDeg float64 `spss:"PRouteLatDeg"`
-	PRouteLonEW  string  `spss:"PRouteLonEW"`
-	DVLineName   string  `spss:"DVLineName"`
-	DVPortName   string  `spss:"DVPortName"`
-}
-
 func TestFromCSV(t *testing.T) {
+
+	type TestDataset struct {
+		Shiftno      float64 `csv:"Shiftno"`
+		Serial       float64 `csv:"Serial"`
+		Version      string  `csv:"Version"`
+		PortRoute2   float64 `csv:"PortRoute2"`
+		Baseport     string  `csv:"Baseport"`
+		PRouteLatDeg float64 `csv:"PRouteLatDeg"`
+		PRouteLonEW  string  `csv:"PRouteLonEW"`
+		DVLineName   string  `csv:"DVLineName"`
+		DVPortName   string  `csv:"DVPortName"`
+	}
 
 	logger := log.New(os.Stdout, "LFS ", log.LstdFlags|log.Lshortfile)
 
@@ -156,6 +156,18 @@ func TestFromCSV(t *testing.T) {
 
 func TestFromSav(t *testing.T) {
 
+	type TestDataset struct {
+		Shiftno      float64 `spss:"Shiftno"`
+		Serial       float64 `spss:"Serial"`
+		Version      string  `spss:"Version"`
+		PortRoute2   float64 `spss:"PortRoute2"`
+		Baseport     string  `spss:"Baseport"`
+		PRouteLatDeg float64 `spss:"PRouteLatDeg"`
+		PRouteLonEW  string  `spss:"PRouteLonEW"`
+		DVLineName   string  `spss:"DVLineName"`
+		DVPortName   string  `spss:"DVPortName"`
+	}
+
 	logger := log.New(os.Stdout, "LFS ", log.LstdFlags|log.Lshortfile)
 
 	d, err := NewDataset("test", logger)
@@ -174,6 +186,18 @@ func TestFromSav(t *testing.T) {
 }
 
 func TestToSav(t *testing.T) {
+	type TestDataset struct {
+		Shiftno      float64 `spss:"Shiftno"`
+		Serial       float64 `spss:"Serial"`
+		Version      string  `spss:"Version"`
+		PortRoute2   float64 `spss:"PortRoute2"`
+		Baseport     string  `spss:"Baseport"`
+		PRouteLatDeg float64 `spss:"PRouteLatDeg"`
+		PRouteLonEW  string  `spss:"PRouteLonEW"`
+		DVLineName   string  `spss:"DVLineName"`
+		DVPortName   string  `spss:"DVPortName"`
+	}
+
 	logger := log.New(os.Stdout, "LFS ", log.LstdFlags|log.Lshortfile)
 
 	d, err := NewDataset("test", logger)
@@ -195,6 +219,17 @@ func TestToSav(t *testing.T) {
 
 func TestToCSV(t *testing.T) {
 
+	type TestDataset struct {
+		Shiftno      float64 `csv:"Shiftno"`
+		Serial       float64 `csv:"Serial"`
+		Version      string  `csv:"Version"`
+		PortRoute2   float64 `csv:"PortRoute2"`
+		Baseport     string  `csv:"Baseport"`
+		PRouteLatDeg float64 `csv:"PRouteLatDeg"`
+		PRouteLonEW  string  `csv:"PRouteLonEW"`
+		DVLineName   string  `csv:"DVLineName"`
+		DVPortName   string  `csv:"DVPortName"`
+	}
 	logger := log.New(os.Stdout, "LFS ", log.LstdFlags|log.Lshortfile)
 
 	d, err := NewDataset("test", logger)

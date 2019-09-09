@@ -38,7 +38,7 @@ func ImportCSVToSlice(fileName string) (out [][]string, err error) {
 }
 
 func (ImportCSV) Import(fileName string, out interface{}) error {
-	clientsFile, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	clientsFile, err := os.OpenFile(fileName, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("cannot open CSV file: %s, error: %s", clientsFile, err)
 	}

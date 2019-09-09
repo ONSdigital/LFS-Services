@@ -16,6 +16,7 @@ import (
 	"pds-go/lfs/importdata/sav"
 	"pds-go/lfs/io/spss"
 	"reflect"
+	"strconv"
 	"sync"
 	"time"
 	"upper.io/db.v3/lib/sqlbuilder"
@@ -577,6 +578,7 @@ func (d *Dataset) FromCSV(fileName string, out interface{}) (dataset Dataset, er
 }
 
 func (d *Dataset) readCSV(in string, out interface{}) (dataset Dataset, err error) {
+
 	// ensure out is a struct
 	if reflect.ValueOf(out).Kind() != reflect.Struct {
 		return Dataset{}, fmt.Errorf(" -> FromCSV: %T is not a struct type", out)
@@ -593,7 +595,7 @@ func (d *Dataset) readCSV(in string, out interface{}) (dataset Dataset, err erro
 
 	i, er := d.createDataset(in, records, out)
 	if er != nil {
-		return Dataset{}, err
+		return Dataset{}, er
 	}
 
 	return i, nil
@@ -621,7 +623,7 @@ func (d *Dataset) readSav(in string, out interface{}) (dataset Dataset, err erro
 
 	i, er := d.createDataset(in, records, out)
 	if er != nil {
-		return Dataset{}, err
+		return Dataset{}, er
 	}
 
 	return i, nil
@@ -692,6 +694,67 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 			if _, ok := d.tableMeta[headers[j]]; !ok {
 				continue
 			}
+
+			// check type is valid
+			a := spssRow[j]
+			if a == "" {
+				a = "NULL"
+			}
+
+			kind := d.tableMeta[headers[j]]
+			switch kind {
+
+			case reflect.String:
+				break
+			case reflect.Int8, reflect.Uint8:
+				if a == "NULL" {
+					a = "0"
+				}
+				i, err := strconv.ParseInt(a, 0, 8)
+				if err != nil {
+					return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert %s into an Int8", a)
+				}
+				row[header] = i
+			case reflect.Int, reflect.Int32, reflect.Uint32:
+				if a == "NULL" {
+					a = "0"
+				}
+				i, err := strconv.ParseInt(a, 0, 32)
+				if err != nil {
+					return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert %s into an Int32", a)
+				}
+				row[header] = i
+			case reflect.Int64, reflect.Uint64:
+				if a == "NULL" {
+					a = "0"
+				}
+				i, err := strconv.ParseInt(a, 0, 64)
+				if err != nil {
+					return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert %s into an Int64", a)
+				}
+				row[header] = i
+			case reflect.Float32:
+				if a == "NULL" {
+					a = "0.0"
+				}
+				i, err := strconv.ParseFloat(a, 32)
+				if err != nil {
+					return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert %s into an Float32", a)
+				}
+				row[header] = i
+			case reflect.Float64:
+				if a == "NULL" {
+					a = "0.0"
+				}
+				i, err := strconv.ParseFloat(a, 64)
+				if err != nil {
+					return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert %s into an Float64", a)
+				}
+				row[header] = i
+			default:
+				return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert struct variable type from SPSS type")
+			}
+
 			row[header] = spssRow[j]
 		}
 
