@@ -61,11 +61,11 @@ func (f FileOutput) Write(rows interface{}) error {
 			return fmt.Errorf("cannot convert type for struct variable %s into SPSS type", fieldInfo.Keys[0])
 		}
 
-		header = append(header, Header{spssType, fieldInfo.Keys[0], fieldInfo.Keys[0] + ""})
+		header = append(header, Header{spssType, fieldInfo.Keys[0], fieldInfo.Keys[0] + "-label"})
 	}
 
 	if inValue.Kind() != reflect.Slice {
-		panic("You need to pass a slice of interface{} to save to an SPSS file")
+		panic("You need to pass a slice of interface{} to save to an SPSS SAV file")
 	}
 
 	inLen := inValue.Len()
@@ -101,7 +101,7 @@ func (f FileOutput) Write(rows interface{}) error {
 
 	}
 
-	val := Export(f.inputType, "Test SAV from GO", header, data)
+	val := Export(f.inputType, "SAV from GO", header, data)
 
 	if val != 0 {
 		return fmt.Errorf("cannot open or write to file: %s", f.inputType)

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-const int MAX_STRING = 4096;
+const int MAX_STRING = 512;
 
 readstat_variable_t *save_header(file_header *const *sav_header, int column_cnt,
                                  readstat_writer_t *writer);
@@ -16,6 +16,7 @@ static ssize_t write_bytes(const void *data, size_t len, void *ctx) {
 
 int save_sav(const char *output_file, const char *label, file_header **sav_header, int column_cnt,
              int data_rows, data_item **sav_data) {
+
     readstat_writer_t *writer = readstat_writer_init();
     readstat_set_data_writer(writer, &write_bytes);
     readstat_writer_set_file_label(writer, label);
@@ -25,9 +26,6 @@ int save_sav(const char *output_file, const char *label, file_header **sav_heade
         unsigned long cnt = 0;
         if (sav_header[i]->sav_type == READSTAT_TYPE_STRING) {
             cnt = MAX_STRING;
-        }
-        if (sav_header[i]->sav_type == READSTAT_TYPE_DOUBLE) {
-            cnt = 8;
         }
         readstat_variable_t *variable =
                 readstat_add_variable(writer, sav_header[i]->name, sav_header[i]->sav_type, cnt);
@@ -50,8 +48,18 @@ int save_sav(const char *output_file, const char *label, file_header **sav_heade
         for (int j = 0; j < column_cnt; j++) {
             readstat_variable_t *variable = sav_header[j]->variable;
             switch (sav_data[cnt]->sav_type) {
-                case READSTAT_TYPE_STRING:
-                    readstat_insert_string_value(writer, variable, (const char *) sav_data[cnt]->string_value);
+                case READSTAT_TYPE_STRING: {
+                        int len = strlen(sav_data[cnt]->string_value);
+                        int to_allocate = (len > MAX_STRING ? MAX_STRING : len);
+                        char *str = malloc(to_allocate + 1);
+                        if (!str) { return -1; }
+
+                        memcpy(str, sav_data[cnt]->string_value, to_allocate);
+
+                        str[to_allocate] = 0;
+                        readstat_insert_string_value(writer, variable, (const char *) str);
+                        free(str);
+                    }
                     break;
 
                 case READSTAT_TYPE_INT8:

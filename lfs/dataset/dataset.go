@@ -405,7 +405,8 @@ func (d Dataset) ToSpss(fileName string) error {
 		default:
 			return fmt.Errorf("cannot convert type for struct variable %s into SPSS type", cols[i].Name)
 		}
-		header = append(header, di.Header{spssType, cols[i].Name, cols[i].Name})
+		//header = append(header, di.Header{spssType, cols[i].Name, cols[i].Name})
+		header = append(header, di.Header{spssType, cols[i].Name, cols[i].Name + "-label"})
 	}
 
 	col := d.DB.Collection(d.tableName)
@@ -770,5 +771,4 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 	}
 
 	return *d, nil
-
 }
