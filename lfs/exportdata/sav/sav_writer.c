@@ -30,7 +30,7 @@ int save_sav(const char *output_file, const char *label, file_header **sav_heade
         readstat_variable_t *variable =
                 readstat_add_variable(writer, sav_header[i]->name, sav_header[i]->sav_type, cnt);
         sav_header[i]->variable = variable;
-        readstat_variable_set_label(variable, sav_header[i]->label);
+        // readstat_variable_set_label(variable, sav_header[i]->label); // causes issues on windows
     }
 
     int fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
