@@ -44,7 +44,7 @@ func TestExportSav(t *testing.T) {
 
 	type TestDataset struct {
 		Shiftno      float64 `spss:"Shiftno"`
-		Serial       float64 `spss:"Serial"`
+		Serial       string  `spss:"Serial"`
 		Version      string  `spss:"Version"`
 		PortRoute2   float64 `spss:"PortRoute2"`
 		Baseport     string  `spss:"Baseport"`

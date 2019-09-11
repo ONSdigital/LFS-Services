@@ -25,16 +25,21 @@ type DataItem struct {
 	Value []interface{}
 }
 
+var DoubleValue []float64
+var StringValue []string
+
 func Export(fileName string, label string, headers []Header, data []DataItem) int {
 
 	numHeaders := len(headers)
-	cHeaders := (*[1 << 28]*C.file_header)(C.malloc(C.size_t(C.sizeof_file_header * numHeaders)))
+
+	cHeaders := (*[8192]*C.file_header)(C.malloc(C.size_t(C.sizeof_file_header * numHeaders)))
+
 	for i, f := range headers {
-		foo := (*C.file_header)(C.malloc(C.size_t(C.sizeof_file_header)))
-		(*foo).sav_type = C.int(f.SavType)
-		(*foo).name = C.CString(f.Name)
-		(*foo).label = C.CString(f.Label)
-		cHeaders[i] = foo
+		header := (*C.file_header)(C.malloc(C.size_t(C.sizeof_file_header)))
+		(*header).sav_type = C.int(f.SavType)
+		(*header).name = C.CString(f.Name)
+		(*header).label = C.CString(f.Label)
+		cHeaders[i] = header
 	}
 
 	numRows := len(data)
@@ -45,8 +50,8 @@ func Export(fileName string, label string, headers []Header, data []DataItem) in
 	cnt := 0
 
 	for _, r := range data {
-
-		for j, col := range r.Value {
+		for j := 0; j < len(r.Value); j++ {
+			col := r.Value[j]
 			dataItem := (*C.data_item)(C.malloc(C.size_t(C.sizeof_data_item)))
 
 			(*dataItem).sav_type = C.int(headers[j].SavType)
@@ -89,7 +94,10 @@ func Export(fileName string, label string, headers []Header, data []DataItem) in
 					fmt.Printf("Invalid type, double expected: %s\n", col)
 					panic("Invalid type, double expected")
 				}
-				(*dataItem).double_value = C.double(col.(float64))
+				//(*dataItem).double_value = C.double(col.(float64))
+
+				var d float64 = 2345634432.7
+				(*dataItem).double_value = C.double(d)
 
 			case spss.ReadstatTypeStringRef:
 				panic("String references not supported")
@@ -99,7 +107,7 @@ func Export(fileName string, label string, headers []Header, data []DataItem) in
 		}
 	}
 
-	res := C.save_sav(C.CString(fileName), C.CString(label), &cHeaders[0], C.int(numHeaders), C.int(numRows), &cDataItem[0])
+	res, err := C.save_sav(C.CString(fileName), C.CString(label), &cHeaders[0], C.int(numHeaders), C.int(numRows), &cDataItem[0])
 
 	// Free up C allocated memory
 	for i := 0; i < numHeaders; i++ {
@@ -116,6 +124,10 @@ func Export(fileName string, label string, headers []Header, data []DataItem) in
 		C.free(unsafe.Pointer(cDataItem[i]))
 	}
 	C.free(unsafe.Pointer(cDataItem))
+
+	if err != nil {
+		fmt.Printf(" -> spss export: C code returned  %s", err)
+	}
 
 	return int(res)
 }

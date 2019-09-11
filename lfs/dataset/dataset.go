@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	di "pds-go/lfs/exportdata/sav"
-	im_csv "pds-go/lfs/importdata/csv"
+	imcsv "pds-go/lfs/importdata/csv"
 	"pds-go/lfs/importdata/sav"
 	"pds-go/lfs/io/spss"
 	"reflect"
@@ -405,8 +405,7 @@ func (d Dataset) ToSpss(fileName string) error {
 		default:
 			return fmt.Errorf("cannot convert type for struct variable %s into SPSS type", cols[i].Name)
 		}
-		//header = append(header, di.Header{spssType, cols[i].Name, cols[i].Name})
-		header = append(header, di.Header{spssType, cols[i].Name, cols[i].Name + "-label"})
+		header = append(header, di.Header{SavType: spssType, Name: cols[i].Name, Label: cols[i].Name + " label"})
 	}
 
 	col := d.DB.Collection(d.tableName)
@@ -439,7 +438,9 @@ func (d Dataset) ToSpss(fileName string) error {
 				dataItem.Value = append(dataItem.Value, value.(int32))
 			case reflect.Int64, reflect.Uint64:
 				dataItem.Value = append(dataItem.Value, value.(int64))
-			case reflect.Float32, reflect.Float64:
+			case reflect.Float32:
+				dataItem.Value = append(dataItem.Value, value.(float32))
+			case reflect.Float64:
 				dataItem.Value = append(dataItem.Value, value.(float64))
 			default:
 				return fmt.Errorf(" -> ToSpss: unknown type - possible corruption")
@@ -585,7 +586,7 @@ func (d *Dataset) readCSV(in string, out interface{}) (dataset Dataset, err erro
 		return Dataset{}, fmt.Errorf(" -> FromCSV: %T is not a struct type", out)
 	}
 
-	records, err := im_csv.ImportCSVToSlice(in)
+	records, err := imcsv.ImportCSVToSlice(in)
 	if err != nil {
 		return Dataset{}, fmt.Errorf(" -> FromCSV: cannot import CSV file %w", err)
 	}
@@ -708,50 +709,40 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 			case reflect.String:
 				break
 			case reflect.Int8, reflect.Uint8:
-				if a == "NULL" {
-					a = "0"
-				}
 				i, err := strconv.ParseInt(a, 0, 8)
 				if err != nil {
 					return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert %s into an Int8", a)
 				}
 				row[header] = i
+
 			case reflect.Int, reflect.Int32, reflect.Uint32:
-				if a == "NULL" {
-					a = "0"
-				}
 				i, err := strconv.ParseInt(a, 0, 32)
 				if err != nil {
 					return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert %s into an Int32", a)
 				}
 				row[header] = i
+
 			case reflect.Int64, reflect.Uint64:
-				if a == "NULL" {
-					a = "0"
-				}
 				i, err := strconv.ParseInt(a, 0, 64)
 				if err != nil {
 					return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert %s into an Int64", a)
 				}
 				row[header] = i
+
 			case reflect.Float32:
-				if a == "NULL" {
-					a = "0.0"
-				}
 				i, err := strconv.ParseFloat(a, 32)
 				if err != nil {
 					return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert %s into an Float32", a)
 				}
 				row[header] = i
+
 			case reflect.Float64:
-				if a == "NULL" {
-					a = "0.0"
-				}
 				i, err := strconv.ParseFloat(a, 64)
 				if err != nil {
 					return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert %s into an Float64", a)
 				}
 				row[header] = i
+
 			default:
 				return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert struct variable type from SPSS type")
 			}

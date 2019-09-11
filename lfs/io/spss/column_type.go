@@ -1,16 +1,16 @@
 package spss
 
-type ColumnType int
+type ColumnType int32
 type ColumnTypes string
 
 const (
-	ReadstatTypeString    ColumnType = iota
-	ReadstatTypeInt8      ColumnType = iota
-	ReadstatTypeInt16     ColumnType = iota
-	ReadstatTypeInt32     ColumnType = iota
-	ReadstatTypeFloat     ColumnType = iota
-	ReadstatTypeDouble    ColumnType = iota
-	ReadstatTypeStringRef ColumnType = iota
+	ReadstatTypeString    ColumnType = 0
+	ReadstatTypeInt8      ColumnType = 1
+	ReadstatTypeInt16     ColumnType = 2
+	ReadstatTypeInt32     ColumnType = 3
+	ReadstatTypeFloat     ColumnType = 4
+	ReadstatTypeDouble    ColumnType = 5
+	ReadstatTypeStringRef ColumnType = 6
 )
 
 const (
@@ -18,8 +18,8 @@ const (
 	INTEGER ColumnTypes = "INTEGER"
 	BIGINT  ColumnTypes = "BIGINT"
 	STRING  ColumnTypes = "TEXT"
-	FLOAT   ColumnTypes = "FLOAT"
-	DOUBLE  ColumnTypes = "DOUBLE"
+	FLOAT   ColumnTypes = "REAL"
+	DOUBLE  ColumnTypes = "REAL"
 )
 
 func (columnType ColumnType) As() ColumnType {

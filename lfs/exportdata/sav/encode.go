@@ -61,7 +61,7 @@ func (f FileOutput) Write(rows interface{}) error {
 			return fmt.Errorf("cannot convert type for struct variable %s into SPSS type", fieldInfo.Keys[0])
 		}
 
-		header = append(header, Header{spssType, fieldInfo.Keys[0], fieldInfo.Keys[0] + "-label"})
+		header = append(header, Header{spssType, fieldInfo.Keys[0], fieldInfo.Keys[0]})
 	}
 
 	if inValue.Kind() != reflect.Slice {
