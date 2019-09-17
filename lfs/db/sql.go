@@ -1,18 +1,30 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	log "github.com/sirupsen/logrus"
 	"pds-go/lfs/config"
+	ds "pds-go/lfs/dataset"
+	"sync"
 	"time"
 )
 
-var DB *gorm.DB
+var globalLock = sync.Mutex{}
 
-func init() {
+type SQL struct {
+	DB     *gorm.DB
+	logger *log.Logger
+}
+
+func NewSQL(logger *log.Logger) (*SQL, error) {
+
+	globalLock.Lock()
+	defer globalLock.Unlock()
+
 	log.Info("initialising DB")
 	server := config.Config.Database.Server
 	user := config.Config.Database.User
@@ -25,23 +37,25 @@ func init() {
 	log.Debug("Connecting to database: ", dbName)
 
 	var err error
-	DB, err = gorm.Open("mysql", connectionString)
+	db, err := gorm.Open("mysql", connectionString)
 
 	if err != nil {
 		log.Fatal(fmt.Errorf("cannot open database connection %v", err))
+		return &SQL{}, err
 	}
 
 	log.Debug(fmt.Sprintf("Connected to database: %s", dbName))
 
 	if verbose {
-		DB.LogMode(true)
+		db.LogMode(true)
 	}
 
-	conn := DB.DB()
+	conn := db.DB()
 
 	err = conn.Ping()
 	if err != nil {
 		log.Fatal(fmt.Errorf("cannot ping database %v", err))
+		return &SQL{}, err
 	}
 
 	poolSize := config.Config.Database.ConnectionPool.MaxPoolSize
@@ -60,4 +74,11 @@ func init() {
 	conn.SetMaxOpenConns(poolSize)
 	conn.SetMaxIdleConns(maxIdle)
 
+	return &SQL{db, logger}, nil
+}
+
+func (sql SQL) create_from_dataset(dataset ds.Dataset) error {
+	sql.logger.Debug("Creating table from dataset")
+
+	sql.DB.CreateTable(&User{})
 }

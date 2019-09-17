@@ -94,10 +94,7 @@ func Export(fileName string, label string, headers []Header, data []DataItem) in
 					fmt.Printf("Invalid type, double expected: %s\n", col)
 					panic("Invalid type, double expected")
 				}
-				//(*dataItem).double_value = C.double(col.(float64))
-
-				var d float64 = 2345634432.7
-				(*dataItem).double_value = C.double(d)
+				(*dataItem).double_value = C.double(col.(float64))
 
 			case spss.ReadstatTypeStringRef:
 				panic("String references not supported")

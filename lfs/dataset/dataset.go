@@ -32,6 +32,7 @@ type Dataset struct {
 	conn      *sql.DB
 	mux       sync.Mutex
 	logger    *log.Logger
+	structure *interface{}
 }
 
 var settings = sqlite.ConnectionURL{
@@ -65,13 +66,14 @@ func NewDataset(name string, logger *log.Logger) (*Dataset, error) {
 	}
 
 	mux := sync.Mutex{}
-	return &Dataset{name, nil, sess, conn, mux, logger}, nil
+	return &Dataset{name, nil, sess, conn, mux, logger, nil}, nil
 }
 
 func (d Dataset) Close() {
 	_ = d.DB.Close()
 }
 
+// TOD: add to structure
 func (d Dataset) AddColumn(name string, columnType spss.ColumnTypes) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
@@ -218,6 +220,7 @@ func (d Dataset) Mean(col string) (res float64, err error) {
 	return
 }
 
+// TOD: drop from structure
 func (d Dataset) DropColumn(column string) (err error) {
 	/*
 		As Sqlite can't delete columns, we have work around this by doing the following:
@@ -576,6 +579,7 @@ func (d *Dataset) logLoad(from fromFileFunc) fromFileFunc {
 }
 
 func (d *Dataset) FromCSV(fileName string, out interface{}) (dataset Dataset, err error) {
+	*d.structure = out
 	return d.logLoad(d.readCSV)(fileName, out)
 }
 
@@ -604,6 +608,7 @@ func (d *Dataset) readCSV(in string, out interface{}) (dataset Dataset, err erro
 }
 
 func (d *Dataset) FromSav(fileName string, out interface{}) (dataset Dataset, err error) {
+	*d.structure = out
 	return d.logLoad(d.readSav)(fileName, out)
 }
 
