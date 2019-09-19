@@ -112,7 +112,7 @@ int save_sav(const char *output_file, const char *label, file_header **sav_heade
                 break;
 
                 case READSTAT_TYPE_DOUBLE: {
-                        long double d = sav_data[cnt]->double_value;
+                        double d = sav_data[cnt]->double_value;
                         if (d == 0.0) {
                            readstat_insert_missing_value(writer, variable);
                         } else {

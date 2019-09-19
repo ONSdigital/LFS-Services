@@ -6,11 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/deepilla/sqlitemeta"
+	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/olekukonko/tablewriter"
-	"log"
+	dynamicstruct "github.com/ompluscator/dynamic-struct"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	"pds-go/lfs/db"
 	di "pds-go/lfs/exportdata/sav"
 	imcsv "pds-go/lfs/importdata/csv"
 	"pds-go/lfs/importdata/sav"
@@ -26,13 +29,12 @@ import (
 var globalLock = sync.Mutex{}
 
 type Dataset struct {
-	tableName string
-	tableMeta map[string]reflect.Kind
-	DB        sqlbuilder.Database
-	conn      *sql.DB
-	mux       sync.Mutex
-	logger    *log.Logger
-	structure *interface{}
+	tableName     string
+	TableMetaData map[string]reflect.Kind
+	DB            sqlbuilder.Database
+	conn          *sql.DB
+	mux           sync.Mutex
+	logger        *log.Logger
 }
 
 var settings = sqlite.ConnectionURL{
@@ -66,7 +68,7 @@ func NewDataset(name string, logger *log.Logger) (*Dataset, error) {
 	}
 
 	mux := sync.Mutex{}
-	return &Dataset{name, nil, sess, conn, mux, logger, nil}, nil
+	return &Dataset{name, nil, sess, conn, mux, logger}, nil
 }
 
 func (d Dataset) Close() {
@@ -158,15 +160,15 @@ func (d Dataset) NumRows() (count int) {
 
 // helper functions
 
-type orderedColumns = map[int]sqlitemeta.Column
+type OrderedColumns = map[int]sqlitemeta.Column
 
 // ensure table is created with existing column order
-func (d Dataset) orderedColumns() (ordered orderedColumns) {
+func (d Dataset) OrderedColumns() (ordered OrderedColumns) {
 	ordered = map[int]sqlitemeta.Column{}
 
 	res, err := sqlitemeta.Columns(d.conn, d.tableName)
 	if err != nil {
-		panic(fmt.Sprintf(" -> orderedColumns: cannot get metadata: %s", err))
+		panic(fmt.Sprintf(" -> OrderedColumns: cannot get metadata: %s", err))
 	}
 	for _, j := range res {
 		ordered[j.ID] = j
@@ -245,7 +247,7 @@ func (d Dataset) DropColumn(column string) (err error) {
 	}
 
 	// get and save existing column order
-	orderedColumns := d.orderedColumns()
+	orderedColumns := d.OrderedColumns()
 
 	var buffer bytes.Buffer
 	var keys []string
@@ -383,9 +385,8 @@ func (d Dataset) DeleteWhere(where ...interface{}) (err error) {
 }
 
 func (d Dataset) ToSpss(fileName string) error {
-	//var keys = d.getKeys(d.orderedColumns())
 	var header []di.Header
-	var cols = d.orderedColumns()
+	var cols = d.OrderedColumns()
 
 	for i := 0; i < len(cols); i++ {
 		if cols[i].Name == "Row" {
@@ -394,7 +395,7 @@ func (d Dataset) ToSpss(fileName string) error {
 
 		var spssType spss.ColumnType = 0
 
-		switch d.tableMeta[cols[i].Name] {
+		switch d.TableMetaData[cols[i].Name] {
 		case reflect.String:
 			spssType = spss.ReadstatTypeString
 		case reflect.Int8, reflect.Uint8:
@@ -431,7 +432,7 @@ func (d Dataset) ToSpss(fileName string) error {
 				continue
 			}
 			value := dat[name]
-			kind := d.tableMeta[name]
+			kind := d.TableMetaData[name]
 			switch kind {
 			case reflect.String:
 				dataItem.Value = append(dataItem.Value, fmt.Sprintf("%s", value))
@@ -461,7 +462,7 @@ func (d Dataset) ToSpss(fileName string) error {
 	return nil
 }
 
-func (d Dataset) getKeys(columns orderedColumns) []string {
+func (d Dataset) getKeys(columns OrderedColumns) []string {
 	var keys []string
 	for i := 0; i < len(columns); i++ {
 		if columns[i].Name != "Row" {
@@ -481,7 +482,7 @@ func (d Dataset) ToCSV(fileName string) error {
 		_ = f.Close()
 	}()
 
-	orderedColumns := d.orderedColumns()
+	orderedColumns := d.OrderedColumns()
 
 	var buffer bytes.Buffer
 	var keys []string
@@ -520,7 +521,7 @@ func (d Dataset) ToCSV(fileName string) error {
 	for res.Next(&dat) {
 		buffer.Reset()
 
-		orderedColumns := d.orderedColumns()
+		orderedColumns := d.OrderedColumns()
 		var keys []string
 		for i := 0; i < len(orderedColumns); i++ {
 			if orderedColumns[i].Name != "Row" {
@@ -529,7 +530,7 @@ func (d Dataset) ToCSV(fileName string) error {
 		}
 
 		for i := 0; i < len(keys); i++ {
-			kind := d.tableMeta[keys[i]]
+			kind := d.TableMetaData[keys[i]]
 			value := dat[keys[i]]
 
 			switch kind {
@@ -566,6 +567,114 @@ func (d Dataset) ToCSV(fileName string) error {
 	return nil
 }
 
+func (d Dataset) ToSQL() error {
+	dbase, err := db.NewSQL(d.logger)
+	if err != nil {
+		return fmt.Errorf("cannot connect to database: %s", err)
+	}
+
+	defer func() {
+		_ = dbase.DB.Close()
+	}()
+
+	err = d.createTableFromDataset(dbase.DB)
+	if err != nil {
+		return fmt.Errorf("cannot connect to database: %s", err)
+	}
+
+	orderedColumns := d.OrderedColumns()
+
+	var buffer bytes.Buffer
+	var keys []string
+	for i := 0; i < len(orderedColumns); i++ {
+		if orderedColumns[i].Name != "Row" {
+			keys = append(keys, orderedColumns[i].Name)
+		}
+	}
+
+	buffer.WriteString(fmt.Sprintf("insert into %s values (", d.tableName))
+
+	for i := 0; i < len(keys); i++ {
+		j := fmt.Sprintf("%s", keys[i])
+		buffer.WriteString(j)
+		if i != len(keys)-1 {
+			buffer.WriteString("?,")
+		} else {
+			buffer.WriteString(")")
+		}
+	}
+
+	tx, err := dbase.DB.DB().Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stmt, err := tx.Prepare(buffer.String())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	col := d.DB.Collection(d.tableName)
+	res := col.Find()
+
+	defer func() {
+		_ = res.Close()
+	}()
+
+	var dat map[string]interface{}
+
+	for res.Next(&dat) {
+		buffer.Reset()
+
+		orderedColumns := d.OrderedColumns()
+		var keys []string
+		for i := 0; i < len(orderedColumns); i++ {
+			if orderedColumns[i].Name != "Row" {
+				keys = append(keys, orderedColumns[i].Name)
+			}
+		}
+
+		for i := 0; i < len(keys); i++ {
+			kind := d.TableMetaData[keys[i]]
+			value := dat[keys[i]]
+
+			switch kind {
+			case reflect.String:
+				buffer.WriteString(fmt.Sprintf("'%s'", value))
+			case reflect.Int8, reflect.Uint8:
+				buffer.WriteString(fmt.Sprintf("%d", value))
+			case reflect.Int, reflect.Int32, reflect.Uint32:
+				buffer.WriteString(fmt.Sprintf("%d", value))
+			case reflect.Int64, reflect.Uint64:
+				buffer.WriteString(fmt.Sprintf("%d", value))
+			case reflect.Float32:
+				buffer.WriteString(fmt.Sprintf("%f", value))
+			case reflect.Float64:
+				buffer.WriteString(fmt.Sprintf("%g", value))
+			default:
+				return fmt.Errorf(" -> ToCSV: unknown type - possible corruption")
+			}
+			if i != len(keys)-1 {
+				buffer.WriteString(",")
+			} else {
+				buffer.WriteString(")")
+			}
+		}
+
+		q := buffer.String()
+
+		_, err = stmt.Exec(q)
+
+		if err != nil {
+			return fmt.Errorf(" -> ToSQL: insert into database failed: %s", err)
+		}
+	}
+	_ = stmt.Close()
+	_ = tx.Commit()
+
+	return nil
+}
+
 type fromFileFunc func(fileName string, out interface{}) (dataset Dataset, err error)
 
 func (d *Dataset) logLoad(from fromFileFunc) fromFileFunc {
@@ -579,7 +688,6 @@ func (d *Dataset) logLoad(from fromFileFunc) fromFileFunc {
 }
 
 func (d *Dataset) FromCSV(fileName string, out interface{}) (dataset Dataset, err error) {
-	*d.structure = out
 	return d.logLoad(d.readCSV)(fileName, out)
 }
 
@@ -608,7 +716,6 @@ func (d *Dataset) readCSV(in string, out interface{}) (dataset Dataset, err erro
 }
 
 func (d *Dataset) FromSav(fileName string, out interface{}) (dataset Dataset, err error) {
-	*d.structure = out
 	return d.logLoad(d.readSav)(fileName, out)
 }
 
@@ -655,11 +762,11 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 	}
 
 	t1 := reflect.TypeOf(out)
-	d.tableMeta = make(map[string]reflect.Kind)
+	d.TableMetaData = make(map[string]reflect.Kind)
 
 	for i := 0; i < t1.NumField(); i++ {
 		a := t1.Field(i)
-		d.tableMeta[a.Name] = a.Type.Kind()
+		d.TableMetaData[a.Name] = a.Type.Kind()
 
 		var spssType spss.ColumnTypes
 
@@ -698,7 +805,7 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 			}
 			header := headers[j]
 			// extract the columns we are interested in
-			if _, ok := d.tableMeta[headers[j]]; !ok {
+			if _, ok := d.TableMetaData[headers[j]]; !ok {
 				continue
 			}
 
@@ -708,7 +815,7 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 				a = "NULL"
 			}
 
-			kind := d.tableMeta[headers[j]]
+			kind := d.TableMetaData[headers[j]]
 			switch kind {
 
 			case reflect.String:
@@ -767,4 +874,37 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 	}
 
 	return *d, nil
+}
+
+func (d Dataset) createTableFromDataset(db *gorm.DB) error {
+	var cols = d.OrderedColumns()
+
+	instance := dynamicstruct.NewStruct()
+	instance.AddField("gorm.Model", "", "")
+
+	for i := 0; i < len(cols); i++ {
+		if cols[i].Name == "Row" {
+			continue
+		}
+
+		switch d.TableMetaData[cols[i].Name] {
+		case reflect.String:
+			instance.AddField(cols[i].Name, "", "")
+		case reflect.Int8, reflect.Uint8:
+			instance.AddField(cols[i].Name, 0, `gorm:"type:int"`)
+		case reflect.Int, reflect.Int32, reflect.Uint32:
+			instance.AddField(cols[i].Name, "", `gorm:"type:bigint"`)
+		case reflect.Float32:
+			instance.AddField(cols[i].Name, 0.0, `gorm:"type:decimal(10,6)"`)
+		case reflect.Float64:
+			instance.AddField(cols[i].Name, 0.0, `gorm:"type:decimal(20,6)"`)
+		default:
+			return fmt.Errorf("cannot convert type for struct variable %s into database type", cols[i].Name)
+		}
+	}
+
+	i := instance.Build().New()
+	db.CreateTable(&i)
+
+	return nil
 }

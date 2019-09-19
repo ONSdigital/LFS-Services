@@ -22,3 +22,5 @@ testdata/out.csv
 lfs/services/
 testdata/export_test.sav
 testdata/test_output.sav
+
+!.idea/

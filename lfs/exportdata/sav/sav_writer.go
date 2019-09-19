@@ -1,7 +1,7 @@
 package sav
 
 // #cgo windows amd64 CFLAGS: -g -IC:/msys64/mingw64/include
-// #cgo windows LDFLAGS: -LC:/msys64/mingw64/libs -lreadstat
+// #cgo windows LDFLAGS: -LC:/msys64/mingw64/lib -lreadstat
 // #cgo darwin amd64 CFLAGS: -g
 // #cgo darwin LDFLAGS: -lreadstat
 // #cgo linux amd64 CFLAGS: -I/usr/local/include -g

@@ -1,16 +1,16 @@
 
 debug = true
 
-testDirectory = "/Users/paul/go/src/pds-go/testdata/"
-#testDirectory = "/Users/pauld/GolandProjects/pds-go/testdata/"
+#testDirectory = "/Users/paul/go/src/pds-go/testdata/"
+testDirectory = "/Users/pauld/GolandProjects/pds-go/testdata/"
 
 [database]
 
-server = "" # set by environment variables
-user = "" # set by environment variables
-password = "" # set by environment variables
+server = "localhost" # set by environment variables
+user = "lfs" # set by environment variables
+password = "lfs" # set by environment variables
 verbose = false
-database = "" # set by environment variables
+database = "lfs" # set by environment variables
 
     [database.pool]
        maxPoolSize = 10

@@ -1,14 +1,12 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	log "github.com/sirupsen/logrus"
 	"pds-go/lfs/config"
-	ds "pds-go/lfs/dataset"
 	"sync"
 	"time"
 )
@@ -75,10 +73,4 @@ func NewSQL(logger *log.Logger) (*SQL, error) {
 	conn.SetMaxIdleConns(maxIdle)
 
 	return &SQL{db, logger}, nil
-}
-
-func (sql SQL) create_from_dataset(dataset ds.Dataset) error {
-	sql.logger.Debug("Creating table from dataset")
-
-	sql.DB.CreateTable(&User{})
 }

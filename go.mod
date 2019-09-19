@@ -12,6 +12,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/olekukonko/tablewriter v0.0.1
+	github.com/ompluscator/dynamic-struct v1.2.0
 	github.com/pelletier/go-toml v1.4.0
 	github.com/senseyeio/roger v0.0.0-20180904151654-5a944f2c5ceb
 	github.com/sirupsen/logrus v1.4.2
