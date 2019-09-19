@@ -75,7 +75,6 @@ func (d Dataset) Close() {
 	_ = d.DB.Close()
 }
 
-// TOD: add to structure
 func (d Dataset) AddColumn(name string, columnType spss.ColumnTypes) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
@@ -90,7 +89,7 @@ func (d Dataset) AddColumn(name string, columnType spss.ColumnTypes) error {
 
 func (d Dataset) Insert(values interface{}) (err error) {
 	q := d.DB.InsertInto(d.tableName).Values(values)
-	_, err = q.Exec()
+	res, err = q.Exec()
 	if err != nil {
 		return fmt.Errorf(" -> Insert: cannot insert row: %s", err)
 	}
@@ -789,7 +788,7 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 
 		err = d.AddColumn(a.Name, spssType)
 		if err != nil {
-			return Dataset{}, fmt.Errorf(" -> createDataset: cannot create column %s, of type %s", name, spssType)
+			return Dataset{}, fmt.Errorf(" -> createDataset: cannot create column %s, of type %s", a.Name, spssType)
 		}
 	}
 
