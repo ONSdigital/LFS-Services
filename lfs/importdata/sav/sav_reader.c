@@ -74,6 +74,7 @@ int handle_value(int obs_index, readstat_variable_t *variable, readstat_value_t 
             if (sav->buffer_size <= strlen(readstat_string_value(value)) + 1) {
                 sav->buffer_size = strlen(readstat_string_value(value)) + SAV_BUFFER_SIZE + 1;
                 sav->buffer = realloc(sav->buffer, sav->buffer_size);
+                buf = sav->buffer;
             }
             char *str = (char *) readstat_string_value(value);
             for (char* p = str; (p = strchr(p, ',')) ; ++p) {

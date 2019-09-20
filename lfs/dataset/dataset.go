@@ -33,7 +33,7 @@ type Dataset struct {
 	TableMetaData map[string]reflect.Kind
 	DB            sqlbuilder.Database
 	conn          *sql.DB
-	mux           sync.Mutex
+	mux           *sync.Mutex
 	logger        *log.Logger
 }
 
@@ -68,7 +68,7 @@ func NewDataset(name string, logger *log.Logger) (*Dataset, error) {
 	}
 
 	mux := sync.Mutex{}
-	return &Dataset{name, nil, sess, conn, mux, logger}, nil
+	return &Dataset{name, nil, sess, conn, &mux, logger}, nil
 }
 
 func (d Dataset) Close() {
@@ -86,17 +86,17 @@ func (d Dataset) AddColumn(name string, columnType spss.ColumnTypes) error {
 	}
 	return nil
 }
-
-func (d Dataset) Insert(values interface{}) (err error) {
+ 
+func (d *Dataset) Insert(values interface{}) (err error) {
 	q := d.DB.InsertInto(d.tableName).Values(values)
-	res, err = q.Exec()
+	_, err = q.Exec()
 	if err != nil {
 		return fmt.Errorf(" -> Insert: cannot insert row: %s", err)
 	}
 	return
 }
 
-func (d Dataset) Head(max ...int) error {
+func (d *Dataset) Head(max ...int) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
