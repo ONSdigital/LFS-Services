@@ -162,13 +162,13 @@ func TestFromSav(t *testing.T) {
 	d, err := NewDataset("test", logger)
 	if err != nil {
 		logger.Error(err)
-		t.Fail()
+		t.FailNow()
 	}
 
 	dataset, err := d.FromSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", BigDataset{})
 	if err != nil {
 		logger.Error(err)
-		t.Fail()
+		t.FailNow()
 	}
 	defer dataset.Close()
 

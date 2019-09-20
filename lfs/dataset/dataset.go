@@ -44,11 +44,11 @@ var settings = sqlite.ConnectionURL{
 	//Database: "LFS.db",
 	Database: ":memory:",
 	Options: map[string]string{
-		"cache":        "shared",
-		"_synchronous": "OFF", // when not using memory: we don't need this
+		"cache": "shared",
+		//"_synchronous": "OFF", // when not using memory: we don't need this
 		//"_journal":     "WAL", // much, MUCH faster
-		"_journal": "OFF",    // much, MUCH faster
-		"mode":     "memory", // memory=prod otherwise debug so we can see the file
+		//"_journal": "OFF",    // much, MUCH faster
+		"mode": "memory", // memory=prod otherwise debug so we can see the file
 	},
 }
 
