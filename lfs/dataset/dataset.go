@@ -20,6 +20,7 @@ import (
 	"pds-go/lfs/io/spss"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 	"upper.io/db.v3/lib/sqlbuilder"
@@ -86,13 +87,47 @@ func (d Dataset) AddColumn(name string, columnType spss.ColumnTypes) error {
 	}
 	return nil
 }
- 
-func (d *Dataset) Insert(values interface{}) (err error) {
-	q := d.DB.InsertInto(d.tableName).Values(values)
-	_, err = q.Exec()
+
+func (d *Dataset) Insert(values map[string]interface{}) (err error) {
+	var kBuffer bytes.Buffer
+	var vBuffer bytes.Buffer
+	kBuffer.WriteString(fmt.Sprintf("insert into %s(", d.tableName))
+	vBuffer.WriteString(fmt.Sprint("values("))
+
+	var i = 0
+	for k, v := range values {
+		kBuffer.WriteString(fmt.Sprintf("%s", k))
+		if d.TableMetaData[k] == reflect.String {
+			a := fmt.Sprintf("%s", v)
+			a = strings.Replace(a, "'", `''`, -1)
+			vBuffer.WriteString(`'` + a + `'`)
+		} else {
+			vBuffer.WriteString(fmt.Sprintf("%s", v))
+		}
+		if i != len(values)-1 {
+			kBuffer.WriteString(",")
+			vBuffer.WriteString(",")
+		} else {
+			kBuffer.WriteString(")")
+			vBuffer.WriteString(")")
+		}
+		i++
+	}
+
+	sqlStatement := kBuffer.String() + vBuffer.String()
+	_, err = d.DB.Exec(sqlStatement)
 	if err != nil {
+		d.logger.Error(sqlStatement)
 		return fmt.Errorf(" -> Insert: cannot insert row: %s", err)
 	}
+
+	return
+
+	//q := d.DB.InsertInto(d.tableName).Values(values)
+	//_, err = q.Exec()
+	//if err != nil {
+	//	return fmt.Errorf(" -> Insert: cannot insert row: %s", err)
+	//}
 	return
 }
 
