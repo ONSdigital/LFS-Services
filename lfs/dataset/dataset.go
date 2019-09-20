@@ -38,13 +38,17 @@ type Dataset struct {
 	logger        *log.Logger
 }
 
+const BulkSize = 10
+
 var settings = sqlite.ConnectionURL{
-	Database: "LFS.db",
+	//Database: "LFS.db",
+	Database: ":memory:",
 	Options: map[string]string{
 		"cache":        "shared",
 		"_synchronous": "OFF", // when not using memory: we don't need this
-		"_journal":     "WAL", // much, MUCH faster
-		//"mode":  "memory", // memory=prod otherwise debug so we can see the file
+		//"_journal":     "WAL", // much, MUCH faster
+		"_journal": "OFF",    // much, MUCH faster
+		"mode":     "memory", // memory=prod otherwise debug so we can see the file
 	},
 }
 
@@ -88,46 +92,64 @@ func (d Dataset) AddColumn(name string, columnType spss.ColumnTypes) error {
 	return nil
 }
 
-func (d *Dataset) Insert(values map[string]interface{}) (err error) {
+func (d *Dataset) BulkInsert(values []map[string]interface{}) (err error) {
 	var kBuffer bytes.Buffer
 	var vBuffer bytes.Buffer
-	kBuffer.WriteString(fmt.Sprintf("insert into %s(", d.tableName))
-	vBuffer.WriteString(fmt.Sprint("values("))
+	var sqlStatement bytes.Buffer
 
-	var i = 0
-	for k, v := range values {
-		kBuffer.WriteString(fmt.Sprintf("%s", k))
-		if d.TableMetaData[k] == reflect.String {
-			a := fmt.Sprintf("%s", v)
-			a = strings.Replace(a, "'", `''`, -1)
-			vBuffer.WriteString(`'` + a + `'`)
-		} else {
-			vBuffer.WriteString(fmt.Sprintf("%s", v))
-		}
-		if i != len(values)-1 {
-			kBuffer.WriteString(",")
-			vBuffer.WriteString(",")
-		} else {
-			kBuffer.WriteString(")")
-			vBuffer.WriteString(")")
-		}
-		i++
+	tx, err := d.DB.NewTx(nil)
+	if err != nil {
+		return fmt.Errorf(" -> InsertBulk: cannot create a transaction: %s", err)
 	}
 
-	sqlStatement := kBuffer.String() + vBuffer.String()
-	_, err = d.DB.Exec(sqlStatement)
+	for _, row := range values {
+		kBuffer.Reset()
+		vBuffer.Reset()
+		kBuffer.WriteString(fmt.Sprintf("insert into %s(", d.tableName))
+		vBuffer.WriteString(fmt.Sprint("values("))
+
+		var i = 0
+		for k, v := range row {
+			kBuffer.WriteString(fmt.Sprintf("%s", k))
+			if d.TableMetaData[k] == reflect.String {
+				a := fmt.Sprintf("%s", v)
+				a = strings.Replace(a, "'", `''`, -1)
+				vBuffer.WriteString(`'` + a + `'`)
+			} else {
+				vBuffer.WriteString(fmt.Sprintf("%s", v))
+			}
+			if i != len(row)-1 {
+				kBuffer.WriteString(",")
+				vBuffer.WriteString(",")
+			} else {
+				kBuffer.WriteString(")")
+				vBuffer.WriteString(")")
+			}
+			i++
+		}
+		sqlStatement.WriteString(kBuffer.String() + vBuffer.String() + ";\n")
+	}
+
+	_, err = d.DB.Exec(sqlStatement.String())
 	if err != nil {
 		d.logger.Error(sqlStatement)
-		return fmt.Errorf(" -> Insert: cannot insert row: %s", err)
+		return fmt.Errorf(" -> InsertBulk: cannot insert rows: %s", err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf(" -> InsertBulk: commit transaction failed: %s", err)
 	}
 
 	return
+}
 
-	//q := d.DB.InsertInto(d.tableName).Values(values)
-	//_, err = q.Exec()
-	//if err != nil {
-	//	return fmt.Errorf(" -> Insert: cannot insert row: %s", err)
-	//}
+func (d *Dataset) Insert(values map[string]interface{}) (err error) {
+
+	q := d.DB.InsertInto(d.tableName).Values(values)
+	_, err = q.Exec()
+	if err != nil {
+		return fmt.Errorf(" -> Insert: cannot insert row: %s", err)
+	}
 	return
 }
 
@@ -158,7 +180,11 @@ func (d *Dataset) Head(max ...int) error {
 
 	vals := make([]interface{}, len(cols))
 	var header []string
+	const MAX_COLS = 15
 	for i, n := range cols {
+		if i > MAX_COLS {
+			break
+		}
 		vals[i] = new(sql.RawBytes)
 		header = append(header, n)
 	}
@@ -169,6 +195,9 @@ func (d *Dataset) Head(max ...int) error {
 
 		var rowItems []string
 		for col := 0; col < len(vals); col++ {
+			if col > MAX_COLS {
+				break
+			}
 			res := vals[col]
 			b := res.(*sql.RawBytes)
 			rowItems = append(rowItems, string(*b))
@@ -790,11 +819,6 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 
 	d.logger.Println("starting import into Dataset")
 
-	tx, err := d.DB.NewTx(nil)
-	if err != nil {
-		return Dataset{}, fmt.Errorf(" -> createDataset: cannot create a transaction: %s", err)
-	}
-
 	t1 := reflect.TypeOf(out)
 	d.TableMetaData = make(map[string]reflect.Kind)
 
@@ -821,7 +845,7 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 			return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert struct variable type from SPSS type")
 		}
 
-		err = d.AddColumn(a.Name, spssType)
+		err := d.AddColumn(a.Name, spssType)
 		if err != nil {
 			return Dataset{}, fmt.Errorf(" -> createDataset: cannot create column %s, of type %s", a.Name, spssType)
 		}
@@ -829,6 +853,9 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 
 	headers := rows[0]
 	body := rows[1:]
+	count := 0
+
+	rs := make([]map[string]interface{}, 0)
 
 	for _, spssRow := range body {
 		row := make(map[string]interface{})
@@ -896,15 +923,24 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 			row[header] = spssRow[j]
 		}
 
-		err = d.Insert(row)
-		if err != nil {
-			return Dataset{}, fmt.Errorf(" -> createDataset: cannot create row: %s", err)
+		rs = append(rs, row)
+		count++
+		if count%BulkSize == 0 {
+			err := d.BulkInsert(rs)
+
+			if err != nil {
+				return Dataset{}, fmt.Errorf(" -> createDataset: cannot create row: %s", err)
+			}
+			rs = nil
 		}
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		return Dataset{}, fmt.Errorf(" -> createDataset: commit transaction failed: %s", err)
+	if rs != nil {
+		err := d.BulkInsert(rs)
+
+		if err != nil {
+			return Dataset{}, fmt.Errorf(" -> createDataset: cannot create row: %s", err)
+		}
 	}
 
 	return *d, nil
