@@ -1,0 +1,15 @@
+{
+    "sqltools.connections": [
+        {
+            "database": "lfs",
+            "dialect": "MySQL",
+            "isActive": false,
+            "isConnected": false,
+            "name": "LFS",
+            "password": "lfs",
+            "port": 3306,
+            "server": "localhost",
+            "username": "lfs"
+        }
+    ]
+}

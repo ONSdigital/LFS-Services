@@ -16,6 +16,7 @@ func setupTable(logger *log.Logger) (d *Dataset, err error) {
 
 	if err != nil {
 		logger.Panic("Cannot create database")
+		return nil, err
 	}
 
 	_ = d.AddColumn("Name", spss.STRING)

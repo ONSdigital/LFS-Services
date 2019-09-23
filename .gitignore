@@ -24,3 +24,4 @@ testdata/export_test.sav
 testdata/test_output.sav
 
 !.idea/
+go.sum
