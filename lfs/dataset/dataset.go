@@ -44,11 +44,11 @@ var settings = sqlite.ConnectionURL{
 	//Database: "LFS.db",
 	Database: ":memory:",
 	Options: map[string]string{
-		"cache": "shared",
-		//"_synchronous": "OFF", // when not using memory: we don't need this
+		"cache":        "shared",
+		"_synchronous": "OFF", // when not using memory: we don't need this
 		//"_journal":     "WAL", // much, MUCH faster
-		//"_journal": "OFF",    // much, MUCH faster
-		"mode": "memory", // memory=prod otherwise debug so we can see the file
+		"_journal": "OFF",    // much, MUCH faster
+		"mode":     "memory", // memory=prod otherwise debug so we can see the file
 	},
 }
 
@@ -97,10 +97,10 @@ func (d *Dataset) BulkInsert(values []map[string]interface{}) (err error) {
 	var vBuffer bytes.Buffer
 	var sqlStatement bytes.Buffer
 
-	tx, err := d.DB.NewTx(nil)
-	if err != nil {
-		return fmt.Errorf(" -> InsertBulk: cannot create a transaction: %s", err)
-	}
+	//tx, err := d.DB.NewTx(nil)
+	//if err != nil {
+	//	return fmt.Errorf(" -> InsertBulk: cannot create a transaction: %s", err)
+	//}
 
 	for _, row := range values {
 		kBuffer.Reset()
@@ -130,15 +130,14 @@ func (d *Dataset) BulkInsert(values []map[string]interface{}) (err error) {
 		sqlStatement.WriteString(kBuffer.String() + vBuffer.String() + ";\n")
 	}
 
-	_, err = d.DB.Exec(sqlStatement.String())
-	if err != nil {
+	if _, err = d.DB.Exec(sqlStatement.String()); err != nil {
 		d.logger.Error(sqlStatement)
 		return fmt.Errorf(" -> InsertBulk: cannot insert rows: %s", err)
 	}
-	err = tx.Commit()
-	if err != nil {
-		return fmt.Errorf(" -> InsertBulk: commit transaction failed: %s", err)
-	}
+	//err = tx.Commit()
+	//if err != nil {
+	//	return fmt.Errorf(" -> InsertBulk: commit transaction failed: %s", err)
+	//}
 
 	return
 }
@@ -146,8 +145,7 @@ func (d *Dataset) BulkInsert(values []map[string]interface{}) (err error) {
 func (d *Dataset) Insert(values map[string]interface{}) (err error) {
 
 	q := d.DB.InsertInto(d.tableName).Values(values)
-	_, err = q.Exec()
-	if err != nil {
+	if _, err = q.Exec(); err != nil {
 		return fmt.Errorf(" -> Insert: cannot insert row: %s", err)
 	}
 	return
@@ -180,9 +178,9 @@ func (d *Dataset) Head(max ...int) error {
 
 	vals := make([]interface{}, len(cols))
 	var header []string
-	const MAX_COLS = 15
+	const maxCols = 15
 	for i, n := range cols {
-		if i > MAX_COLS {
+		if i > maxCols {
 			break
 		}
 		vals[i] = new(sql.RawBytes)
@@ -195,7 +193,7 @@ func (d *Dataset) Head(max ...int) error {
 
 		var rowItems []string
 		for col := 0; col < len(vals); col++ {
-			if col > MAX_COLS {
+			if col > maxCols {
 				break
 			}
 			res := vals[col]
@@ -365,14 +363,12 @@ func (d Dataset) DropColumn(column string) (err error) {
 	buffer.WriteString(" from ")
 	buffer.WriteString(fmt.Sprintf("%s", d.tableName))
 	q = buffer.String()
-	_, err = d.DB.Exec(q)
-	if err != nil {
+	if _, err = d.DB.Exec(q); err != nil {
 		return fmt.Errorf(" -> DropColumn: Exec() failed: %s", err)
 	}
 
 	// Delete existing table
-	_, err = d.DB.Exec(fmt.Sprintf("drop table %s", d.tableName))
-	if err != nil {
+	if _, err = d.DB.Exec(fmt.Sprintf("drop table %s", d.tableName)); err != nil {
 		return fmt.Errorf(" -> DropColumn: Exec() failed: %s", err)
 	}
 
@@ -390,8 +386,7 @@ func (d Dataset) DropColumn(column string) (err error) {
 	buffer.WriteString(")")
 
 	q = buffer.String()
-	_, err = d.DB.Exec(q)
-	if err != nil {
+	if _, err = d.DB.Exec(q); err != nil {
 		return fmt.Errorf(" -> DropColumn: Exec() failed: %s", err)
 	}
 
@@ -418,19 +413,16 @@ func (d Dataset) DropColumn(column string) (err error) {
 	buffer.WriteString(" from t1 ")
 
 	q = buffer.String()
-	_, err = d.DB.Exec(q)
-	if err != nil {
+	if _, err = d.DB.Exec(q); err != nil {
 		return fmt.Errorf(" -> DropColumn: Exec() failed: %s", err)
 	}
 
 	// Delete temporary table
-	_, err = d.DB.Exec("drop table t1")
-	if err != nil {
+	if _, err = d.DB.Exec("drop table t1"); err != nil {
 		return fmt.Errorf(" -> DropColumn: Exec() failed: %s", err)
 	}
 
-	err = tx.Commit()
-	if err != nil {
+	if err = tx.Commit(); err != nil {
 		return fmt.Errorf(" -> DropColumn: Commit() failed: %s", err)
 	}
 
@@ -440,8 +432,7 @@ func (d Dataset) DropColumn(column string) (err error) {
 func (d Dataset) DeleteWhere(where ...interface{}) (err error) {
 	err = nil
 	q := d.DB.DeleteFrom(d.tableName).Where(where)
-	_, err = q.Exec()
-	if err != nil {
+	if _, err = q.Exec(); err != nil {
 		return fmt.Errorf(" -> DeleteWhere: Exec failed: %w", err)
 	}
 	return
@@ -516,9 +507,7 @@ func (d Dataset) ToSpss(fileName string) error {
 		data = append(data, dataItem)
 	}
 
-	val := di.Export(fileName, d.tableName, header, data)
-
-	if val != 0 {
+	if val := di.Export(fileName, d.tableName, header, data); val != 0 {
 		return fmt.Errorf(" -> spss export to %s failed", fileName)
 	}
 
@@ -567,8 +556,7 @@ func (d Dataset) ToCSV(fileName string) error {
 
 	q := buffer.String()
 
-	_, err = f.WriteString(q)
-	if err != nil {
+	if _, err = f.WriteString(q); err != nil {
 		return fmt.Errorf(" -> ToCSV: write to file: %s failed: %s", fileName, err)
 	}
 
@@ -621,8 +609,7 @@ func (d Dataset) ToCSV(fileName string) error {
 
 		q := buffer.String()
 
-		_, err = f.WriteString(q)
-		if err != nil {
+		if _, err = f.WriteString(q); err != nil {
 			return fmt.Errorf(" -> ToCSV: write to file: %s failed: %s", fileName, err)
 		}
 	}
@@ -640,8 +627,7 @@ func (d Dataset) ToSQL() error {
 		_ = dbase.DB.Close()
 	}()
 
-	err = d.createTableFromDataset(dbase.DB)
-	if err != nil {
+	if err = d.createTableFromDataset(dbase.DB); err != nil {
 		return fmt.Errorf("cannot connect to database: %s", err)
 	}
 
@@ -845,8 +831,7 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 			return Dataset{}, fmt.Errorf(" -> createDataset: cannot convert struct variable type from SPSS type")
 		}
 
-		err := d.AddColumn(a.Name, spssType)
-		if err != nil {
+		if err := d.AddColumn(a.Name, spssType); err != nil {
 			return Dataset{}, fmt.Errorf(" -> createDataset: cannot create column %s, of type %s", a.Name, spssType)
 		}
 	}
@@ -856,6 +841,13 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 	count := 0
 
 	rs := make([]map[string]interface{}, 0)
+
+	var wg sync.WaitGroup
+	errorChannel := make(chan error)
+
+	//v := math.Ceil(float64(len(body) / BulkSize))
+	v := len(body) / BulkSize
+	wg.Add(v)
 
 	for _, spssRow := range body {
 		row := make(map[string]interface{})
@@ -925,20 +917,28 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 
 		rs = append(rs, row)
 		count++
-		if count%BulkSize == 0 {
-			err := d.BulkInsert(rs)
 
-			if err != nil {
-				return Dataset{}, fmt.Errorf(" -> createDataset: cannot create row: %s", err)
-			}
+		if count%BulkSize == 0 {
+			go func(rs []map[string]interface{}) {
+				defer wg.Done()
+				if err := d.BulkInsert(rs); err != nil {
+					errorChannel <- fmt.Errorf(" -> createDataset: cannot create row: %s", err)
+				}
+			}(rs)
 			rs = nil
 		}
 	}
 
-	if rs != nil {
-		err := d.BulkInsert(rs)
+	wg.Wait()
 
-		if err != nil {
+	select {
+	case err := <-errorChannel:
+		return Dataset{}, err
+	default:
+	}
+
+	if rs != nil {
+		if err := d.BulkInsert(rs); err != nil {
 			return Dataset{}, fmt.Errorf(" -> createDataset: cannot create row: %s", err)
 		}
 	}

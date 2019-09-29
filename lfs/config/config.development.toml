@@ -1,7 +1,7 @@
 
 debug = true
 
-testDirectory = "/home/paul/pds-go/testdata/"
+testDirectory = "/Users/paul/go/src/pds-go/testdata/"
 #testDirectory = "/Users/pauld/GolandProjects/pds-go/testdata/"
 
 [database]
