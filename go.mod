@@ -7,6 +7,7 @@ require (
 	github.com/deepilla/sqlitemeta v0.0.0-20171127071218-5c76bc47e374
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gocarina/gocsv v0.0.0-20190821091544-020a928c6f4e
+	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/jinzhu/gorm v1.9.9
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect

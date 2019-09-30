@@ -47,7 +47,7 @@ var settings = sqlite.ConnectionURL{
 		"cache":        "shared",
 		"_synchronous": "OFF", // when not using memory: we don't need this
 		//"_journal":     "WAL", // much, MUCH faster
-		"_journal": "OFF",    // much, MUCH faster
+		"_journal": "MEMORY", // much, MUCH faster
 		"mode":     "memory", // memory=prod otherwise debug so we can see the file
 	},
 }
@@ -731,7 +731,7 @@ func (d *Dataset) logLoad(from fromFileFunc) fromFileFunc {
 		startTime := time.Now()
 		res, err := from(fileName, out)
 		a := time.Now().Sub(startTime)
-		d.logger.Printf("file load processed in %s\n", a)
+		d.logger.Printf("file load processed in %s", a)
 		return res, err
 	}
 }
@@ -775,6 +775,8 @@ func (d *Dataset) readSav(in string, out interface{}) (dataset Dataset, err erro
 		return Dataset{}, fmt.Errorf(" -> FromSav: %T is not a struct type", out)
 	}
 
+	start := time.Now()
+
 	records, err := sav.ImportSav(in)
 	if err != nil {
 		return Dataset{}, err
@@ -784,10 +786,16 @@ func (d *Dataset) readSav(in string, out interface{}) (dataset Dataset, err erro
 		return Dataset{}, fmt.Errorf(" -> createDataset: spss file: %s is empty", in)
 	}
 
+	elapsed := time.Since(start)
+	d.logger.Info(fmt.Sprintf("read sav file (%d records) in %s", len(records), elapsed))
+
+	start = time.Now()
 	i, er := d.createDataset(in, records, out)
 	if er != nil {
 		return Dataset{}, er
 	}
+	elapsed = time.Since(start)
+	d.logger.Info(fmt.Sprintf("created dataset (%d records) in %s", len(records), elapsed))
 
 	return i, nil
 }
@@ -854,7 +862,7 @@ func (d *Dataset) createDataset(fileName string, rows [][]string, out interface{
 
 		for j := 0; j < len(spssRow); j++ {
 			if len(spssRow) != len(headers) {
-				return Dataset{}, fmt.Errorf(" -> createDataset: header is out of alignment with row. row size: %d, column size: %d\n", len(spssRow), len(headers))
+				return Dataset{}, fmt.Errorf(" -> createDataset: header is out of alignment with row. row size: %d, column size: %d", len(spssRow), len(headers))
 			}
 			header := headers[j]
 			// extract the columns we are interested in
