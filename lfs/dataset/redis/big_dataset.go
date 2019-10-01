@@ -510,7 +510,7 @@ type BigDataset struct {
 	BHNotA        float64 `spss:"BHNotA"`
 	BHNotB        float64 `spss:"BHNotB"`
 	BHNotC        float64 `spss:"BHNotC"`
-	UnionVar      float64 `spss:"Union"`
+	Union         float64 `spss:"Union"`
 	TUPres        float64 `spss:"TUPres"`
 	TUCov         float64 `spss:"TUCov"`
 	LIndD2        string  `spss:"LIndD2"`
