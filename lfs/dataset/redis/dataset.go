@@ -2,13 +2,14 @@ package redis
 
 import "C"
 import (
+	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gomodule/redigo/redis"
 	"github.com/olekukonko/tablewriter"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	"pds-go/lfs/db"
 	"pds-go/lfs/importdata/sav"
 	"reflect"
 	"strconv"
@@ -26,7 +27,6 @@ type Column struct {
 type Dataset struct {
 	tableName   string
 	Columns     map[string]Column
-	pool        *redis.Pool
 	mux         *sync.Mutex
 	logger      *log.Logger
 	rowCount    int
@@ -40,52 +40,11 @@ const (
 	COMMA                 = ","
 )
 
-func newPool() *redis.Pool {
-	return &redis.Pool{
-		// Maximum number of idle connections in the pool.
-		MaxIdle: 5,
-		// max number of connections
-		MaxActive: 100,
-		// Dial is an application supplied function for creating and
-		// configuring a connection.
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", ":6379")
-			if err != nil {
-				panic(err.Error())
-			}
-			return c, err
-		},
-	}
-}
-
-func ping(c redis.Conn) error {
-	pong, err := c.Do("PING")
-	if err != nil {
-		return err
-	}
-
-	if _, err := redis.String(pong, err); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func NewDataset(name string, logger *log.Logger) (Dataset, error) {
-
-	pool := newPool()
-	conn := pool.Get()
-	err := ping(conn)
-
-	if err != nil {
-		return Dataset{}, fmt.Errorf(" -> NewDataset: cannot connect to redis, error: %s", err)
-	}
-
-	_, _ = conn.Do("DEL", name)
 
 	mux := sync.Mutex{}
 	cols := make(map[string]Column, InitialColumnCapacity)
-	return Dataset{name, cols, pool, &mux, logger, 0, 0}, nil
+	return Dataset{name, cols, &mux, logger, 0, 0}, nil
 }
 
 type fromFileFunc func(fileName string, out interface{}) error
@@ -192,7 +151,7 @@ func (d *Dataset) DropColumn(name string) error {
 		return fmt.Errorf(" -> DropColumn: Column %s does not exist", name)
 	}
 
-	a := d.orderedColumns()
+	a := d.OrderedColumns()
 	m := make(map[string]Column, InitialColumnCapacity)
 
 	var colNo = 0
@@ -315,12 +274,16 @@ func (d *Dataset) populateDataset(fileName string, rows [][]string, out interfac
 	return nil
 }
 
-func (d Dataset) orderedColumns() []string {
+func (d Dataset) OrderedColumns() []string {
 	var keys = make([]string, d.columnCount)
 	for k, v := range d.Columns {
 		keys[v.colNo] = k
 	}
 	return keys
+}
+
+func (d *Dataset) getAllRows() ([]string, [][]string) {
+	return d.getByRow(d.rowCount, d.columnCount)
 }
 
 func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
@@ -332,7 +295,7 @@ func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
 		maxCols = d.columnCount
 	}
 
-	for _, v := range d.orderedColumns() {
+	for _, v := range d.OrderedColumns() {
 		if cnt > maxCols-1 {
 			break
 		}
@@ -439,44 +402,50 @@ func (d Dataset) Mean(name string) (float64, error) {
 	return avg / float64(d.rowCount), nil
 }
 
-//func (d *Dataset) BulkInsert(values []map[string]interface{}) (err error) {
-//	var kBuffer bytes.Buffer
-//
-//	conn := d.pool.Get()
-//	defer func() {
-//		_ = conn.Close()
-//	}()
-//
-//	for _, row := range values {
-//		kBuffer.Reset()
-//		kBuffer.WriteString("{")
-//		d.count++
-//		rowLabel := fmt.Sprintf("%s:%d", d.tableName, d.count)
-//
-//		var i = 0
-//		for k, v := range row {
-//			kBuffer.WriteString(fmt.Sprintf("\"%s\":", k))
-//			if d.TableMetaData[k] == reflect.String {
-//				a := fmt.Sprintf("%s", v)
-//				a = strings.Replace(a, "'", `''`, -1)
-//				kBuffer.WriteString("\"" + a + "\"")
-//			} else {
-//				kBuffer.WriteString(fmt.Sprintf("%s", v))
-//			}
-//			if i != len(row)-1 {
-//				kBuffer.WriteString(",")
-//			} else {
-//				kBuffer.WriteString("}")
-//			}
-//			i++
-//		}
-//
-//		_, err := conn.Do("SET", rowLabel, kBuffer.String())
-//		if err != nil {
-//			panic(err)
-//		}
-//
-//	}
-//
-//	return
-//}
+func (d *Dataset) PersistDataset() (err error) {
+	var kBuffer bytes.Buffer
+
+	dbase := db.GetPersistenceImpl()
+	if err := dbase.Connect(d.logger); err != nil {
+		return fmt.Errorf(" -> NewDataset: cannot connect to database, error: %s", err)
+	}
+
+	defer dbase.Close()
+
+	_ = dbase.DropTable(d.tableName)
+
+	header, items := d.getAllRows()
+
+	for row_no, row := range items {
+		kBuffer.Reset()
+		kBuffer.WriteString("{")
+
+		rowLabel := fmt.Sprintf("%s:%d", d.tableName, row_no)
+
+		var i = 0
+		for k, v := range row {
+			kBuffer.WriteString(fmt.Sprintf("\"%s\":", k))
+			if d.TableMetaData[k] == reflect.String {
+				a := fmt.Sprintf("%s", v)
+				a = strings.Replace(a, "'", `''`, -1)
+				kBuffer.WriteString("\"" + a + "\"")
+			} else {
+				kBuffer.WriteString(fmt.Sprintf("%s", v))
+			}
+			if i != len(row)-1 {
+				kBuffer.WriteString(",")
+			} else {
+				kBuffer.WriteString("}")
+			}
+			i++
+		}
+
+		_, err := conn.Do("SET", rowLabel, kBuffer.String())
+		if err != nil {
+			panic(err)
+		}
+
+	}
+
+	return
+}

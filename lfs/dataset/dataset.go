@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
-	"pds-go/lfs/db"
+	"pds-go/lfs/db/mysql"
 	di "pds-go/lfs/exportdata/sav"
 	imcsv "pds-go/lfs/importdata/csv"
 	"pds-go/lfs/importdata/sav"
@@ -618,7 +618,7 @@ func (d Dataset) ToCSV(fileName string) error {
 }
 
 func (d Dataset) ToSQL() error {
-	dbase, err := db.NewSQL(d.logger)
+	dbase, err := mysql.NewSQL(d.logger)
 	if err != nil {
 		return fmt.Errorf("cannot connect to database: %s", err)
 	}
