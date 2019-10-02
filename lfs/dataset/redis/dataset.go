@@ -81,7 +81,7 @@ func (d *Dataset) readSav(in string, out interface{}) error {
 	}
 
 	elapsed := time.Since(start)
-	d.logger.Info(fmt.Sprintf("read sav file (%d records) in %s", len(records), elapsed))
+	d.logger.Info(fmt.Sprintf("read sav file (%d records) in %s", len(records)-1, elapsed))
 
 	start = time.Now()
 	er := d.populateDataset(in, records, out)
