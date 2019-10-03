@@ -2,7 +2,7 @@ package db
 
 import (
 	logger "github.com/sirupsen/logrus"
-	"pds-go/lfs/db/mysql"
+	"pds-go/lfs/dataset"
 	"sync"
 )
 
@@ -17,22 +17,14 @@ type Connection struct {
 	Verbose    bool
 }
 
-func (c Connection) DropTable(name string) error {
-	return c.Connection.DropTable(name)
-}
-
-func (c Connection) Close() {
-	c.Connection.Close()
-}
-
-func GetPersistenceImpl() Persistence {
+func GetDefaultPersistenceImpl(log *logger.Logger) Persistence {
 	// Maybe get this from config
-	return mysql.MySQL{}
+	return &MySQL{nil, log}
 }
 
 type Persistence interface {
-	Connect(*logger.Logger) error
-	DropTable(name string) error
+	Connect() error
 	Close()
-	Insert(name string) error
+	PersistDataset(d dataset.Dataset) error
+	UnpersistDataset(tableName string) (dataset.Dataset, error)
 }
