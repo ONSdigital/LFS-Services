@@ -5,7 +5,6 @@ go 1.12
 require (
 	github.com/caarlos0/env/v6 v6.0.0
 	github.com/deepilla/sqlitemeta v0.0.0-20171127071218-5c76bc47e374
-	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gocarina/gocsv v0.0.0-20190821091544-020a928c6f4e
 	github.com/jinzhu/gorm v1.9.9
 	github.com/kr/pretty v0.1.0 // indirect
