@@ -1,0 +1,21 @@
+
+debug = true
+
+#testDirectory = "/Users/paul/go/src/pds-go/testdata/"
+testDirectory = "/Users/paul/ONS/LFS/LFS-Services/testdata/"
+
+[database]
+
+# database tables configuration
+columnsTable = "columns"
+
+# connections configuration
+server = "localhost" # set by environment variables
+user = "lfs" # set by environment variables
+password = "lfs" # set by environment variables
+verbose = false
+database = "LFS" # set by environment variables
+    [database.pool]
+       maxPoolSize = 10
+       maxIdleConnections = 2
+       maxLifetimeSeconds = 0

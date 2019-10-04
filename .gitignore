@@ -17,7 +17,7 @@
 # vendor/
 
 .idea/
-lfs/dataset/LFS.db
+dataset/LFS.db
 testdata/out.csv
 lfs/services/
 testdata/export_test.sav
