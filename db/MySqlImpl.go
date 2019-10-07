@@ -37,11 +37,16 @@ func (s *MySQL) Connect() error {
 		Password: config.Config.Database.Password,
 	}
 
-	s.log.Debug("Connecting to database: ", config.Config.Database.Database)
+	s.log.WithFields(logger.Fields{
+		"database": config.Config.Database.Database,
+	}).Debug("Connecting to database...")
+
 	sess, err := mysql.Open(settings)
 
 	if err != nil {
-		s.log.Fatal(fmt.Errorf("cannot open database connection %v", err))
+		s.log.WithFields(logger.Fields{
+			"error": err,
+		}).Error("cannot open database connection")
 		return err
 	}
 
@@ -63,8 +68,10 @@ func (s *MySQL) Connect() error {
 		s.log.Debug("MaxLifetime: ", maxLifetime)
 	}
 
-	s.log.Debug("MaxPoolSize: ", poolSize)
-	s.log.Debug("MaxIdleConnections: ", maxIdle)
+	s.log.WithFields(logger.Fields{
+		"MaxPoolSize":        poolSize,
+		"MaxIdleConnections": maxIdle,
+	}).Debug("Connection Attributes")
 
 	sess.SetMaxOpenConns(poolSize)
 	sess.SetMaxIdleConns(maxIdle)
@@ -176,7 +183,7 @@ func (s MySQL) UnpersistDataset(tableName string) (dataset.Dataset, error) {
 	}
 
 	a := time.Now().Sub(startTime)
-	s.log.Info("data unpersisted in ", a.String())
+	s.log.WithFields(logger.Fields{"ElapsedTime": a.String()}).Debug("Data unpersisted")
 	return d, nil
 }
 
@@ -196,6 +203,9 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 
 	tx, err := s.DB.NewTx(nil)
 	if err != nil {
+		s.log.WithFields(logger.Fields{
+			"Error": err,
+		}).Error("Cannot start a transaction")
 		return fmt.Errorf(" -> PersistData: cannot start a transaction, error: %s", err)
 	}
 
@@ -237,11 +247,15 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 	}
 
 	if err := tx.Commit(); err != nil {
+		s.log.WithFields(logger.Fields{
+			"Error": err,
+		}).Error("Commit failed")
 		return fmt.Errorf(" -> PersistData: commit failed, error: %s", err)
 	}
 
 	a := time.Now().Sub(startTime)
-	s.log.Info(fmt.Sprintf("data persisted in %s", a.String()))
+
+	s.log.WithFields(logger.Fields{"ElapsedTime": a.String()}).Debug("Data persisted")
 
 	return nil
 }

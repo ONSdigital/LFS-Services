@@ -13,7 +13,7 @@ func main() {
 	router := mux.NewRouter()
 	logger := log.New()
 	restHandlers := api.NewRestHandler(logger)
-	logger.Info("Starting up")
+	logger.Info("LFS Services: Starting up")
 	router.HandleFunc("/import/survey/{run_id}", restHandlers.FileUploadHandler).Methods("POST")
 
 	listenAddress := config.Config.Service.ListenAddress
@@ -25,6 +25,6 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	logger.Info("Waiting for requests")
+	logger.Info("LFS Services: Waiting for requests")
 	logger.Fatal(srv.ListenAndServe())
 }

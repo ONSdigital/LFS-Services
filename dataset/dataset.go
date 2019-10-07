@@ -106,9 +106,9 @@ func (d *Dataset) readCSV(in string, out interface{}) error {
 	}).Info("read CSV file")
 
 	start = time.Now()
-	er := d.populateDataset(in, records, out)
-	if er != nil {
-		return er
+	err = d.populateDataset(in, records, out)
+	if err != nil {
+		return err
 	}
 
 	elapsed = time.Since(start)
