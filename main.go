@@ -4,15 +4,15 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"services/api"
 	"services/config"
-	"services/services"
 	"time"
 )
 
 func main() {
 	router := mux.NewRouter()
 	logger := log.New()
-	restHandlers := services.NewRestHandler(logger)
+	restHandlers := api.NewRestHandler(logger)
 	logger.Info("Starting up")
 	router.HandleFunc("/import/survey/{run_id}", restHandlers.FileUploadHandler).Methods("POST")
 
