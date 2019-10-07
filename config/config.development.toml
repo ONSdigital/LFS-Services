@@ -19,3 +19,7 @@ database = "LFS" # set by environment variables
        maxPoolSize = 10
        maxIdleConnections = 2
        maxLifetimeSeconds = 0
+
+[service]
+
+port = ":8000"

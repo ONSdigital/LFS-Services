@@ -1,8 +1,8 @@
 package importdata
 
 import (
-	"lfs/lfs-services/importdata/csv"
-	"lfs/lfs-services/importdata/sav"
+	"services/importdata/csv"
+	"services/importdata/sav"
 )
 
 type ImportFunction func(fileName string, out interface{}) error

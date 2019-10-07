@@ -1,7 +1,7 @@
 package exportdata
 
-import "lfs/lfs-services/exportdata/sav"
-import "lfs/lfs-services/exportdata/csv"
+import "services/exportdata/sav"
+import "services/exportdata/csv"
 
 type ExportFunction func(fileName string, out interface{}) error
 

@@ -1,7 +1,7 @@
 package config_test
 
 import (
-	conf "lfs/lfs-services/config"
+	conf "services/config"
 	"testing"
 )
 
@@ -46,6 +46,14 @@ func TestConfig(t *testing.T) {
 		t.Errorf("columnsTable = %s, want columns", columnsTable)
 	} else {
 		t.Logf("columnsTable %s\n", columnsTable)
+	}
+
+	address := conf.Config.Service.ListenAddress
+	expected := "127.0.0.1:8000"
+	if address != expected {
+		t.Errorf("address = %s, want %s", address, expected)
+	} else {
+		t.Logf("port %s\n", address)
 	}
 
 }

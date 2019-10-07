@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	log "github.com/sirupsen/logrus"
-	di "lfs/lfs-services/exportdata/sav"
-	imcsv "lfs/lfs-services/importdata/csv"
-	"lfs/lfs-services/importdata/sav"
-	"lfs/lfs-services/io/spss"
 	"os"
 	"path/filepath"
 	"reflect"
+	di "services/exportdata/sav"
+	imcsv "services/importdata/csv"
+	"services/importdata/sav"
+	"services/io/spss"
 	"strconv"
 	"strings"
 	"sync"
@@ -38,7 +38,6 @@ type Dataset struct {
 const (
 	InitialRowCapacity    = 20000
 	InitialColumnCapacity = 2000
-	COMMA                 = ","
 )
 
 func NewDataset(name string, logger *log.Logger) (Dataset, error) {
@@ -54,7 +53,13 @@ func (d *Dataset) logTime(from fromFileFunc) fromFileFunc {
 		startTime := time.Now()
 		err := from(fileName, out)
 		a := time.Now().Sub(startTime)
-		d.logger.Printf("load processed in %s", a)
+
+		d.logger.WithFields(log.Fields{
+			"method":      "logTime",
+			"file":        fileName,
+			"elapsedTime": a,
+		}).Info("load processed")
+
 		return err
 	}
 }
@@ -67,29 +72,52 @@ func (d *Dataset) readCSV(in string, out interface{}) error {
 
 	// ensure out is a struct
 	if reflect.ValueOf(out).Kind() != reflect.Struct {
+		d.logger.WithFields(log.Fields{
+			"method": "readCSV",
+			"file":   in,
+		}).Error("the output interface is not a struct")
 		return fmt.Errorf(" -> FromCSV: %T is not a struct type", out)
 	}
 
 	start := time.Now()
 	records, err := imcsv.ImportCSVToSlice(in)
 	if err != nil {
+		d.logger.WithFields(log.Fields{
+			"method": "readCSV",
+			"file":   in,
+		}).Error("cannot import CSV file")
 		return fmt.Errorf(" -> FromCSV: cannot import CSV file %w", err)
 	}
 
 	if len(records) == 0 {
+		d.logger.WithFields(log.Fields{
+			"method": "readCSV",
+			"file":   in,
+		}).Error("the CSV file is empty")
 		return fmt.Errorf(" -> FromCSV: csv file: %s is empty", in)
 	}
 
 	elapsed := time.Since(start)
-	d.logger.Info(fmt.Sprintf("read sav file (%d records) in %s", len(records)-1, elapsed))
+	d.logger.WithFields(log.Fields{
+		"method":      "readCSV",
+		"file":        in,
+		"records":     len(records) - 1,
+		"elapsedTime": elapsed,
+	}).Info("read CSV file")
 
 	start = time.Now()
 	er := d.populateDataset(in, records, out)
 	if er != nil {
 		return er
 	}
+
 	elapsed = time.Since(start)
-	d.logger.Info(fmt.Sprintf("created dataset (%d records) in %s", d.RowCount, elapsed))
+
+	d.logger.WithFields(log.Fields{
+		"method":      "readCSV",
+		"records":     d.RowCount,
+		"elapsedTime": elapsed,
+	}).Info("dataset created")
 
 	return nil
 }
@@ -101,7 +129,11 @@ func (d *Dataset) LoadSav(fileName string, out interface{}) error {
 func (d *Dataset) readSav(in string, out interface{}) error {
 	// ensure out is a struct
 	if reflect.ValueOf(out).Kind() != reflect.Struct {
-		return fmt.Errorf(" -> FromSav: %T is not a struct type", out)
+		d.logger.WithFields(log.Fields{
+			"method": "readSav",
+			"file":   in,
+		}).Error("the output interface is not a struct")
+		return fmt.Errorf(" -> readSav: %T is not a struct type", out)
 	}
 
 	start := time.Now()
@@ -112,11 +144,21 @@ func (d *Dataset) readSav(in string, out interface{}) error {
 	}
 
 	if len(records) == 0 {
-		return fmt.Errorf(" -> populateDataset: spss file: %s is empty", in)
+		d.logger.WithFields(log.Fields{
+			"method": "readSav",
+			"file":   in,
+		}).Error("the sav file is empty")
+		return fmt.Errorf(" -> readSav: spss file: %s is empty", in)
 	}
 
 	elapsed := time.Since(start)
-	d.logger.Info(fmt.Sprintf("read sav file (%d records) in %s", len(records)-1, elapsed))
+
+	d.logger.WithFields(log.Fields{
+		"method":      "readSav",
+		"file":        in,
+		"records":     len(records) - 1,
+		"elapsedTime": elapsed,
+	}).Info("read sav file")
 
 	start = time.Now()
 	er := d.populateDataset(in, records, out)
@@ -124,7 +166,12 @@ func (d *Dataset) readSav(in string, out interface{}) error {
 		return er
 	}
 	elapsed = time.Since(start)
-	d.logger.Info(fmt.Sprintf("created dataset (%d records) in %s", d.RowCount, elapsed))
+
+	d.logger.WithFields(log.Fields{
+		"method":      "readSav",
+		"records":     d.RowCount,
+		"elapsedTime": elapsed,
+	}).Info("dataset created")
 
 	return nil
 }
@@ -148,6 +195,10 @@ func (d Dataset) ToSAV(fileName string) error {
 		case reflect.Float64:
 			spssType = spss.ReadstatTypeDouble
 		default:
+			d.logger.WithFields(log.Fields{
+				"method":   "ToSAV",
+				"variable": cols[i],
+			}).Error("cannot convert type for struct variable into equivelent SPSS type")
 			return fmt.Errorf("cannot convert type for struct variable %s into equivelent SPSS type", cols[i])
 		}
 		header = append(header, di.Header{SavType: spssType, Name: cols[i], Label: cols[i] + " label"})
@@ -196,14 +247,17 @@ func (d Dataset) ToSAV(fileName string) error {
 				}
 				dataItem.Value = append(dataItem.Value, cv)
 			default:
-				return fmt.Errorf(" -> ToSpss: unknown type - possible corruption")
+				return fmt.Errorf(" -> ToSAV: unknown type - possible corruption")
 			}
 		}
 		data = append(data, dataItem)
 	}
 
 	if val := di.Export(fileName, d.TableName, header, data); val != 0 {
-		return fmt.Errorf(" -> spss export to %s failed", fileName)
+		d.logger.WithFields(log.Fields{"method": "ToSAV",
+			"file": fileName,
+		}).Error("spss export failed")
+		return fmt.Errorf(" -> ToSAV: spss export to %s failed", fileName)
 	}
 
 	return nil
@@ -212,6 +266,10 @@ func (d Dataset) ToSAV(fileName string) error {
 func (d Dataset) ToCSV(fileName string) error {
 	f, err := os.Create(fileName)
 	if err != nil {
+		d.logger.WithFields(log.Fields{
+			"method": "ToCSV",
+			"file":   fileName,
+		}).Error("cannot create CSV output file")
 		return fmt.Errorf(" -> ToCSV: cannot open output csv file: %s", err)
 	}
 
@@ -235,6 +293,10 @@ func (d Dataset) ToCSV(fileName string) error {
 	q := buffer.String()
 
 	if _, err = f.WriteString(q); err != nil {
+		d.logger.WithFields(log.Fields{
+			"method": "ToCSV",
+			"file":   fileName,
+		}).Error("cannot write to CSV file")
 		return fmt.Errorf(" -> ToCSV: write to file: %s failed: %s", fileName, err)
 	}
 
@@ -252,6 +314,10 @@ func (d Dataset) ToCSV(fileName string) error {
 		q := buffer.String()
 
 		if _, err = f.WriteString(q); err != nil {
+			d.logger.WithFields(log.Fields{
+				"method": "ToCSV",
+				"file":   fileName,
+			}).Error("cannot write to CSV file")
 			return fmt.Errorf(" -> ToCSV: write to file: %s failed: %s", fileName, err)
 		}
 	}
@@ -264,6 +330,11 @@ func (d *Dataset) AddRow(row map[string]interface{}) error {
 	//defer d.mux.Unlock()
 
 	if len(row) != len(d.Columns) {
+		d.logger.WithFields(log.Fields{
+			"method":   "AddRow",
+			"expected": len(d.Columns),
+			"got":      len(row),
+		}).Error("Column count mismatch")
 		return fmt.Errorf(" -> AddRow: Column count mismatch. Expected %d, got %d", len(d.Columns), len(row))
 	}
 	for k, v := range row {
@@ -280,6 +351,10 @@ func (d *Dataset) AddColumn(name string, columnType reflect.Kind) error {
 	defer d.mux.Unlock()
 
 	if _, ok := d.Columns[name]; ok {
+		d.logger.WithFields(log.Fields{
+			"method": "AddColumn",
+			"column": name,
+		}).Error("Column already exists")
 		return fmt.Errorf(" -> AddColumn: Column %s already exists", name)
 	}
 

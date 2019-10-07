@@ -4,8 +4,8 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"lfs/lfs-services/io/spss"
 	"reflect"
+	"services/io/spss"
 )
 
 type Reader interface {

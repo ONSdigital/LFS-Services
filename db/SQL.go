@@ -2,7 +2,7 @@ package db
 
 import (
 	logger "github.com/sirupsen/logrus"
-	"lfs/lfs-services/dataset"
+	"services/dataset"
 	"sync"
 )
 
