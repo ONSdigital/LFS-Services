@@ -1,8 +1,8 @@
 package importdata_test
 
 import (
-	conf "lfs/lfs-services/config"
-	im "lfs/lfs-services/importdata"
+	conf "services/config"
+	im "services/importdata"
 	"testing"
 )
 

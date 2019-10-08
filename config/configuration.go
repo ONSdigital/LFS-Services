@@ -4,4 +4,5 @@ type configuration struct {
 	Debug         bool
 	TestDirectory string
 	Database      DatabaseConfiguration
+	Service       ServiceConfiguration
 }

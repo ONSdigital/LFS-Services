@@ -2,10 +2,10 @@ package dataset_test
 
 import (
 	log "github.com/sirupsen/logrus"
-	conf "lfs/lfs-services/config"
-	"lfs/lfs-services/dataset"
-	"lfs/lfs-services/db"
 	"math"
+	conf "services/config"
+	"services/dataset"
+	"services/db"
 	"testing"
 )
 
@@ -81,7 +81,7 @@ func TestFromSav(t *testing.T) {
 		logger.Error(err)
 		t.FailNow()
 	}
-	logger.Printf("dataset contains %d row(s)\n", d.NumRows())
+
 	_ = d.Head(5)
 }
 
@@ -98,6 +98,7 @@ func TestToCSV(t *testing.T) {
 		DVLineName   string  `csv:"DVLineName"`
 		DVPortName   string  `csv:"DVPortName"`
 	}
+
 	logger := log.New()
 
 	d, err := dataset.NewDataset("test", logger)

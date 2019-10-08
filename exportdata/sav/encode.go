@@ -2,9 +2,9 @@ package sav
 
 import (
 	"fmt"
-	"lfs/lfs-services/io/spss"
 	"log"
 	"reflect"
+	"services/io/spss"
 	"strconv"
 )
 

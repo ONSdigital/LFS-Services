@@ -11,7 +11,7 @@ package sav
 import "C"
 import (
 	"fmt"
-	"lfs/lfs-services/io/spss"
+	"services/io/spss"
 	"unsafe"
 )
 

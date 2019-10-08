@@ -1,9 +1,9 @@
 package exportdata_test
 
 import (
-	conf "lfs/lfs-services/config"
-	ext "lfs/lfs-services/exportdata"
-	imp "lfs/lfs-services/importdata"
+	conf "services/config"
+	ext "services/exportdata"
+	imp "services/importdata"
 	"testing"
 )
 
