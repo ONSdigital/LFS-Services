@@ -5,4 +5,6 @@ type configuration struct {
 	TestDirectory string
 	Database      DatabaseConfiguration
 	Service       ServiceConfiguration
+	Rename        Rename
+	DropColumns   DropColumns
 }

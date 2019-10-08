@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
+	"services/api/filters"
 )
 
 func (h RestHandlers) fileUpload() error {
@@ -61,7 +62,11 @@ func (h RestHandlers) geogUpload() {
 }
 
 func (h RestHandlers) surveyUpload() {
-
+	// load into dataset
+	// pass dataset to filter
+	filter := filters.NewSurveyFilter(nil)
+	filter.DropColumns()
+	filter.RenameColumns()
 }
 
 func (h RestHandlers) getParameter(parameter string) (string, error) {

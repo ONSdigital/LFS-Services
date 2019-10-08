@@ -26,6 +26,13 @@ listenAddress = "127.0.0.1:8000"
 readTimeout = "15s"
 writeTimeout = "15s"
 
-[filters]
+[[rename.survey]]
+    from = "YPTCIA"
+    to = "YPTCIA-renamed"
 
-    [survey]
+[[rename.survey]]
+    from = "TRONJB"
+    to = "TRONJB-renamed"
+
+[dropColumns.survey]
+    ColumnNames = ["SOC2KA_INDEX", "HLDCOUNT"]
