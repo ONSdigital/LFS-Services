@@ -2,20 +2,26 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
 const (
-	SURVEY_FILE = "Survey"
-	GEOG_FILE   = "Geog"
+	SurveyFile = "Survey"
+	GeogFile   = "Geog"
 )
 
-type Response struct {
+type Response interface {
+	sendResponse(w http.ResponseWriter, r *http.Request)
+}
+
+type ErrorResponse struct {
 	Status       string `json:"status"`
-	ErrorMessage string `json:"status"`
-	Request      string `json:"request"`
+	ErrorMessage string `json:"errorMessage"`
+}
+
+type OkayResponse struct {
+	Status string `json:"status"`
 }
 
 type RestHandlers struct {
@@ -29,38 +35,37 @@ func NewRestHandler(log *log.Logger) *RestHandlers {
 	return &RestHandlers{log, nil, nil}
 }
 
-func (handler RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
+func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	log.WithFields(log.Fields{
 		"client": r.RemoteAddr,
 		"uri":    r.RequestURI,
 	}).Debug("Received new FileUpload Request")
 
-	handler.w = w
-	handler.r = r
+	h.w = w
+	h.r = r
 
-	res := handler.fileUpload()
+	res := h.fileUpload()
 
 	w.Header().Set("Content-Type", "application/json")
-	vars := mux.Vars(r)
 	w.WriteHeader(http.StatusOK)
 
-	var stat Response
-
-	if res == nil {
-		stat = Response{
-			"OK",
-			res.Error(),
-			vars["run_id"],
-		}
+	if res != nil {
+		ErrorResponse{Status: "ERROR", ErrorMessage: res.Error()}.sendResponse(w, r)
 	} else {
-		stat = Response{
-			"OK",
-			nil,
-			vars["run_id"],
-		}
+		OkayResponse{"OK"}.sendResponse(w, r)
 	}
+}
 
-	if err := json.NewEncoder(w).Encode(stat); err != nil {
+func (response OkayResponse) sendResponse(w http.ResponseWriter, r *http.Request) {
+	send(w, r, response)
+}
+
+func (response ErrorResponse) sendResponse(w http.ResponseWriter, r *http.Request) {
+	send(w, r, response)
+}
+
+func send(w http.ResponseWriter, r *http.Request, response Response) {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.WithFields(log.Fields{
 			"client": r.RemoteAddr,
 			"uri":    r.RequestURI,

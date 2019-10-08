@@ -25,3 +25,7 @@ database = "LFS" # set by environment variables
 listenAddress = "127.0.0.1:8000"
 readTimeout = "15s"
 writeTimeout = "15s"
+
+[filters]
+
+    [survey]
