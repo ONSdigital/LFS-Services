@@ -56,4 +56,20 @@ func TestConfig(t *testing.T) {
 		t.Logf("port %s\n", address)
 	}
 
+	readTimeout := conf.Config.Service.ReadTimeout
+	expectedTimeout := "15s"
+	if readTimeout != expectedTimeout {
+		t.Errorf("readTimeout = %s, want %s", readTimeout, expectedTimeout)
+	} else {
+		t.Logf("readTimeout %s\n", readTimeout)
+	}
+
+	writeTimeout := conf.Config.Service.WriteTimeout
+	expectedTimeout = "15s"
+	if readTimeout != expectedTimeout {
+		t.Errorf("writeTimeout = %s, want %s", writeTimeout, expectedTimeout)
+	} else {
+		t.Logf("writeTimeout %s\n", writeTimeout)
+	}
+
 }

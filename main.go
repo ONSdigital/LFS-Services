@@ -17,14 +17,27 @@ func main() {
 	router.HandleFunc("/import/survey/{run_id}", restHandlers.FileUploadHandler).Methods("POST")
 
 	listenAddress := config.Config.Service.ListenAddress
+	writeTimeout, err := time.ParseDuration(config.Config.Service.WriteTimeout)
+	if err != nil {
+		panic("writeTimeout configuration error")
+	}
+	readTimeout, err := time.ParseDuration(config.Config.Service.ReadTimeout)
+	if err != nil {
+		panic("readTimeout configuration error")
+	}
 
 	srv := &http.Server{
 		Handler:      router,
 		Addr:         listenAddress,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		WriteTimeout: writeTimeout,
+		ReadTimeout:  readTimeout,
 	}
 
-	logger.Info("LFS Services: Waiting for requests")
+	logger.WithFields(log.Fields{
+		"listenAddress": listenAddress,
+		"writeTimeout":  writeTimeout,
+		"readTimeout":   readTimeout,
+	}).Info("LFS Services: Waiting for requests")
+
 	logger.Fatal(srv.ListenAndServe())
 }
