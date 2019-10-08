@@ -1,8 +1,8 @@
 
 debug = true
 
-#testDirectory = "/Users/paul/go/src/pds-go/testdata/"
-testDirectory = "/Users/paul/ONS/LFS/LFS-Services/testdata/"
+testDirectory = "/Users/paul/LFS/LFS-Services/testdata/"
+#testDirectory = "/Users/paul/ONS/LFS/LFS-Services/testdata/"
 
 [database]
 
@@ -19,3 +19,9 @@ database = "LFS" # set by environment variables
        maxPoolSize = 10
        maxIdleConnections = 2
        maxLifetimeSeconds = 0
+
+[service]
+
+listenAddress = "127.0.0.1:8000"
+readTimeout = "15s"
+writeTimeout = "15s"

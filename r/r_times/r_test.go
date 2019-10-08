@@ -2,9 +2,9 @@ package r_times_test
 
 import (
 	"fmt"
-	"lfs/lfs-services/r"
-	times "lfs/lfs-services/r/r_times"
 	"log"
+	"services/r"
+	times "services/r/r_times"
 	"testing"
 )
 
