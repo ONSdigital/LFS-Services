@@ -18,14 +18,16 @@ func (sf SurveyFilter) DropColumns(dataset *dataset.Dataset) {
 	drop := conf.Config.DropColumns.Survey
 
 	for _, v := range drop.ColumnNames {
-		sf.log.WithFields(log.Fields{
-			"column": v,
-		}).Info("Drop column")
 		if err := dataset.DropColumn(v); err != nil {
 			sf.log.WithFields(log.Fields{
 				"column": v,
-			}).Warn("drop column not found - ignored")
+			}).Warn("Drop column: column not found - ignored")
+		} else {
+			sf.log.WithFields(log.Fields{
+				"column": v,
+			}).Info("Column dropped")
 		}
+
 	}
 }
 
@@ -41,7 +43,7 @@ func (sf SurveyFilter) RenameColumns(dataset *dataset.Dataset) {
 			sf.log.WithFields(log.Fields{
 				"from": v.From,
 				"to":   v.To,
-			}).Warn("Rename column not found - ignored")
+			}).Warn("Rename column: column not found - ignored")
 		}
 	}
 }
