@@ -191,7 +191,9 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 	var kBuffer bytes.Buffer
 
 	startTime := time.Now()
-	s.log.Info("starting persistence")
+	s.log.WithFields(logger.Fields{
+		"tableName": d.DatasetName,
+	}).Info("Starting persistence into table")
 
 	if err := s.Connect(); err != nil {
 		return fmt.Errorf(" -> PersistData: cannot connect to database, error: %s", err)
@@ -199,7 +201,7 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 
 	defer s.Close()
 
-	_ = s.DeleteColumnData(d.TableName)
+	_ = s.DeleteColumnData(d.DatasetName)
 
 	tx, err := s.DB.NewTx(nil)
 	if err != nil {
@@ -241,7 +243,7 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 			i++
 		}
 
-		if err := s.insertColumnData(tx, d.TableName, colName, column.ColNo, int(columnKind), kBuffer.String()); err != nil {
+		if err := s.insertColumnData(tx, d.DatasetName, colName, column.ColNo, int(columnKind), kBuffer.String()); err != nil {
 			return fmt.Errorf(" -> PersistData: cannot insert column, error: %s", err)
 		}
 	}

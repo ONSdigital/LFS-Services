@@ -16,7 +16,7 @@ func setupDataset(logger *log.Logger) (*dataset.Dataset, error) {
 		return &dataset.Dataset{}, nil
 	}
 
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", dataset.BigDataset{})
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", dataset.Survey{})
 	if err != nil {
 		logger.Error(err)
 		return &dataset.Dataset{}, nil
@@ -76,7 +76,7 @@ func TestFromSav(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", dataset.BigDataset{})
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", dataset.Survey{})
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
@@ -106,7 +106,7 @@ func TestToCSV(t *testing.T) {
 		logger.Panic(err)
 	}
 
-	err = d.LoadSav(testDirectory()+"ips1710bv2.sav", TestDataset{})
+	err = d.LoadSav(testDirectory()+"ips1710bv2.sav", "test", TestDataset{})
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -140,7 +140,7 @@ func TestToSav(t *testing.T) {
 		logger.Panic(err)
 	}
 
-	err = d.LoadSav(testDirectory()+"ips1710bv2.sav", TestDataset{})
+	err = d.LoadSav(testDirectory()+"ips1710bv2.sav", "test", TestDataset{})
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -172,7 +172,7 @@ func TestFromCSV(t *testing.T) {
 		logger.Panic(err)
 	}
 
-	err = d.LoadCSV(testDirectory()+"out.csv", TestDataset{})
+	err = d.LoadCSV(testDirectory()+"out.csv", "Test", TestDataset{})
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -201,7 +201,7 @@ func TestPersist(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", dataset.BigDataset{})
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", dataset.Survey{})
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()

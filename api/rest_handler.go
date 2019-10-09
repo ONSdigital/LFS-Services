@@ -2,8 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"time"
 )
 
 const (
@@ -39,7 +41,9 @@ func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) 
 	log.WithFields(log.Fields{
 		"client": r.RemoteAddr,
 		"uri":    r.RequestURI,
-	}).Debug("Received new FileUpload Request")
+	}).Debug("Received FileUpload request")
+
+	startTime := time.Now()
 
 	h.w = w
 	h.r = r
@@ -52,23 +56,46 @@ func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) 
 	if res != nil {
 		ErrorResponse{Status: "ERROR", ErrorMessage: res.Error()}.sendResponse(w, r)
 	} else {
-		OkayResponse{"OK"}.sendResponse(w, r)
+		a := OkayResponse{"OK"}
+		sendResponse(h.w, h.r, a)
 	}
+
+	elapsed := time.Now().Sub(startTime)
+
+	log.WithFields(log.Fields{
+		"client":      r.RemoteAddr,
+		"uri":         r.RequestURI,
+		"elapsedTime": elapsed,
+	}).Debug("FileUpload request completed")
+
+}
+
+func (h RestHandlers) getParameter(parameter string) (string, error) {
+	keys, ok := h.r.URL.Query()[parameter]
+
+	if !ok || len(keys[0]) < 1 {
+		h.log.WithFields(log.Fields{
+			"parameter": parameter,
+		}).Error("URL parameter missing")
+		return "", fmt.Errorf("URL parameter, %s, is missing", parameter)
+	}
+
+	return keys[0], nil
 }
 
 func (response OkayResponse) sendResponse(w http.ResponseWriter, r *http.Request) {
-	send(w, r, response)
+	sendResponse(w, r, response)
 }
 
 func (response ErrorResponse) sendResponse(w http.ResponseWriter, r *http.Request) {
-	send(w, r, response)
+	sendResponse(w, r, response)
 }
 
-func send(w http.ResponseWriter, r *http.Request, response Response) {
+func sendResponse(w http.ResponseWriter, r *http.Request, response Response) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.WithFields(log.Fields{
 			"client": r.RemoteAddr,
 			"uri":    r.RequestURI,
-		}).Error("json.NewEncoder failed in FileUploadHandler")
+		}).Error("json.NewEncoder() failed in FileUploadHandler")
 	}
 }

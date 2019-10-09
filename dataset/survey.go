@@ -1,6 +1,6 @@
 package dataset
 
-type BigDataset struct {
+type Survey struct {
 	Quota         float64 `spss:"Quota"`
 	Week          float64 `spss:"Week"`
 	W1Yr          float64 `spss:"W1Yr"`

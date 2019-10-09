@@ -1,31 +1,51 @@
 package filters
 
 import (
-	"fmt"
+	log "github.com/sirupsen/logrus"
 	conf "services/config"
 	"services/dataset"
 )
 
-func NewSurveyFilter(dataset *dataset.Dataset) *DropSurveyColumns {
-	return &DropSurveyColumns{dataset: dataset}
+func NewSurveyFilter(log *log.Logger) *SurveyFilter {
+	return &SurveyFilter{log: log}
 }
 
-type DropSurveyColumns struct {
-	dataset *dataset.Dataset
+type SurveyFilter struct {
+	log *log.Logger
 }
 
-func (ren DropSurveyColumns) DropColumns() {
+func (sf SurveyFilter) DropColumns(dataset *dataset.Dataset) {
 	drop := conf.Config.DropColumns.Survey
 
 	for _, v := range drop.ColumnNames {
-		fmt.Printf("Drop Column: %s\n", v)
+		sf.log.WithFields(log.Fields{
+			"column": v,
+		}).Info("Drop column")
+		if err := dataset.DropColumn(v); err != nil {
+			sf.log.WithFields(log.Fields{
+				"column": v,
+			}).Warn("drop column not found")
+		}
 	}
 }
 
-func (ren DropSurveyColumns) RenameColumns() {
+func (sf SurveyFilter) RenameColumns(dataset *dataset.Dataset) {
 	cols := conf.Config.Rename.Survey
 
 	for _, v := range cols {
-		fmt.Printf("From: %s, to: %s\n", v.From, v.To)
+		sf.log.WithFields(log.Fields{
+			"from": v.From,
+			"to":   v.To,
+		}).Info("Rename column")
+		if err := dataset.RenameColumn(v.From, v.To); err != nil {
+			sf.log.WithFields(log.Fields{
+				"from": v.From,
+				"to":   v.To,
+			}).Warn("Rename column not found")
+		}
 	}
+}
+
+func (sf SurveyFilter) Validate() error {
+	return nil
 }

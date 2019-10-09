@@ -4,80 +4,130 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io"
+	"io/ioutil"
 	"os"
 	"services/api/filters"
+	"services/dataset"
+	"services/db"
+	"time"
 )
 
 func (h RestHandlers) fileUpload() error {
 
 	_ = h.r.ParseMultipartForm(32 << 20)
 
-	file, handler, err := h.r.FormFile("uploadfile")
+	file, _, err := h.r.FormFile("lfsFile")
 	if err != nil {
-		fmt.Println(err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Error getting formfile")
 		return err
 	}
 
 	defer func() { _ = file.Close() }()
 
-	fileName, err := h.getParameter("lfs-file")
-	if err != nil {
-		return err
+	fileName := h.r.Form.Get("fileName")
+	if fileName == "" {
+		log.Error("fileName not set")
+		return fmt.Errorf("fileName not set")
 	}
 
-	fileType, err := h.getParameter("lfs-fileType")
-	if err != nil {
-		return err
+	fileType := h.r.Form.Get("fileType")
+	if fileType == "" {
+		log.Error("fileType not set")
+		return fmt.Errorf("fileType not set")
 	}
 
 	log.WithFields(log.Fields{
 		"fileName": fileName,
 		"fileType": fileType,
-	}).Debug("Uploading file")
+	}).Debug("Uploading file...")
+
+	startTime := time.Now()
+
+	tmpfile, err := ioutil.TempFile("", fileName)
+	if err != nil {
+		return fmt.Errorf("cannot create temporary file: %s ", err)
+	}
+
+	defer func() {
+		_ = os.Remove(tmpfile.Name())
+	}()
+
+	n, err := io.Copy(tmpfile, file)
+
+	elapsed := time.Now().Sub(startTime)
+	log.WithFields(log.Fields{
+		"fileName":    fileName,
+		"fileType":    fileType,
+		"bytesRead":   n,
+		"elapsedtime": elapsed,
+	}).Debug("File uploaded")
+
+	_ = tmpfile.Close()
 
 	switch fileType {
 	case SurveyFile:
-		h.surveyUpload()
+		if err := h.surveyUpload(tmpfile.Name(), fileName); err != nil {
+			return err
+		}
+
 	case GeogFile:
-		h.geogUpload()
+		if err := h.geogUpload(tmpfile.Name(), fileName); err != nil {
+			return err
+		}
+
+	default:
+		log.WithFields(log.Fields{
+			"error":    "filetype not recognised",
+			"fileName": fileName,
+			"fileType": fileType,
+		}).Error("Error getting formfile")
+		return fmt.Errorf("fileType, %s, not recognised", fileType)
 	}
-
-	_, _ = fmt.Fprintf(h.w, "%v", handler.Header)
-
-	f, err := os.OpenFile("./test/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	defer func() { _ = f.Close() }()
-
-	_, _ = io.Copy(f, file)
 
 	return nil
 }
 
-func (h RestHandlers) geogUpload() {
-
+func (h RestHandlers) geogUpload(tmpfile, datasetName string) error {
+	return nil
 }
 
-func (h RestHandlers) surveyUpload() {
-	// load into dataset
-	// pass dataset to filter
-	filter := filters.NewSurveyFilter(nil)
-	filter.DropColumns()
-	filter.RenameColumns()
-}
+func (h RestHandlers) surveyUpload(tmpfile, datasetName string) error {
+	startTime := time.Now()
+	logger := log.New()
 
-func (h RestHandlers) getParameter(parameter string) (string, error) {
-	keys, ok := h.r.URL.Query()[parameter]
-
-	if !ok || len(keys[0]) < 1 {
-		h.log.WithFields(log.Fields{
-			"parameter": parameter,
-		}).Error("URL parameter missing")
-		return "", fmt.Errorf("URL parameter, %s, is missing", parameter)
+	d, err := dataset.NewDataset(datasetName, logger)
+	if err != nil {
+		return err
 	}
 
-	return keys[0], nil
+	err = d.LoadSav(tmpfile, datasetName, dataset.Survey{})
+	if err != nil {
+		return err
+	}
+
+	filter := filters.NewSurveyFilter(h.log)
+	err = filter.Validate()
+	if err != nil {
+		return fmt.Errorf("validation failed: %s", err)
+	}
+
+	filter.DropColumns(&d)
+	filter.RenameColumns(&d)
+
+	err = db.GetDefaultPersistenceImpl(logger).PersistDataset(d)
+	if err != nil {
+		return fmt.Errorf("GetDefaultPersistenceImpl failed: %s", err)
+	}
+
+	elapsed := time.Now().Sub(startTime)
+	log.WithFields(log.Fields{
+		"datasetName": datasetName,
+		"rowCount":    d.NumRows(),
+		"columnCount": d.ColumnCount,
+		"elapsedTime": elapsed,
+	}).Info("imported and persisted dataset")
+
+	return nil
 }

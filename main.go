@@ -14,6 +14,7 @@ func main() {
 	logger := log.New()
 	restHandlers := api.NewRestHandler(logger)
 	logger.Info("LFS Services: Starting up")
+
 	router.HandleFunc("/import/survey/{run_id}", restHandlers.FileUploadHandler).Methods("POST")
 
 	listenAddress := config.Config.Service.ListenAddress
