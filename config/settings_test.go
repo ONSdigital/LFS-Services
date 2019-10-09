@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"fmt"
 	conf "services/config"
 	"testing"
 )
@@ -72,4 +73,15 @@ func TestConfig(t *testing.T) {
 		t.Logf("writeTimeout %s\n", writeTimeout)
 	}
 
+	ren := conf.Config.Rename.Survey
+
+	for _, v := range ren {
+		fmt.Printf("Rename from: %s, to: %s\n", v.From, v.To)
+	}
+
+	drop := conf.Config.DropColumns.Survey
+
+	for _, v := range drop.ColumnNames {
+		fmt.Printf("Drop Column: %s\n", v)
+	}
 }

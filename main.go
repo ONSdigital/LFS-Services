@@ -17,10 +17,12 @@ func main() {
 	router.HandleFunc("/import/survey/{run_id}", restHandlers.FileUploadHandler).Methods("POST")
 
 	listenAddress := config.Config.Service.ListenAddress
+
 	writeTimeout, err := time.ParseDuration(config.Config.Service.WriteTimeout)
 	if err != nil {
 		panic("writeTimeout configuration error")
 	}
+
 	readTimeout, err := time.ParseDuration(config.Config.Service.ReadTimeout)
 	if err != nil {
 		panic("readTimeout configuration error")

@@ -25,3 +25,14 @@ database = "LFS" # set by environment variables
 listenAddress = "127.0.0.1:8000"
 readTimeout = "15s"
 writeTimeout = "15s"
+
+[[rename.survey]]
+    from = "YPTCIA"
+    to = "YPTCIA-renamed"
+
+[[rename.survey]]
+    from = "TRONJB"
+    to = "TRONJB-renamed"
+
+[dropColumns.survey]
+    ColumnNames = ["SOC2KA_INDEX", "HLDCOUNT"]
