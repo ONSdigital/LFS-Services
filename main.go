@@ -10,10 +10,13 @@ import (
 )
 
 func main() {
+
+	log.WithFields(log.Fields{
+		"startTime": time.Now(),
+	}).Info("LFS Services: Starting up")
+
 	router := mux.NewRouter()
-	logger := log.New()
-	restHandlers := api.NewRestHandler(logger)
-	logger.Info("LFS Services: Starting up")
+	restHandlers := api.NewRestHandler()
 
 	router.HandleFunc("/import/survey/{run_id}", restHandlers.FileUploadHandler).Methods("POST")
 
@@ -36,11 +39,11 @@ func main() {
 		ReadTimeout:  readTimeout,
 	}
 
-	logger.WithFields(log.Fields{
+	log.WithFields(log.Fields{
 		"listenAddress": listenAddress,
 		"writeTimeout":  writeTimeout,
 		"readTimeout":   readTimeout,
 	}).Info("LFS Services: Waiting for requests")
 
-	logger.Fatal(srv.ListenAndServe())
+	log.Fatal(srv.ListenAndServe())
 }

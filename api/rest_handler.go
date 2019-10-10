@@ -13,6 +13,11 @@ const (
 	GeogFile   = "Geog"
 )
 
+const (
+	Error = "ERROR"
+	OK    = "OK"
+)
+
 type Response interface {
 	sendResponse(w http.ResponseWriter, r *http.Request)
 }
@@ -27,14 +32,15 @@ type OkayResponse struct {
 }
 
 type RestHandlers struct {
-	log *log.Logger
-	w   http.ResponseWriter
-	r   *http.Request
+	w http.ResponseWriter
+	r *http.Request
 }
 
-func NewRestHandler(log *log.Logger) *RestHandlers {
-	log.Info("Creating new RestHandler")
-	return &RestHandlers{log, nil, nil}
+func NewRestHandler() *RestHandlers {
+	log.WithFields(log.Fields{
+		"startTime": time.Now(),
+	}).Debug("Creating new RestHandler")
+	return &RestHandlers{nil, nil}
 }
 
 func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,9 +60,9 @@ func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 
 	if res != nil {
-		ErrorResponse{Status: "ERROR", ErrorMessage: res.Error()}.sendResponse(w, r)
+		ErrorResponse{Status: Error, ErrorMessage: res.Error()}.sendResponse(w, r)
 	} else {
-		a := OkayResponse{"OK"}
+		a := OkayResponse{OK}
 		sendResponse(h.w, h.r, a)
 	}
 
@@ -74,7 +80,7 @@ func (h RestHandlers) getParameter(parameter string) (string, error) {
 	keys, ok := h.r.URL.Query()[parameter]
 
 	if !ok || len(keys[0]) < 1 {
-		h.log.WithFields(log.Fields{
+		log.WithFields(log.Fields{
 			"parameter": parameter,
 		}).Error("URL parameter missing")
 		return "", fmt.Errorf("URL parameter, %s, is missing", parameter)

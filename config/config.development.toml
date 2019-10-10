@@ -1,5 +1,6 @@
 
-debug = true
+logFormat = "Terminal" # one of: Text | Json | Terminal
+logLevel = "Debug" #	one of: "Info" # Trace | Info | Debug | Warn | Error | Fatal
 
 testDirectory = "/Users/paul/LFS/LFS-Services/testdata/"
 #testDirectory = "/Users/paul/ONS/LFS/LFS-Services/testdata/"
@@ -15,7 +16,7 @@ user = "lfs" # set by environment variables
 password = "lfs" # set by environment variables
 verbose = false
 database = "LFS" # set by environment variables
-    [database.pool]
+    [database.connectionPool]
        maxPoolSize = 10
        maxIdleConnections = 2
        maxLifetimeSeconds = 0

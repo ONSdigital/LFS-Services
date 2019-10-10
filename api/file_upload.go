@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"services/api/filters"
+	"services/api/validation"
 	"services/dataset"
 	"services/db"
 	"time"
@@ -14,7 +15,7 @@ import (
 
 func (h RestHandlers) fileUpload() error {
 
-	_ = h.r.ParseMultipartForm(32 << 20)
+	_ = h.r.ParseMultipartForm(64 << 20)
 
 	file, _, err := h.r.FormFile("lfsFile")
 	if err != nil {
@@ -38,6 +39,12 @@ func (h RestHandlers) fileUpload() error {
 		return fmt.Errorf("fileType not set")
 	}
 
+	source := h.r.Form.Get("fileSource") // GB or NI
+	if source != "GB" && source != "NI" {
+		log.Error("fileSource must be NI or GB")
+		return fmt.Errorf("invalid fileSource or fileSource not set - must be GB or NI")
+	}
+
 	log.WithFields(log.Fields{
 		"fileName": fileName,
 		"fileType": fileType,
@@ -50,9 +57,7 @@ func (h RestHandlers) fileUpload() error {
 		return fmt.Errorf("cannot create temporary file: %s ", err)
 	}
 
-	defer func() {
-		_ = os.Remove(tmpfile.Name())
-	}()
+	defer func() { _ = os.Remove(tmpfile.Name()) }()
 
 	n, err := io.Copy(tmpfile, file)
 
@@ -67,6 +72,7 @@ func (h RestHandlers) fileUpload() error {
 	_ = tmpfile.Close()
 
 	switch fileType {
+
 	case SurveyFile:
 		if err := h.surveyUpload(tmpfile.Name(), fileName); err != nil {
 			return err
@@ -82,7 +88,7 @@ func (h RestHandlers) fileUpload() error {
 			"error":    "filetype not recognised",
 			"fileName": fileName,
 			"fileType": fileType,
-		}).Error("Error getting formfile")
+		}).Warn("Error getting formfile")
 		return fmt.Errorf("fileType, %s, not recognised", fileType)
 	}
 
@@ -95,9 +101,8 @@ func (h RestHandlers) geogUpload(tmpfile, datasetName string) error {
 
 func (h RestHandlers) surveyUpload(tmpfile, datasetName string) error {
 	startTime := time.Now()
-	logger := log.New()
 
-	d, err := dataset.NewDataset(datasetName, logger)
+	d, err := dataset.NewDataset(datasetName)
 	if err != nil {
 		return err
 	}
@@ -107,27 +112,61 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName string) error {
 		return err
 	}
 
-	filter := filters.NewSurveyFilter(h.log)
-	err = filter.Validate()
+	startValidation := time.Now()
+
+	val := validation.NewSurveyValidation(&d)
+	validationResponse, err := val.Validate()
 	if err != nil {
-		return fmt.Errorf("validation failed: %s", err)
+		log.WithFields(log.Fields{
+			"status":       "Failed",
+			"errorMessage": err,
+			"elapsedTime":  time.Now().Sub(startValidation),
+		}).Warn("Validation complete")
+		return err
 	}
 
-	filter.DropColumns(&d)
-	filter.RenameColumns(&d)
-
-	err = db.GetDefaultPersistenceImpl(logger).PersistDataset(d)
-	if err != nil {
-		return fmt.Errorf("GetDefaultPersistenceImpl failed: %s", err)
+	if validationResponse.ValidationStatus == validation.ValidationFailed {
+		log.WithFields(log.Fields{
+			"status":       "Failed",
+			"errorMessage": validationResponse.ErrorMessage,
+			"elapsedTime":  time.Now().Sub(startValidation),
+		}).Warn("Validation complete")
+		return fmt.Errorf(validationResponse.ErrorMessage)
 	}
 
-	elapsed := time.Now().Sub(startTime)
+	log.WithFields(log.Fields{
+		"status":      "Successful",
+		"elapsedTime": time.Now().Sub(startValidation),
+	}).Debug("Validation complete")
+
+	filter := filters.NewSurveyFilter(&d)
+
+	filter.DropColumns()
+	filter.RenameColumns()
+
+	database, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"datasetName":  datasetName,
+			"errorMessage": err.Error(),
+		}).Error("cannot connect to database")
+		return fmt.Errorf("cannot connect to database: %s", err)
+	}
+
+	if err := database.PersistDataset(d); err != nil {
+		log.WithFields(log.Fields{
+			"datasetName":  datasetName,
+			"errorMessage": err.Error(),
+		}).Error("cannot persist dataset to database")
+		return fmt.Errorf("cannot persist dataset to database: %s", err)
+	}
+
 	log.WithFields(log.Fields{
 		"datasetName": datasetName,
 		"rowCount":    d.NumRows(),
 		"columnCount": d.ColumnCount,
-		"elapsedTime": elapsed,
-	}).Info("imported and persisted dataset")
+		"elapsedTime": time.Now().Sub(startTime),
+	}).Debug("Imported and persisted dataset")
 
 	return nil
 }

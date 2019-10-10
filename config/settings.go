@@ -34,13 +34,40 @@ func init() {
 		log.Fatal(fmt.Errorf("cannot parse environment variables %+v", err))
 	}
 
-	if Config.Debug {
-		log.SetLevel(log.DebugLevel)
-	} else {
-		log.SetLevel(log.WarnLevel)
+	switch Config.LogFormat {
+	case "Text":
+		log.SetFormatter(&log.TextFormatter{
+			DisableColors: true,
+			FullTimestamp: true,
+		})
+	case "Json":
+		log.SetFormatter(&log.JSONFormatter{
+			TimestampFormat:  "",
+			DisableTimestamp: false,
+			DataKey:          "",
+			FieldMap:         nil,
+			CallerPrettyfier: nil,
+			PrettyPrint:      false,
+		})
+	case "Terminal":
+		break
 	}
 
-	log.Info("Configuration loaded")
+	switch Config.LogLevel {
+	case "Trace":
+		log.SetLevel(log.TraceLevel)
+	case "Info":
+		log.SetLevel(log.InfoLevel)
+	case "Debug":
+		log.SetLevel(log.DebugLevel)
+	case "Warn":
+		log.SetLevel(log.WarnLevel)
+	case "Error":
+		log.SetLevel(log.ErrorLevel)
+	case "Fatal":
+		log.SetLevel(log.FatalLevel)
+
+	}
 
 }
 
