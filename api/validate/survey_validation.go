@@ -1,4 +1,4 @@
-package validation
+package validate
 
 import (
 	"fmt"
@@ -9,15 +9,15 @@ type SurveyValidation struct {
 	dataset *dataset.Dataset
 }
 
-func NewSurveyValidation(dataset *dataset.Dataset) Validation {
-	var v Validation = SurveyValidation{dataset: dataset}
+func NewSurveyValidation(dataset *dataset.Dataset) Validator {
+	var v Validator = SurveyValidation{dataset: dataset}
 	return v
 }
 
 func (sf SurveyValidation) Validate() (ValidationResponse, error) {
 	ok, err := sf.validateREFDTE()
 
-	// add additional validation here
+	// add additional validate here
 	return ok, err
 }
 
@@ -25,7 +25,7 @@ func (sf SurveyValidation) validateREFDTE() (ValidationResponse, error) {
 	rows, err := sf.dataset.GetRowsAsDouble("REFDTE")
 	if err != nil {
 		return ValidationResponse{
-			ValidationStatus: ValidationFailed,
+			ValidationResult: ValidationFailed,
 			ErrorMessage:     err.Error(),
 		}, err
 	}
@@ -37,13 +37,13 @@ func (sf SurveyValidation) validateREFDTE() (ValidationResponse, error) {
 		}
 		if val != j {
 			return ValidationResponse{
-				ValidationStatus: ValidationFailed,
+				ValidationResult: ValidationFailed,
 				ErrorMessage:     "rows contain different values for RFEDTE",
 			}, fmt.Errorf("rows contain different values for RFEDTE")
 		}
 	}
 	return ValidationResponse{
-		ValidationStatus: ValidationSuccessful,
+		ValidationResult: ValidationSuccessful,
 		ErrorMessage:     "",
 	}, nil
 }

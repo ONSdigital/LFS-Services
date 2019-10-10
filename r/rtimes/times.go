@@ -1,4 +1,4 @@
-package r_times
+package rtimes
 
 // #cgo windows amd64 CFLAGS: -g -IC:/Users/pauld/scoop/apps/r/current/include
 // #cgo windows LDFLAGS: -LC:/Users/pauld/scoop/apps/r/current/bin/x64 -lR -lRblas
@@ -7,7 +7,7 @@ package r_times
 // #cgo linux amd64 CFLAGS: -I/usr/share/R/include -g
 // #cgo linux LDFLAGS: -L/usr/lib/R -lR
 // #include <stdlib.h>
-// #include "r_times.h"
+// #include "rtimes.h"
 import "C"
 import "errors"
 

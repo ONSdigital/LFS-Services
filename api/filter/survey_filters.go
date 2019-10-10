@@ -1,12 +1,12 @@
-package filters
+package filter
 
 import (
 	conf "services/config"
 	"services/dataset"
 )
 
-func NewSurveyFilter(dataset *dataset.Dataset) *SurveyFilter {
-	return &SurveyFilter{dataset: dataset}
+func NewSurveyFilter(dataset *dataset.Dataset) Filter {
+	return SurveyFilter{dataset: dataset}
 }
 
 type SurveyFilter struct {

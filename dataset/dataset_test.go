@@ -10,13 +10,13 @@ import (
 )
 
 func setupDataset(logger *log.Logger) (*dataset.Dataset, error) {
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Error(err)
 		return &dataset.Dataset{}, nil
 	}
 
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", dataset.Survey{})
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "Test", dataset.Survey{})
 	if err != nil {
 		logger.Error(err)
 		return &dataset.Dataset{}, nil
@@ -70,7 +70,7 @@ func TestFromSav(t *testing.T) {
 
 	logger := log.New()
 
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
@@ -101,7 +101,7 @@ func TestToCSV(t *testing.T) {
 
 	logger := log.New()
 
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -135,7 +135,7 @@ func TestToSav(t *testing.T) {
 
 	logger := log.New()
 
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -167,7 +167,7 @@ func TestFromCSV(t *testing.T) {
 
 	logger := log.New()
 
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -183,11 +183,19 @@ func TestFromCSV(t *testing.T) {
 
 func TestUnPersist(t *testing.T) {
 	logger := log.New()
-	d, err := db.GetDefaultPersistenceImpl(logger).UnpersistDataset("LFSwk18PERS_non_confidential")
+	pi, err := db.GetDefaultPersistenceImpl()
+
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
 	}
+
+	d, err := pi.UnpersistDataset("LFSwk18PERS_non_confidential")
+	if err != nil {
+		logger.Error(err)
+		t.FailNow()
+	}
+
 	logger.Printf("dataset contains %d row(s)\n", d.NumRows())
 	_ = d.Head(5)
 }
@@ -195,7 +203,7 @@ func TestUnPersist(t *testing.T) {
 func TestPersist(t *testing.T) {
 	logger := log.New()
 
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
@@ -207,7 +215,14 @@ func TestPersist(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = db.GetDefaultPersistenceImpl(logger).PersistDataset(d)
+	pi, err := db.GetDefaultPersistenceImpl()
+
+	if err != nil {
+		logger.Error(err)
+		t.FailNow()
+	}
+
+	err = pi.PersistDataset(d)
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()

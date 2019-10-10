@@ -1,10 +1,10 @@
-package r_times_test
+package rtimes_test
 
 import (
 	"fmt"
 	"log"
 	"services/r"
-	times "services/r/r_times"
+	times "services/r/rtimes"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ Set R_HOME to the correct directory in the environment, e.g.:
 R_HOME=/Library/Frameworks/R.framework/Resources
 */
 
-func Test_times(t *testing.T) {
+func TestTimes(t *testing.T) {
 
 	t.Logf("Starting test - times")
 

@@ -1,4 +1,4 @@
-package filters
+package filter
 
 type Filter interface {
 	RenameColumns()

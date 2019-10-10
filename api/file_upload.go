@@ -6,8 +6,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"services/api/filters"
-	"services/api/validation"
+	"services/api/filter"
+	"services/api/validate"
 	"services/dataset"
 	"services/db"
 	"time"
@@ -114,32 +114,32 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName string) error {
 
 	startValidation := time.Now()
 
-	val := validation.NewSurveyValidation(&d)
+	val := validate.NewSurveyValidation(&d)
 	validationResponse, err := val.Validate()
 	if err != nil {
 		log.WithFields(log.Fields{
 			"status":       "Failed",
 			"errorMessage": err,
 			"elapsedTime":  time.Now().Sub(startValidation),
-		}).Warn("Validation complete")
+		}).Warn("Validator complete")
 		return err
 	}
 
-	if validationResponse.ValidationStatus == validation.ValidationFailed {
+	if validationResponse.ValidationResult == validate.ValidationFailed {
 		log.WithFields(log.Fields{
 			"status":       "Failed",
 			"errorMessage": validationResponse.ErrorMessage,
 			"elapsedTime":  time.Now().Sub(startValidation),
-		}).Warn("Validation complete")
+		}).Warn("Validator complete")
 		return fmt.Errorf(validationResponse.ErrorMessage)
 	}
 
 	log.WithFields(log.Fields{
 		"status":      "Successful",
 		"elapsedTime": time.Now().Sub(startValidation),
-	}).Debug("Validation complete")
+	}).Debug("Validator complete")
 
-	filter := filters.NewSurveyFilter(&d)
+	filter := filter.NewSurveyFilter(&d)
 
 	filter.DropColumns()
 	filter.RenameColumns()

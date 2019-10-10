@@ -25,9 +25,6 @@ type DataItem struct {
 	Value []interface{}
 }
 
-var DoubleValue []float64
-var StringValue []string
-
 func Export(fileName string, label string, headers []Header, data []DataItem) int {
 
 	numHeaders := len(headers)
