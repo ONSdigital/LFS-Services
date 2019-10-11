@@ -39,12 +39,6 @@ func (h RestHandlers) fileUpload() error {
 		return fmt.Errorf("fileType not set")
 	}
 
-	source := h.r.Form.Get("fileSource") // GB or NI
-	if source != "GB" && source != "NI" {
-		log.Error("fileSource must be NI or GB")
-		return fmt.Errorf("invalid fileSource or fileSource not set - must be GB or NI")
-	}
-
 	log.WithFields(log.Fields{
 		"fileName": fileName,
 		"fileType": fileType,
@@ -74,7 +68,12 @@ func (h RestHandlers) fileUpload() error {
 	switch fileType {
 
 	case SurveyFile:
-		if err := h.surveyUpload(tmpfile.Name(), fileName); err != nil {
+		source := h.r.Form.Get("fileSource") // GB or NI
+		if source != "GB" && source != "NI" {
+			log.Error("fileSource must be NI or GB")
+			return fmt.Errorf("invalid fileSource or fileSource not set - must be GB or NI")
+		}
+		if err := h.surveyUpload(tmpfile.Name(), fileName, source); err != nil {
 			return err
 		}
 
@@ -99,9 +98,14 @@ func (h RestHandlers) geogUpload(tmpfile, datasetName string) error {
 	return nil
 }
 
-func (h RestHandlers) surveyUpload(tmpfile, datasetName string) error {
+func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 	startTime := time.Now()
 
+	if source == "GB" {
+
+	} else {
+		// must be NI
+	}
 	d, err := dataset.NewDataset(datasetName)
 	if err != nil {
 		return err
