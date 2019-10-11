@@ -168,6 +168,7 @@ func (d *Dataset) readSav(in, datasetName string, out interface{}) error {
 	if er != nil {
 		return er
 	}
+
 	elapsed = time.Since(start)
 
 	log.WithFields(log.Fields{
@@ -199,7 +200,7 @@ func (d Dataset) GetRowsAsString(colName string) ([]string, error) {
 		return nil, fmt.Errorf("column %s is not a string", colName)
 	}
 
-	rows := make([]string, d.RowCount)
+	rows := make([]string, 0, d.RowCount)
 	for _, a := range r {
 		rows = append(rows, a.(string))
 	}
@@ -217,7 +218,7 @@ func (d Dataset) GetRowsAsInt(colName string) ([]int, error) {
 		return nil, fmt.Errorf("column %s is not an int", colName)
 	}
 
-	rows := make([]int, d.RowCount)
+	rows := make([]int, 0, d.RowCount)
 	for _, a := range r {
 		rows = append(rows, a.(int))
 	}
@@ -235,7 +236,7 @@ func (d Dataset) GetRowsAsFloat(colName string) ([]float32, error) {
 		return nil, fmt.Errorf("column %s is not a float32", colName)
 	}
 
-	rows := make([]float32, d.RowCount)
+	rows := make([]float32, 0, d.RowCount)
 	for _, a := range r {
 		rows = append(rows, a.(float32))
 	}
@@ -253,7 +254,7 @@ func (d Dataset) GetRowsAsDouble(colName string) ([]float64, error) {
 		return nil, fmt.Errorf("column %s is not a float64t", colName)
 	}
 
-	rows := make([]float64, d.RowCount)
+	rows := make([]float64, 0, d.RowCount)
 	for _, a := range r {
 		rows = append(rows, a.(float64))
 	}
@@ -291,7 +292,7 @@ func (d Dataset) ToSAV(fileName string) error {
 		header = append(header, di.Header{SavType: spssType, Name: cols[i], Label: cols[i] + " label"})
 	}
 
-	h, items := d.getAllRows()
+	h, items := d.GetAllRows()
 	var data []di.DataItem
 
 	for _, v := range items {
@@ -367,7 +368,7 @@ func (d Dataset) ToCSV(fileName string) error {
 		_ = f.Close()
 	}()
 
-	header, items := d.getAllRows()
+	header, items := d.GetAllRows()
 	var buffer bytes.Buffer
 
 	for i := 0; i < len(header); i++ {
@@ -436,27 +437,24 @@ func (d *Dataset) AddRow(row map[string]interface{}) error {
 	return nil
 }
 
-func (d *Dataset) AddColumn(name string, columnType reflect.Kind) error {
+func (d *Dataset) AddColumn(name string, columnType reflect.Kind) (*Column, error) {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
 	if _, ok := d.Columns[name]; ok {
-		log.WithFields(log.Fields{
-			"method": "AddColumn",
-			"column": name,
-		}).Warn("Column already exists")
-		return fmt.Errorf("column %s already exists", name)
+		log.WithFields(log.Fields{"method": "AddColumn", "column": name}).Warn("Column already exists")
+		return &Column{}, fmt.Errorf("column %s already exists", name)
 	}
 
 	col := Column{}
 	col.Kind = columnType
 	col.ColNo = d.ColumnCount
 	col.Rows = make([]interface{}, 0, InitialRowCapacity)
-	d.Columns[name] = col
 	d.ColumnCount++
 
 	if d.RowCount == 0 {
-		return nil
+		d.Columns[name] = col
+		return &col, nil
 	}
 
 	// Add empty Rows if we have existing data
@@ -464,21 +462,37 @@ func (d *Dataset) AddColumn(name string, columnType reflect.Kind) error {
 		switch columnType {
 		case reflect.String:
 			col.Rows = append(col.Rows, "")
-		case reflect.Int8, reflect.Uint8, reflect.Int, reflect.Int32, reflect.Uint32, reflect.Int64, reflect.Uint64:
-			col.Rows = append(col.Rows, 0)
-		case reflect.Float32, reflect.Float64:
-			col.Rows = append(col.Rows, 0.0)
+		case reflect.Int8:
+			col.Rows = append(col.Rows, int8(0))
+		case reflect.Uint8:
+			col.Rows = append(col.Rows, uint8(0))
+		case reflect.Int:
+			col.Rows = append(col.Rows, int(0))
+		case reflect.Int32:
+			col.Rows = append(col.Rows, int32(0))
+		case reflect.Uint32:
+			col.Rows = append(col.Rows, uint32(0))
+		case reflect.Int64:
+			col.Rows = append(col.Rows, int64(0))
+		case reflect.Uint64:
+			col.Rows = append(col.Rows, uint64(0))
+		case reflect.Float32:
+			col.Rows = append(col.Rows, float32(0.0))
+		case reflect.Float64:
+			col.Rows = append(col.Rows, float64(0.0))
 		default:
 			log.WithFields(log.Fields{
 				"method":     "AddColumn",
 				"columnName": name,
 				"columnType": columnType,
 			}).Error("Cannot convert type")
-			return fmt.Errorf("cannot convert type")
+			return &Column{}, fmt.Errorf("cannot convert type")
 		}
 	}
 
-	return nil
+	d.Columns[name] = col
+
+	return &col, nil
 }
 
 func (d *Dataset) RenameColumns(columns map[string]string) error {
@@ -638,7 +652,7 @@ func (d *Dataset) populateDataset(fileName, datasetName string, rows [][]string,
 
 	for i := 0; i < t1.NumField(); i++ {
 		a := t1.Field(i)
-		if err := d.AddColumn(strings.ToUpper(a.Name), a.Type.Kind()); err != nil {
+		if _, err := d.AddColumn(strings.ToUpper(a.Name), a.Type.Kind()); err != nil {
 			log.WithFields(log.Fields{
 				"datasetName":  datasetName,
 				"methodName":   "populateDataset",
@@ -761,7 +775,7 @@ func (d Dataset) OrderedColumns() []string {
 	return keys
 }
 
-func (d *Dataset) getAllRows() ([]string, [][]string) {
+func (d *Dataset) GetAllRows() ([]string, [][]string) {
 	return d.getByRow(d.RowCount, d.ColumnCount)
 }
 

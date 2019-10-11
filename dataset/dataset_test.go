@@ -1,12 +1,14 @@
 package dataset_test
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"math"
 	conf "services/config"
 	"services/dataset"
 	"services/db"
 	"testing"
+	"time"
 )
 
 func setupDataset(logger *log.Logger) (*dataset.Dataset, error) {
@@ -194,6 +196,41 @@ func TestUnPersist(t *testing.T) {
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
+	}
+
+	logger.Printf("dataset contains %d row(s)\n", d.NumRows())
+	_ = d.Head(5)
+}
+
+func TestDateClc(t *testing.T) {
+	logger := log.New()
+	pi, err := db.GetDefaultPersistenceImpl()
+
+	if err != nil {
+		logger.Error(err)
+		t.FailNow()
+	}
+
+	d, err := pi.UnpersistDataset("LFSwk18PERS_non_confidential")
+	if err != nil {
+		logger.Error(err)
+		t.FailNow()
+	}
+
+	rows, err := d.GetRowsAsDouble("REFDTE")
+	if err != nil {
+		logger.Error(err)
+		t.FailNow()
+	}
+
+	for _, b := range rows {
+		i := int64(b) - (141428 * 86400)
+		tm := time.Unix(i, 0)
+		day := tm.Day()
+		month := int(tm.Month())
+		year := tm.Year()
+		weekday := tm.Weekday().String()
+		fmt.Printf("Weekday: %s, day: %d, Month: %d, Year :%d\n", weekday, day, month, year)
 	}
 
 	logger.Printf("dataset contains %d row(s)\n", d.NumRows())

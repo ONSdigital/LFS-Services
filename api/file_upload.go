@@ -139,10 +139,23 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName string) error {
 		"elapsedTime": time.Now().Sub(startValidation),
 	}).Debug("Validator complete")
 
-	filter := filter.NewSurveyFilter(&d)
+	f := filter.NewSurveyFilter(&d)
 
-	filter.DropColumns()
-	filter.RenameColumns()
+	f.DropColumns()
+	f.RenameColumns()
+
+	err = f.AddVariables()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"datasetName":  datasetName,
+			"errorMessage": err.Error(),
+		}).Error(err)
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"status": "Successful",
+	}).Debug("Filtering complete")
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
