@@ -1,5 +1,7 @@
 package validate
 
+import "services/dataset"
+
 type ValidationResult int
 
 const ValidationFailed ValidationResult = 0
@@ -10,6 +12,9 @@ type ValidationResponse struct {
 	ErrorMessage     string
 }
 
-type Validator interface {
-	Validate() (ValidationResponse, error)
+/**
+Base validation. To use this, use composition in concrete structs
+*/
+type Validator struct {
+	dataset *dataset.Dataset
 }

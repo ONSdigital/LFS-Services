@@ -18,19 +18,6 @@ const (
 	OK    = "OK"
 )
 
-type Response interface {
-	sendResponse(w http.ResponseWriter, r *http.Request)
-}
-
-type ErrorResponse struct {
-	Status       string `json:"status"`
-	ErrorMessage string `json:"errorMessage"`
-}
-
-type OkayResponse struct {
-	Status string `json:"status"`
-}
-
 type RestHandlers struct {
 	w http.ResponseWriter
 	r *http.Request
@@ -87,6 +74,19 @@ func (h RestHandlers) getParameter(parameter string) (string, error) {
 	}
 
 	return keys[0], nil
+}
+
+type Response interface {
+	sendResponse(w http.ResponseWriter, r *http.Request)
+}
+
+type ErrorResponse struct {
+	Status       string `json:"status"`
+	ErrorMessage string `json:"errorMessage"`
+}
+
+type OkayResponse struct {
+	Status string `json:"status"`
 }
 
 func (response OkayResponse) sendResponse(w http.ResponseWriter, r *http.Request) {

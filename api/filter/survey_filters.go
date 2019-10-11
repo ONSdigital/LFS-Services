@@ -2,36 +2,24 @@ package filter
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"reflect"
-	conf "services/config"
 	"services/dataset"
 	"strconv"
+	"time"
 )
 
-func NewSurveyFilter(dataset *dataset.Dataset) Filter {
-	return SurveyFilter{dataset: dataset}
-}
-
 type SurveyFilter struct {
-	dataset *dataset.Dataset
+	BaseFilter
 }
 
-func (sf SurveyFilter) DropColumns() {
-	drop := conf.Config.DropColumns.Survey
-	_ = sf.dataset.DropColumns(drop.ColumnNames)
+func NewSurveyFilter(dataset *dataset.Dataset) SurveyFilter {
+	s := SurveyFilter{BaseFilter{dataset}}
+	s.runBaseFilters() // to run the rename and drop filters
+	return s
 }
 
-func (sf SurveyFilter) RenameColumns() {
-	cols := conf.Config.Rename.Survey
-	m := make(map[string]string, sf.dataset.ColumnCount)
-
-	for _, v := range cols {
-		m[v.From] = v.To
-	}
-	_ = sf.dataset.RenameColumns(m)
-}
-
-func findLocation(headers []string, column string) (int, error) {
+func (sf SurveyFilter) findLocation(headers []string, column string) (int, error) {
 	for i, j := range headers {
 		if j == column {
 			return i, nil
@@ -42,6 +30,11 @@ func findLocation(headers []string, column string) (int, error) {
 
 func (sf SurveyFilter) AddVariables() error {
 
+	log.WithFields(log.Fields{
+		"variable": "CASENO",
+	}).Debug("Start adding variables")
+	startTime := time.Now()
+
 	column, err := sf.dataset.AddColumn("CASENO", reflect.Int64)
 	if err != nil {
 		return err
@@ -50,39 +43,40 @@ func (sf SurveyFilter) AddVariables() error {
 	header, items := sf.dataset.GetAllRows()
 
 	// get indexes of items we are interested in for calculation
-	quotaInx, err := findLocation(header, "QUOTA")
+	quotaInx, err := sf.findLocation(header, "QUOTA")
 	if err != nil {
 		return err
 	}
-	weekInx, err := findLocation(header, "WEEK")
+	weekInx, err := sf.findLocation(header, "WEEK")
 	if err != nil {
 		return err
 	}
-	w1yrInx, err := findLocation(header, "W1YR")
+	w1yrInx, err := sf.findLocation(header, "W1YR")
 	if err != nil {
 		return err
 	}
-	qrtrInx, err := findLocation(header, "QRTR")
+	qrtrInx, err := sf.findLocation(header, "QRTR")
 	if err != nil {
 		return err
 	}
-	addrInx, err := findLocation(header, "ADD")
+	addrInx, err := sf.findLocation(header, "ADD")
 	if err != nil {
 		return err
 	}
-	wavfndInx, err := findLocation(header, "WAVFND")
+	wavfndInx, err := sf.findLocation(header, "WAVFND")
 	if err != nil {
 		return err
 	}
-	hhldInx, err := findLocation(header, "HHLD")
+	hhldInx, err := sf.findLocation(header, "HHLD")
 	if err != nil {
 		return err
 	}
-	persnoInx, err := findLocation(header, "PERSON")
+	persnoInx, err := sf.findLocation(header, "PERSON")
 	if err != nil {
 		return err
 	}
 
+	// TODO: Run this in go routines
 	for i := range column.Rows {
 		row := items[i]
 
@@ -130,6 +124,11 @@ func (sf SurveyFilter) AddVariables() error {
 			(qrtr * 10000000) + (addr * 100000) + (wavfnd * 10000) + (hhld * 100) + persno
 		column.Rows[i] = int64(n)
 	}
+
+	log.WithFields(log.Fields{
+		"variable":    "CASENO",
+		"elapsedTime": time.Now().Sub(startTime),
+	}).Debug("Finished adding variables")
 
 	return nil
 }

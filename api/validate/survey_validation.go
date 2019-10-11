@@ -7,18 +7,17 @@ import (
 )
 
 type SurveyValidation struct {
-	dataset *dataset.Dataset
+	Validator
 }
 
-func NewSurveyValidation(dataset *dataset.Dataset) Validator {
-	var v Validator = SurveyValidation{dataset: dataset}
-	return v
+func NewSurveyValidation(dataset *dataset.Dataset) SurveyValidation {
+	return SurveyValidation{Validator: Validator{dataset}}
 }
 
 func (sf SurveyValidation) Validate() (ValidationResponse, error) {
 	ok, err := sf.validateREFDTE()
 
-	// add additional validate here
+	// add additional validations here
 	return ok, err
 }
 

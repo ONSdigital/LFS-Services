@@ -145,11 +145,7 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 
 	f := filter.NewSurveyFilter(&d)
 
-	f.DropColumns()
-	f.RenameColumns()
-
-	err = f.AddVariables()
-	if err != nil {
+	if err := f.AddVariables(); err != nil {
 		log.WithFields(log.Fields{
 			"datasetName":  datasetName,
 			"errorMessage": err.Error(),
