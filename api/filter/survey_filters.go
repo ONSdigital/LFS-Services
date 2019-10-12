@@ -31,8 +31,7 @@ func (sf SurveyFilter) findLocation(headers []string, column string) (int, error
 func (sf SurveyFilter) AddVariables() error {
 
 	log.WithFields(log.Fields{
-		"variable": "CASENO",
-	}).Debug("Start adding variables")
+		"variable": "CASENO"}).Debug("Start adding variables")
 	startTime := time.Now()
 
 	column, err := sf.dataset.AddColumn("CASENO", reflect.Int64)
