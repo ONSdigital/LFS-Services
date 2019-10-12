@@ -76,7 +76,6 @@ func (sf SurveyFilter) AddVariables() error {
 		return err
 	}
 
-	// TODO: Run this in go routines
 	for i := range column.Rows {
 		row := items[i]
 
