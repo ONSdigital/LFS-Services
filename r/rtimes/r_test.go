@@ -2,7 +2,7 @@ package rtimes_test
 
 import (
 	"fmt"
-	"log"
+	"github.com/rs/zerolog/log"
 	"services/r"
 	times "services/r/rtimes"
 	"testing"

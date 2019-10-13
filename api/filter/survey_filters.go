@@ -2,7 +2,7 @@ package filter
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"reflect"
 	"services/dataset"
 	"strconv"
@@ -30,9 +30,12 @@ func (sf SurveyFilter) findLocation(headers []string, column string) (int, error
 
 func (sf SurveyFilter) AddVariables() error {
 
-	log.WithFields(log.Fields{
-		"variable": "CASENO"}).Debug("Start adding variables")
 	startTime := time.Now()
+
+	log.Debug().
+		Str("variable", "CASENO").
+		Timestamp().
+		Msg("Start adding variables")
 
 	column, err := sf.dataset.AddColumn("CASENO", reflect.Int64)
 	if err != nil {
@@ -123,10 +126,10 @@ func (sf SurveyFilter) AddVariables() error {
 		column.Rows[i] = int64(n)
 	}
 
-	log.WithFields(log.Fields{
-		"variable":    "CASENO",
-		"elapsedTime": time.Now().Sub(startTime),
-	}).Debug("Finished adding variables")
+	log.Debug().
+		Str("variable", "CASENO").
+		TimeDiff("elapsedTime", time.Now(), startTime).
+		Msg("Finished adding variables")
 
 	return nil
 }

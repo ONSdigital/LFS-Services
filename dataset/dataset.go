@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"os"
 	"reflect"
 	di "services/exportdata/sav"
@@ -50,13 +50,12 @@ func (d *Dataset) logTime(from fromFileFunc) fromFileFunc {
 	return func(fileName, datasetName string, out interface{}) error {
 		startTime := time.Now()
 		err := from(fileName, datasetName, out)
-		a := time.Now().Sub(startTime)
 
-		log.WithFields(log.Fields{
-			"method":      "logTime",
-			"file":        fileName,
-			"elapsedTime": a,
-		}).Debug("Load processed")
+		log.Debug().
+			Str("method", "logTime").
+			Str("file", fileName).
+			TimeDiff("elapsedTime", time.Now(), startTime).
+			Msg("Load processed")
 
 		return err
 	}
@@ -72,38 +71,36 @@ func (d *Dataset) readCSV(in, datasetName string, out interface{}) error {
 
 	// ensure out is a struct
 	if reflect.ValueOf(out).Kind() != reflect.Struct {
-		log.WithFields(log.Fields{
-			"method": "readCSV",
-			"file":   in,
-		}).Error("The output interface is not a struct")
+		log.Error().
+			Str("method", "readCSV").
+			Msg("The output interface is not a struct")
 		return fmt.Errorf(" -> FromCSV: %T is not a struct type", out)
 	}
 
 	start := time.Now()
 	records, err := imcsv.ImportCSVToSlice(in)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"method": "readCSV",
-			"file":   in,
-		}).Error("Cannot import CSV file")
-		return fmt.Errorf(" -> FromCSV: cannot import CSV file %w", err)
+		log.Error().
+			Err(err).
+			Str("method", "readCSV").
+			Str("file", in).
+			Msg("Cannot import CSV file")
+		return fmt.Errorf("cannot import CSV file %w", err)
 	}
 
 	if len(records) == 0 {
-		log.WithFields(log.Fields{
-			"method": "readCSV",
-			"file":   in,
-		}).Warn("The CSV file is empty")
-		return fmt.Errorf(" -> FromCSV: csv file: %s is empty", in)
+		log.Warn().
+			Str("method", "readCSV").
+			Msg("The CSV file is empty")
+		return fmt.Errorf("csv file: %s is empty", in)
 	}
 
-	elapsed := time.Since(start)
-	log.WithFields(log.Fields{
-		"method":      "readCSV",
-		"file":        in,
-		"records":     len(records) - 1,
-		"elapsedTime": elapsed,
-	}).Debug("Read CSV file")
+	log.Info().
+		Str("method", "readCSV").
+		Str("file", in).
+		Str("records", string(len(records)-1)).
+		TimeDiff("elapsedTime", time.Now(), start).
+		Msg("Read CSV file")
 
 	start = time.Now()
 	err = d.populateDataset(in, datasetName, records, out)
@@ -111,13 +108,12 @@ func (d *Dataset) readCSV(in, datasetName string, out interface{}) error {
 		return err
 	}
 
-	elapsed = time.Since(start)
-
-	log.WithFields(log.Fields{
-		"method":      "readCSV",
-		"records":     d.RowCount,
-		"elapsedTime": elapsed,
-	}).Debug("Dataset created")
+	log.Debug().
+		Str("method", "readCSV").
+		Str("file", "in").
+		Str("records", string(d.NumRows())).
+		TimeDiff("elapsedTime", time.Now(), start).
+		Msg("Read CSV file")
 
 	return nil
 }
@@ -132,11 +128,10 @@ func (d *Dataset) readSav(in, datasetName string, out interface{}) error {
 
 	// ensure out is a struct
 	if reflect.ValueOf(out).Kind() != reflect.Struct {
-		log.WithFields(log.Fields{
-			"method": "readSav",
-			"file":   in,
-		}).Error("The output interface is not a struct")
-		return fmt.Errorf(" -> readSav: %T is not a struct type", out)
+		log.Error().
+			Str("method", "readSav").
+			Msg("The output interface is not a struct")
+		return fmt.Errorf("%T is not a struct type", out)
 	}
 
 	start := time.Now()
@@ -147,35 +142,23 @@ func (d *Dataset) readSav(in, datasetName string, out interface{}) error {
 	}
 
 	if len(records) == 0 {
-		log.WithFields(log.Fields{
-			"method": "readSav",
-			"file":   in,
-		}).Warn("The sav file is empty")
-		return fmt.Errorf(" -> readSav: spss file: %s is empty", in)
+		log.Warn().
+			Str("method", "readSav").
+			Msg("The CSV file is empty")
+		return fmt.Errorf("the spss file: %s is empty", in)
 	}
 
-	elapsed := time.Since(start)
-
-	log.WithFields(log.Fields{
-		"method":      "readSav",
-		"file":        in,
-		"records":     len(records) - 1,
-		"elapsedTime": elapsed,
-	}).Debug("Read sav file")
+	log.Debug().
+		Str("file", in).
+		Int("records", len(records)-1).
+		TimeDiff("elapsedTime", time.Now(), start).
+		Msg("Read Sav file")
 
 	start = time.Now()
 	er := d.populateDataset(in, datasetName, records, out)
 	if er != nil {
 		return er
 	}
-
-	elapsed = time.Since(start)
-
-	log.WithFields(log.Fields{
-		"method":      "readSav",
-		"records":     d.RowCount,
-		"elapsedTime": elapsed,
-	}).Debug("Dataset created")
 
 	return nil
 }
@@ -200,7 +183,7 @@ func (d Dataset) GetRowsAsString(colName string) ([]string, error) {
 		return nil, fmt.Errorf("column %s is not a string", colName)
 	}
 
-	rows := make([]string, 0, d.RowCount)
+	rows := make([]string, 0, d.NumRows())
 	for _, a := range r {
 		rows = append(rows, a.(string))
 	}
@@ -218,7 +201,7 @@ func (d Dataset) GetRowsAsInt(colName string) ([]int, error) {
 		return nil, fmt.Errorf("column %s is not an int", colName)
 	}
 
-	rows := make([]int, 0, d.RowCount)
+	rows := make([]int, 0, d.NumRows())
 	for _, a := range r {
 		rows = append(rows, a.(int))
 	}
@@ -236,7 +219,7 @@ func (d Dataset) GetRowsAsFloat(colName string) ([]float32, error) {
 		return nil, fmt.Errorf("column %s is not a float32", colName)
 	}
 
-	rows := make([]float32, 0, d.RowCount)
+	rows := make([]float32, 0, d.NumRows())
 	for _, a := range r {
 		rows = append(rows, a.(float32))
 	}
@@ -254,7 +237,7 @@ func (d Dataset) GetRowsAsDouble(colName string) ([]float64, error) {
 		return nil, fmt.Errorf("column %s is not a float64t", colName)
 	}
 
-	rows := make([]float64, 0, d.RowCount)
+	rows := make([]float64, 0, d.NumRows())
 	for _, a := range r {
 		rows = append(rows, a.(float64))
 	}
@@ -283,10 +266,10 @@ func (d Dataset) ToSAV(fileName string) error {
 		case reflect.Float64:
 			spssType = spss.ReadstatTypeDouble
 		default:
-			log.WithFields(log.Fields{
-				"method":   "ToSAV",
-				"variable": cols[i],
-			}).Error("Cannot convert type for struct variable into equivelent SPSS type")
+			log.Error().
+				Str("method", "ToSAV").
+				Str("variable", cols[i]).
+				Msg("Cannot convert type for struct variable into equivelent SPSS type")
 			return fmt.Errorf("cannot convert type for struct variable %s into equivelent SPSS type", cols[i])
 		}
 		header = append(header, di.Header{SavType: spssType, Name: cols[i], Label: cols[i] + " label"})
@@ -342,9 +325,9 @@ func (d Dataset) ToSAV(fileName string) error {
 	}
 
 	if val := di.Export(fileName, d.DatasetName, header, data); val != 0 {
-		log.WithFields(log.Fields{"method": "ToSAV",
-			"file": fileName,
-		}).Error("SPSS export failed")
+		log.Error().
+			Str("file", fileName).
+			Msg("SPSS export failed")
 		return fmt.Errorf(" -> ToSAV: spss export to %s failed", fileName)
 	}
 
@@ -357,10 +340,11 @@ func (d Dataset) ToCSV(fileName string) error {
 
 	f, err := os.Create(fileName)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"method": "ToCSV",
-			"file":   fileName,
-		}).Error("Cannot create CSV output file")
+		log.Error().
+			Err(err).
+			Str("method", "ToCSV").
+			Str("file", fileName).
+			Msg("Cannot create CSV output file")
 		return fmt.Errorf(" -> ToCSV: cannot open output csv file: %s", err)
 	}
 
@@ -384,10 +368,11 @@ func (d Dataset) ToCSV(fileName string) error {
 	q := buffer.String()
 
 	if _, err = f.WriteString(q); err != nil {
-		log.WithFields(log.Fields{
-			"method": "ToCSV",
-			"file":   fileName,
-		}).Error("Cannot write to CSV file")
+		log.Error().
+			Err(err).
+			Str("method", "ToCSV").
+			Str("file", fileName).
+			Msg("Cannot write to CSV file")
 		return fmt.Errorf(" -> ToCSV: write to file: %s failed: %s", fileName, err)
 	}
 
@@ -405,10 +390,10 @@ func (d Dataset) ToCSV(fileName string) error {
 		q := buffer.String()
 
 		if _, err = f.WriteString(q); err != nil {
-			log.WithFields(log.Fields{
-				"method": "ToCSV",
-				"file":   fileName,
-			}).Error("Cannot write to CSV file")
+			log.Error().
+				Err(err).
+				Str("file", fileName).
+				Msg("Cannot write to CSV file")
 			return fmt.Errorf(" -> ToCSV: write to file: %s failed: %s", fileName, err)
 		}
 	}
@@ -421,11 +406,12 @@ func (d *Dataset) AddRow(row map[string]interface{}) error {
 	defer d.mux.Unlock()
 
 	if len(row) != len(d.Columns) {
-		log.WithFields(log.Fields{
-			"method":   "AddRow",
-			"expected": len(d.Columns),
-			"got":      len(row),
-		}).Error("Column count mismatch")
+		log.Error().
+			Str("method", "AddRow").
+			Str("expected", string(len(d.Columns))).
+			Str("got", string(len(row))).
+			Msg("Column count mismatch")
+
 		return fmt.Errorf("column count mismatch. Expected %d, got %d", len(d.Columns), len(row))
 	}
 	for k, v := range row {
@@ -442,7 +428,10 @@ func (d *Dataset) AddColumn(name string, columnType reflect.Kind) (*Column, erro
 	defer d.mux.Unlock()
 
 	if _, ok := d.Columns[name]; ok {
-		log.WithFields(log.Fields{"method": "AddColumn", "column": name}).Warn("Column already exists")
+		log.Warn().
+			Str("method", "AddColumn").
+			Str("column", name).
+			Msg("Column already exists")
 		return &Column{}, fmt.Errorf("column %s already exists", name)
 	}
 
@@ -481,11 +470,11 @@ func (d *Dataset) AddColumn(name string, columnType reflect.Kind) (*Column, erro
 		case reflect.Float64:
 			col.Rows = append(col.Rows, float64(0.0))
 		default:
-			log.WithFields(log.Fields{
-				"method":     "AddColumn",
-				"columnName": name,
-				"columnType": columnType,
-			}).Error("Cannot convert type")
+			log.Error().
+				Str("method", "AddColumn").
+				Str("column", name).
+				Str("columnType", string(columnType)).
+				Msg("Cannot convert type")
 			return &Column{}, fmt.Errorf("cannot convert type")
 		}
 	}
@@ -506,10 +495,10 @@ func (d *Dataset) RenameColumns(columns map[string]string) error {
 		colName := v
 		if to, ok := columns[colName]; ok {
 			colName = to
-			log.WithFields(log.Fields{
-				"from": v,
-				"to":   colName,
-			}).Debug("Rename column")
+			log.Debug().
+				Str("fromColumn", v).
+				Str("toColumn", colName).
+				Msg("Rename column")
 		}
 
 		var col Column
@@ -529,11 +518,11 @@ func (d *Dataset) RenameColumn(from, to string) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 	if _, ok := d.Columns[from]; !ok {
-		log.WithFields(log.Fields{
-			"method":     "RenameColumn",
-			"fromColumn": from,
-			"toColumn":   to,
-		}).Warn("Column doesn't exist")
+		log.Warn().
+			Str("method", "RenameColumn").
+			Str("fromColumn", from).
+			Str("toColumn", to).
+			Msg("Column doesn't exist")
 		return fmt.Errorf("column %s does not exist", from)
 	}
 
@@ -587,9 +576,9 @@ func (d *Dataset) DropColumns(columns []string) error {
 			m[v] = col
 			colNo++
 		} else {
-			log.WithFields(log.Fields{
-				"columnName": v,
-			}).Debug("Dropping column")
+			log.Debug().
+				Str("columnName", v).
+				Msg("Dropping column")
 		}
 	}
 
@@ -603,10 +592,11 @@ func (d *Dataset) DropColumn(name string) error {
 	defer d.mux.Unlock()
 
 	if _, ok := d.Columns[name]; !ok {
-		log.WithFields(log.Fields{
-			"method":     "DropColumn",
-			"columnName": name,
-		}).Warn("Column doesn't exist")
+		log.Warn().
+			Str("method", "DropColumn").
+			Str("columnName", name).
+			Msg("Column doesn't exist")
+
 		return fmt.Errorf("column %s does not exist", name)
 	}
 
@@ -637,29 +627,30 @@ func (d *Dataset) populateDataset(fileName, datasetName string, rows [][]string,
 	*d, err = NewDataset(datasetName)
 
 	if err != nil {
-		log.WithFields(log.Fields{
-			"datasetName":  datasetName,
-			"errorMessage": err.Error(),
-		}).Error("Cannot create dataset")
-		return fmt.Errorf("cannot create a new DataSet: %s", err)
+		log.Error().
+			Err(err).
+			Str("datasetName", datasetName).
+			Msg("Cannot create a dataset")
+		return fmt.Errorf("cannot create a  DataSet: %s", err)
 	}
 
-	log.WithFields(log.Fields{
-		"datasetName": datasetName,
-	}).Debug("Starting import into Dataset")
+	log.Debug().
+		Err(err).
+		Str("datasetName", datasetName).
+		Msg("Starting import into Dataset")
 
 	t1 := reflect.TypeOf(out)
 
 	for i := 0; i < t1.NumField(); i++ {
 		a := t1.Field(i)
 		if _, err := d.AddColumn(strings.ToUpper(a.Name), a.Type.Kind()); err != nil {
-			log.WithFields(log.Fields{
-				"datasetName":  datasetName,
-				"methodName":   "populateDataset",
-				"columnName":   strings.ToUpper(a.Name),
-				"columnType":   a.Type.Kind(),
-				"errorMessage": err.Error(),
-			}).Error("Cannot create column")
+			log.Error().
+				Err(err).
+				Str("datasetName", datasetName).
+				Str("methodName", "populateDataset").
+				Str("columnName", strings.ToUpper(a.Name)).
+				Str("columnType", string(a.Type.Kind())).
+				Msg("Cannot create column")
 			return fmt.Errorf("cannot create column: %w", err)
 		}
 	}
@@ -677,11 +668,13 @@ func (d *Dataset) populateDataset(fileName, datasetName string, rows [][]string,
 
 		for j := 0; j < len(spssRow); j++ {
 			if len(spssRow) != len(headers) {
-				log.WithFields(log.Fields{
-					"methodName": "populateDataset",
-					"rowSize":    len(spssRow),
-					"columnSize": len(headers),
-				}).Error("header is out of alignment with row")
+				log.Error().
+					Err(err).
+					Str("methodName", datasetName).
+					Str("methodName", "populateDataset").
+					Str("rowSize", string(len(spssRow))).
+					Str("columnSize", string(len(headers))).
+					Msg("Header is out of alignment with row")
 				return fmt.Errorf("header is out of alignment with row")
 			}
 			header := strings.ToUpper(headers[j])
@@ -750,7 +743,10 @@ func (d *Dataset) populateDataset(fileName, datasetName string, rows [][]string,
 		}
 
 		if err := d.AddRow(row); err != nil {
-			log.WithFields(log.Fields{"methodName": "populateDataset"}).Error("Cannot add row")
+			log.Error().
+				Err(err).
+				Str("methodName", "populateDataset").
+				Msg("Camnnot add row")
 			return fmt.Errorf("cannot add a row: %w", err)
 		}
 
@@ -759,12 +755,12 @@ func (d *Dataset) populateDataset(fileName, datasetName string, rows [][]string,
 }
 
 func logStructError(methodName, variableName string, kind reflect.Kind, newType string) {
-	log.WithFields(log.Fields{
-		"methodName":  methodName,
-		"variable":    variableName,
-		"convertFrom": kind,
-		"convertTo":   newType,
-	}).Error("Camnnot convert type")
+	log.Error().
+		Str("methodName", methodName).
+		Str("variable", variableName).
+		Str("convertFrom", string(kind)).
+		Str("convertTo", string(newType)).
+		Msg("Camnnot convert type")
 }
 
 func (d Dataset) OrderedColumns() []string {
@@ -784,8 +780,8 @@ func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
 	var header []string
 	var items [][]string
 
-	if maxCols > d.ColumnCount {
-		maxCols = d.ColumnCount
+	if maxCols > d.NumColumns() {
+		maxCols = d.NumColumns()
 	}
 
 	for _, v := range d.OrderedColumns() {
@@ -796,8 +792,8 @@ func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
 		cnt++
 	}
 
-	if maxRows > d.RowCount {
-		maxRows = d.RowCount
+	if maxRows > d.NumRows() {
+		maxRows = d.NumRows()
 	}
 
 	// for each header, get MaxRows
@@ -821,7 +817,9 @@ func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
 			case reflect.Float64:
 				row = append(row, fmt.Sprintf("%g", r.(float64)))
 			default:
-				log.WithFields(log.Fields{"methodName": "getByRow", "type": kind}).Error("Unknown type - possible corruption")
+				log.Error().
+					Str("methodName", "getByRow").
+					Msg("Unknown type - possible corruption")
 				panic(fmt.Errorf("unknown type - possible corruption"))
 			}
 		}
@@ -865,14 +863,20 @@ func (d Dataset) NumRows() int {
 
 func (d Dataset) Mean(name string) (float64, error) {
 	if _, ok := d.Columns[name]; !ok {
-		log.WithFields(log.Fields{"methodName": "Mean", "columnName": name}).Warn("Column does not exist")
+		log.Warn().
+			Str("methodName", "Mean").
+			Str("columnName", name).
+			Msg("Column does not exist")
 		return 0.0, fmt.Errorf("column %s does not exist", name)
 	}
 
 	var kind = d.Columns[name].Kind
 
 	if kind == reflect.String {
-		log.WithFields(log.Fields{"methodName": "Mean", "columnName": kind}).Warn("column is not numeric")
+		log.Warn().
+			Str("methodName", "Mean").
+			Str("columnName", name).
+			Msg("Column is not numeric")
 		return 0.0, errors.New(fmt.Sprintf("column %s is not numeric", name))
 	}
 
@@ -891,7 +895,10 @@ func (d Dataset) Mean(name string) (float64, error) {
 		case reflect.Float64:
 			avg = avg + v.(float64)
 		default:
-			log.WithFields(log.Fields{"methodName": "Mean", "type": kind}).Error("Unknown type - possible corruption")
+			log.Error().
+				Str("methodName", "Mean").
+				Str("kind", string(kind)).
+				Msg("Unknown type - possible corruption")
 			return 0.0, fmt.Errorf("unknown type - possible corruption")
 		}
 	}

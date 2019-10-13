@@ -3,7 +3,7 @@ package db
 import (
 	"bytes"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"reflect"
 	"services/config"
 	"services/dataset"
@@ -36,22 +36,23 @@ func (s *MySQL) Connect() error {
 		Password: config.Config.Database.Password,
 	}
 
-	log.WithFields(log.Fields{
-		"databaseName": config.Config.Database.Database,
-	}).Debug("Connecting to database")
+	log.Debug().
+		Str("databaseName", config.Config.Database.Database).
+		Msg("Connecting to database")
 
 	sess, err := mysql.Open(settings)
 
 	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error("cannot open database connection")
+		log.Error().
+			Err(err).
+			Str("databaseName", config.Config.Database.Database).
+			Msg("Cannot connect to database")
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"databaseName": config.Config.Database.Database,
-	}).Debug("Connected to database")
+	log.Debug().
+		Str("databaseName", config.Config.Database.Database).
+		Msg("Connected to database")
 
 	if config.Config.Database.Verbose {
 		sess.SetLogging(true)
@@ -68,11 +69,11 @@ func (s *MySQL) Connect() error {
 		sess.SetConnMaxLifetime(maxLifetime)
 	}
 
-	log.WithFields(log.Fields{
-		"MaxPoolSize":        poolSize,
-		"MaxIdleConnections": maxIdle,
-		"MaxLifetime":        maxLifetime * time.Second,
-	}).Debug("Connection Attributes")
+	log.Debug().
+		Int("MaxPoolSize", poolSize).
+		Int("MaxIdleConnections", maxIdle).
+		Dur("MaxLifetime", maxLifetime*time.Second).
+		Msg("Connection Attributes")
 
 	sess.SetMaxOpenConns(poolSize)
 	sess.SetMaxIdleConns(maxIdle)
@@ -122,17 +123,17 @@ func (s MySQL) UnpersistDataset(tableName string) (dataset.Dataset, error) {
 	d, err := dataset.NewDataset(tableName)
 
 	startTime := time.Now()
-	log.Info("starting unpersist")
+	log.Info().Msg("starting unpersist")
 
 	if err != nil {
-		log.WithFields(log.Fields{
-			"methodName":   "UnpersistDataset",
-			"errorMessage": err.Error(),
-		}).Error("cannot create a new DataSet")
+		log.Error().
+			Err(err).
+			Str("methodName", "UnpersistDataset").
+			Msg("Cannot create a new DataSet")
 		return dataset.Dataset{}, fmt.Errorf("cannot create a new DataSet: %s", err)
 	}
 
-	log.Info("starting unpersist into Dataset")
+	log.Info().Msg("starting unpersist into Dataset")
 
 	req := s.DB.Collection(columnsTable).Find().Where("table_name = '" + tableName + "'").OrderBy("column_number")
 	var column Column
@@ -169,10 +170,11 @@ func (s MySQL) UnpersistDataset(tableName string) (dataset.Dataset, error) {
 					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistDataset: unpersist error on float64 - possible corruption")
 				}
 			default:
-				log.WithFields(log.Fields{
-					"methodName": "UnpersistDataset",
-					"type":       reflect.Kind(column.Kind),
-				}).Error("unknown type - possible corruption")
+				log.Error().
+					Err(err).
+					Str("methodName", "UnpersistDataset").
+					Str("type", string(reflect.Kind(column.Kind))).
+					Msg("Unknown type - possible corruption")
 				return dataset.Dataset{}, fmt.Errorf("unknown type - possible corruption")
 			}
 		}
@@ -186,8 +188,10 @@ func (s MySQL) UnpersistDataset(tableName string) (dataset.Dataset, error) {
 		d.RowCount = len(s)
 	}
 
-	a := time.Now().Sub(startTime)
-	log.WithFields(log.Fields{"ElapsedTime": a.String()}).Debug("Data unpersisted")
+	log.Debug().
+		Err(err).
+		TimeDiff("elapsedTime", time.Now(), startTime).
+		Msg("Data unpersisted")
 	return d, nil
 }
 
@@ -195,17 +199,17 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 	var kBuffer bytes.Buffer
 
 	startTime := time.Now()
-	log.WithFields(log.Fields{
-		"tableName": d.DatasetName,
-	}).Debug("Starting persistence into DB")
+	log.Debug().
+		Str("tableName", d.DatasetName).
+		Msg("Starting persistence into DB")
 
 	_ = s.DeleteColumnData(d.DatasetName)
 
 	tx, err := s.DB.NewTx(nil)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"Error": err,
-		}).Error("Cannot start a transaction")
+		log.Error().
+			Err(err).
+			Msg("Start transaction failed")
 		return fmt.Errorf("cannot start a transaction, error: %s", err)
 	}
 
@@ -232,10 +236,10 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 			case reflect.Float64:
 				kBuffer.WriteString(fmt.Sprintf("%g", v))
 			default:
-				log.WithFields(log.Fields{
-					"methodName": "PersistDataset",
-					"type":       columnKind,
-				}).Error("unknown type - possible corruption")
+				log.Error().
+					Str("methodName", "PersistDataset").
+					Int("type", int(columnKind)).
+					Msg("Unknown type - possible corruption")
 				return fmt.Errorf("unknown type - possible corruption")
 			}
 
@@ -251,15 +255,15 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.WithFields(log.Fields{
-			"Error": err,
-		}).Error("Commit failed")
+		log.Error().
+			Err(err).
+			Msg("Commit transaction failed")
 		return fmt.Errorf("commit failed, error: %s", err)
 	}
 
-	a := time.Now().Sub(startTime)
-
-	log.WithFields(log.Fields{"elapsedTime": a.String()}).Debug("Data persisted")
+	log.Debug().
+		TimeDiff("elapsedTime", time.Now(), startTime).
+		Msg("Data persisted")
 
 	return nil
 }

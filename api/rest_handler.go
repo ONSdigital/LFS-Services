@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"time"
 )
@@ -24,17 +24,17 @@ type RestHandlers struct {
 }
 
 func NewRestHandler() *RestHandlers {
-	log.WithFields(log.Fields{
-		"startTime": time.Now(),
-	}).Debug("Creating new RestHandler")
+	log.Debug().
+		Time("startTime", time.Now()).
+		Msg("Creating new RestHandler")
 	return &RestHandlers{nil, nil}
 }
 
 func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
-	log.WithFields(log.Fields{
-		"client": r.RemoteAddr,
-		"uri":    r.RequestURI,
-	}).Debug("Received FileUpload request")
+	log.Debug().
+		Str("client", r.RemoteAddr).
+		Str("uri", r.RequestURI).
+		Msg("Received FileUpload request")
 
 	startTime := time.Now()
 
@@ -53,13 +53,11 @@ func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) 
 		sendResponse(h.w, h.r, a)
 	}
 
-	elapsed := time.Now().Sub(startTime)
-
-	log.WithFields(log.Fields{
-		"client":      r.RemoteAddr,
-		"uri":         r.RequestURI,
-		"elapsedTime": elapsed,
-	}).Debug("FileUpload request completed")
+	log.Debug().
+		Str("client", r.RemoteAddr).
+		Str("uri", r.RequestURI).
+		TimeDiff("elapsedTime", time.Now(), startTime).
+		Msg("FileUpload request completed")
 
 }
 
@@ -67,9 +65,9 @@ func (h RestHandlers) getParameter(parameter string) (string, error) {
 	keys, ok := h.r.URL.Query()[parameter]
 
 	if !ok || len(keys[0]) < 1 {
-		log.WithFields(log.Fields{
-			"parameter": parameter,
-		}).Error("URL parameter missing")
+		log.Error().
+			Str("parameter", parameter).
+			Msg("URL parameter missing")
 		return "", fmt.Errorf("URL parameter, %s, is missing", parameter)
 	}
 
@@ -99,9 +97,9 @@ func (response ErrorResponse) sendResponse(w http.ResponseWriter, r *http.Reques
 
 func sendResponse(w http.ResponseWriter, r *http.Request, response Response) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.WithFields(log.Fields{
-			"client": r.RemoteAddr,
-			"uri":    r.RequestURI,
-		}).Error("json.NewEncoder() failed in FileUploadHandler")
+		log.Error().
+			Str("client", r.RemoteAddr).
+			Str("uri", r.RequestURI).
+			Msg("json.NewEncoder() failed in FileUploadHandler")
 	}
 }

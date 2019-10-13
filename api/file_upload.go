@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
 	"os"
@@ -19,9 +19,9 @@ func (h RestHandlers) fileUpload() error {
 
 	file, _, err := h.r.FormFile("lfsFile")
 	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error("Error getting formfile")
+		log.Error().
+			Err(err).
+			Msg("Error getting formfile")
 		return err
 	}
 
@@ -29,20 +29,20 @@ func (h RestHandlers) fileUpload() error {
 
 	fileName := h.r.Form.Get("fileName")
 	if fileName == "" {
-		log.Error("fileName not set")
+		log.Error().Msg("fileName not set")
 		return fmt.Errorf("fileName not set")
 	}
 
 	fileType := h.r.Form.Get("fileType")
 	if fileType == "" {
-		log.Error("fileType not set")
+		log.Error().Msg("fileName not set")
 		return fmt.Errorf("fileType not set")
 	}
 
-	log.WithFields(log.Fields{
-		"fileName": fileName,
-		"fileType": fileType,
-	}).Debug("Uploading file...")
+	log.Debug().
+		Str("fileName", fileName).
+		Str("fileType", fileType).
+		Msg("Uploading file")
 
 	startTime := time.Now()
 
@@ -55,13 +55,12 @@ func (h RestHandlers) fileUpload() error {
 
 	n, err := io.Copy(tmpfile, file)
 
-	elapsed := time.Now().Sub(startTime)
-	log.WithFields(log.Fields{
-		"fileName":    fileName,
-		"fileType":    fileType,
-		"bytesRead":   n,
-		"elapsedtime": elapsed,
-	}).Debug("File uploaded")
+	log.Debug().
+		Str("fileName", fileName).
+		Str("fileType", fileType).
+		Int64("bytesRead", n).
+		TimeDiff("elapsedTime", time.Now(), startTime).
+		Msg("File uploaded")
 
 	_ = tmpfile.Close()
 
@@ -70,7 +69,7 @@ func (h RestHandlers) fileUpload() error {
 	case SurveyFile:
 		source := h.r.Form.Get("fileSource") // GB or NI
 		if source != "GB" && source != "NI" {
-			log.Error("fileSource must be NI or GB")
+			log.Error().Msg("fileSource must be NI or GB")
 			return fmt.Errorf("invalid fileSource or fileSource not set - must be GB or NI")
 		}
 		if err := h.surveyUpload(tmpfile.Name(), fileName, source); err != nil {
@@ -83,11 +82,12 @@ func (h RestHandlers) fileUpload() error {
 		}
 
 	default:
-		log.WithFields(log.Fields{
-			"error":    "filetype not recognised",
-			"fileName": fileName,
-			"fileType": fileType,
-		}).Warn("Error getting formfile")
+		log.Warn().
+			Str("fileName", fileName).
+			Str("fileType", fileType).
+			Int64("bytesRead", n).
+			Str("error", "filetype not recognised").
+			Msg("Error getting formfile")
 		return fmt.Errorf("fileType, %s, not recognised", fileType)
 	}
 
@@ -121,65 +121,65 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 	val := validate.NewSurveyValidation(&d)
 	validationResponse, err := val.Validate()
 	if err != nil {
-		log.WithFields(log.Fields{
-			"status":       "Failed",
-			"errorMessage": err,
-			"elapsedTime":  time.Now().Sub(startValidation),
-		}).Warn("Validator complete")
+		log.Warn().
+			Err(err).
+			Str("status", "Failed").
+			TimeDiff("elapsedTime", time.Now(), startValidation).
+			Msg("Validator failed")
 		return err
 	}
 
 	if validationResponse.ValidationResult == validate.ValidationFailed {
-		log.WithFields(log.Fields{
-			"status":       "Failed",
-			"errorMessage": validationResponse.ErrorMessage,
-			"elapsedTime":  time.Now().Sub(startValidation),
-		}).Warn("Validator complete")
+		log.Warn().
+			Str("status", "Failed").
+			Str("errorMessage", validationResponse.ErrorMessage).
+			TimeDiff("elapsedTime", time.Now(), startValidation).
+			Msg("Validator failed")
 		return fmt.Errorf(validationResponse.ErrorMessage)
 	}
 
-	log.WithFields(log.Fields{
-		"status":      "Successful",
-		"elapsedTime": time.Now().Sub(startValidation),
-	}).Debug("Validator complete")
+	log.Debug().
+		Str("status", "Successful").
+		TimeDiff("elapsedTime", time.Now(), startValidation).
+		Msg("Validator complete")
 
 	f := filter.NewSurveyFilter(&d)
 
 	if err := f.AddVariables(); err != nil {
-		log.WithFields(log.Fields{
-			"datasetName":  datasetName,
-			"errorMessage": err.Error(),
-		}).Error(err)
+		log.Error().
+			Err(err).
+			Str("datasetName", datasetName)
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"status": "Successful",
-	}).Debug("Filtering complete")
+	log.Debug().
+		Str("datasetName", datasetName).
+		Str("status", "Successful").
+		Msg("Filtering complete")
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
-		log.WithFields(log.Fields{
-			"datasetName":  datasetName,
-			"errorMessage": err.Error(),
-		}).Error("cannot connect to database")
+		log.Error().
+			Err(err).
+			Str("datasetName", datasetName).
+			Msg("Cannot connect to database")
 		return fmt.Errorf("cannot connect to database: %s", err)
 	}
 
 	if err := database.PersistDataset(d); err != nil {
-		log.WithFields(log.Fields{
-			"datasetName":  datasetName,
-			"errorMessage": err.Error(),
-		}).Error("cannot persist dataset to database")
+		log.Error().
+			Err(err).
+			Str("datasetName", datasetName).
+			Msg("Cannot persist dataset")
 		return fmt.Errorf("cannot persist dataset to database: %s", err)
 	}
 
-	log.WithFields(log.Fields{
-		"datasetName": datasetName,
-		"rowCount":    d.NumRows(),
-		"columnCount": d.ColumnCount,
-		"elapsedTime": time.Now().Sub(startTime),
-	}).Debug("Imported and persisted dataset")
+	log.Debug().
+		Str("datasetName", datasetName).
+		Int("rowCount", d.NumRows()).
+		Int("columnCount", d.NumColumns()).
+		TimeDiff("elapsedTime", time.Now(), startTime).
+		Msg("Imported and persisted dataset")
 
 	return nil
 }

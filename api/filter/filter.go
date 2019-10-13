@@ -25,7 +25,7 @@ func (bf BaseFilter) DropColumns() {
 
 func (bf BaseFilter) RenameColumns() {
 	cols := conf.Config.Rename.Survey
-	m := make(map[string]string, bf.dataset.ColumnCount)
+	m := make(map[string]string, bf.dataset.NumColumns())
 
 	for _, v := range cols {
 		m[v.From] = v.To

@@ -1,9 +1,12 @@
 package main
 
 import (
+	"flag"
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"net/http"
+	"os"
 	"services/api"
 	"services/config"
 	"time"
@@ -11,9 +14,28 @@ import (
 
 func main() {
 
-	log.WithFields(log.Fields{
-		"startTime": time.Now(),
-	}).Info("LFS Services: Starting up")
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+
+	if config.Config.LogFormat == "Terminal" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
+	}
+
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
+	if config.Config.LogLevel == "Debug" {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
+	// Command line flag overrides the configuration file
+	debug := flag.Bool("debug", false, "sets log level to debug")
+	flag.Parse()
+	if *debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
+	log.Info().
+		Str("startTime", time.Now().String()).
+		Msg("LFS Services: Starting up")
 
 	router := mux.NewRouter()
 	restHandlers := api.NewRestHandler()
@@ -24,12 +46,18 @@ func main() {
 
 	writeTimeout, err := time.ParseDuration(config.Config.Service.WriteTimeout)
 	if err != nil {
-		panic("writeTimeout configuration error")
+		log.Fatal().
+			Err(err).
+			Str("service", "LFS").
+			Msgf("writeTimeout configuration error")
 	}
 
 	readTimeout, err := time.ParseDuration(config.Config.Service.ReadTimeout)
 	if err != nil {
-		panic("readTimeout configuration error")
+		log.Fatal().
+			Err(err).
+			Str("service", "LFS").
+			Msgf("readTimeout configuration error")
 	}
 
 	srv := &http.Server{
@@ -39,11 +67,15 @@ func main() {
 		ReadTimeout:  readTimeout,
 	}
 
-	log.WithFields(log.Fields{
-		"listenAddress": listenAddress,
-		"writeTimeout":  writeTimeout,
-		"readTimeout":   readTimeout,
-	}).Info("LFS Services: Waiting for requests")
+	log.Info().
+		Str("listenAddress", listenAddress).
+		Str("writeTimeout", writeTimeout.String()).
+		Str("readTimeout", readTimeout.String()).
+		Msg("LFS Services: Waiting for requests")
 
-	log.Fatal(srv.ListenAndServe())
+	err = srv.ListenAndServe()
+	log.Fatal().
+		Err(err).
+		Str("service", "LFS").
+		Msgf("ListenAndServe failed")
 }
