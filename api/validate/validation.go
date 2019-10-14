@@ -12,7 +12,7 @@ type ValidationResponse struct {
 	ErrorMessage     string
 }
 
-/**
+/*
 Base validation. To use this, use composition in concrete structs
 */
 type Validator struct {

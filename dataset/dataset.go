@@ -19,6 +19,14 @@ import (
 	"time"
 )
 
+type Audit struct {
+	ReferenceDate time.Time `db:"reference_date"`
+	NumVarFile    int       `db:"num_var_file"`
+	NumVarLoaded  int       `db:"num_var_loaded"`
+	NumObFile     int       `db:"num_ob_file"`
+	NumObLoaded   int       `db:"num_ob_loaded"`
+}
+
 type Column struct {
 	ColNo int
 	Kind  reflect.Kind
@@ -31,6 +39,7 @@ type Dataset struct {
 	mux         *sync.Mutex
 	RowCount    int
 	ColumnCount int
+	Audit
 }
 
 const (
@@ -41,31 +50,13 @@ const (
 func NewDataset(name string) (Dataset, error) {
 	mux := sync.Mutex{}
 	cols := make(map[string]Column, InitialColumnCapacity)
-	return Dataset{name, cols, &mux, 0, 0}, nil
+	return Dataset{name, cols, &mux, 0, 0, Audit{}}, nil
 }
 
-type fromFileFunc func(fileName, datasetName string, out interface{}) error
+type DropFunction func(name string) bool
+type RenameFunction func(name string) (string, bool)
 
-func (d *Dataset) logTime(from fromFileFunc) fromFileFunc {
-	return func(fileName, datasetName string, out interface{}) error {
-		startTime := time.Now()
-		err := from(fileName, datasetName, out)
-
-		log.Debug().
-			Str("method", "logTime").
-			Str("file", fileName).
-			TimeDiff("elapsedTime", time.Now(), startTime).
-			Msg("Load processed")
-
-		return err
-	}
-}
-
-func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}) error {
-	return d.logTime(d.readCSV)(fileName, datasetName, out)
-}
-
-func (d *Dataset) readCSV(in, datasetName string, out interface{}) error {
+func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, dropColumn DropFunction, renameColumns RenameFunction) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
@@ -78,12 +69,12 @@ func (d *Dataset) readCSV(in, datasetName string, out interface{}) error {
 	}
 
 	start := time.Now()
-	records, err := imcsv.ImportCSVToSlice(in)
+	records, err := imcsv.ImportCSVToSlice(fileName)
 	if err != nil {
 		log.Error().
 			Err(err).
 			Str("method", "readCSV").
-			Str("file", in).
+			Str("file", fileName).
 			Msg("Cannot import CSV file")
 		return fmt.Errorf("cannot import CSV file %w", err)
 	}
@@ -92,18 +83,18 @@ func (d *Dataset) readCSV(in, datasetName string, out interface{}) error {
 		log.Warn().
 			Str("method", "readCSV").
 			Msg("The CSV file is empty")
-		return fmt.Errorf("csv file: %s is empty", in)
+		return fmt.Errorf("csv file: %s is empty", fileName)
 	}
 
 	log.Info().
 		Str("method", "readCSV").
-		Str("file", in).
+		Str("file", fileName).
 		Str("records", string(len(records)-1)).
 		TimeDiff("elapsedTime", time.Now(), start).
 		Msg("Read CSV file")
 
 	start = time.Now()
-	err = d.populateDataset(in, datasetName, records, out)
+	err = d.populateDataset(datasetName, records, out, dropColumn, renameColumns)
 	if err != nil {
 		return err
 	}
@@ -118,11 +109,7 @@ func (d *Dataset) readCSV(in, datasetName string, out interface{}) error {
 	return nil
 }
 
-func (d *Dataset) LoadSav(fileName, datasetName string, out interface{}) error {
-	return d.logTime(d.readSav)(fileName, datasetName, out)
-}
-
-func (d *Dataset) readSav(in, datasetName string, out interface{}) error {
+func (d *Dataset) LoadSav(in string, datasetName string, out interface{}, dropColumns DropFunction, renameColumns RenameFunction) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
@@ -155,7 +142,7 @@ func (d *Dataset) readSav(in, datasetName string, out interface{}) error {
 		Msg("Read Sav file")
 
 	start = time.Now()
-	er := d.populateDataset(in, datasetName, records, out)
+	er := d.populateDataset(datasetName, records, out, dropColumns, renameColumns)
 	if er != nil {
 		return er
 	}
@@ -484,36 +471,6 @@ func (d *Dataset) AddColumn(name string, columnType reflect.Kind) (*Column, erro
 	return &col, nil
 }
 
-func (d *Dataset) RenameColumns(columns map[string]string) error {
-	d.mux.Lock()
-	defer d.mux.Unlock()
-	a := d.OrderedColumns()
-	m := make(map[string]Column, InitialColumnCapacity)
-
-	var colNo = 0
-	for _, v := range a {
-		colName := v
-		if to, ok := columns[colName]; ok {
-			colName = to
-			log.Debug().
-				Str("fromColumn", v).
-				Str("toColumn", colName).
-				Msg("Rename column")
-		}
-
-		var col Column
-		old := d.Columns[v]
-		col.Rows = old.Rows
-		col.Kind = old.Kind
-		col.ColNo = colNo
-		m[colName] = col
-		colNo++
-	}
-
-	d.Columns = m
-	return nil
-}
-
 func (d *Dataset) RenameColumn(from, to string) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
@@ -558,12 +515,13 @@ func isInSlice(a string, list []string) bool {
 	return false
 }
 
-func (d *Dataset) DropColumns(columns []string) error {
+func (d *Dataset) DropColumns(columns []string) (int, error) {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
 	a := d.OrderedColumns()
 	m := make(map[string]Column, InitialColumnCapacity)
+	var columnsDropped = 0
 
 	var colNo = 0
 	for _, v := range a {
@@ -576,6 +534,7 @@ func (d *Dataset) DropColumns(columns []string) error {
 			m[v] = col
 			colNo++
 		} else {
+			columnsDropped++
 			log.Debug().
 				Str("columnName", v).
 				Msg("Dropping column")
@@ -584,7 +543,7 @@ func (d *Dataset) DropColumns(columns []string) error {
 
 	d.Columns = m
 	d.ColumnCount = colNo
-	return nil
+	return columnsDropped, nil
 }
 
 func (d *Dataset) DropColumn(name string) error {
@@ -621,7 +580,8 @@ func (d *Dataset) DropColumn(name string) error {
 	return nil
 }
 
-func (d *Dataset) populateDataset(fileName, datasetName string, rows [][]string, out interface{}) error {
+func (d *Dataset) populateDataset(datasetName string, rows [][]string, out interface{},
+	dropColumn DropFunction, renameColumns RenameFunction) error {
 
 	var err error
 	*d, err = NewDataset(datasetName)
@@ -635,7 +595,6 @@ func (d *Dataset) populateDataset(fileName, datasetName string, rows [][]string,
 	}
 
 	log.Debug().
-		Err(err).
 		Str("datasetName", datasetName).
 		Msg("Starting import into Dataset")
 
@@ -643,6 +602,10 @@ func (d *Dataset) populateDataset(fileName, datasetName string, rows [][]string,
 
 	for i := 0; i < t1.NumField(); i++ {
 		a := t1.Field(i)
+		// skip columns that are marked as being dropped
+		if dropColumn(strings.ToUpper(a.Name)) {
+			continue
+		}
 		if _, err := d.AddColumn(strings.ToUpper(a.Name), a.Type.Kind()); err != nil {
 			log.Error().
 				Err(err).
@@ -677,6 +640,7 @@ func (d *Dataset) populateDataset(fileName, datasetName string, rows [][]string,
 					Msg("Header is out of alignment with row")
 				return fmt.Errorf("header is out of alignment with row")
 			}
+
 			header := strings.ToUpper(headers[j])
 			// extract the tagged columns only
 			if _, ok := d.Columns[headers[j]]; !ok {
@@ -749,8 +713,21 @@ func (d *Dataset) populateDataset(fileName, datasetName string, rows [][]string,
 				Msg("Camnnot add row")
 			return fmt.Errorf("cannot add a row: %w", err)
 		}
-
 	}
+
+	m := make(map[string]Column, d.NumColumns())
+
+	for k, v := range d.Columns {
+		to, ok := renameColumns(k)
+		if ok {
+			m[to] = v
+		} else {
+			m[k] = v
+		}
+	}
+
+	d.Columns = m
+
 	return nil
 }
 
@@ -776,20 +753,18 @@ func (d *Dataset) GetAllRows() ([]string, [][]string) {
 }
 
 func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
-	cnt := 0
-	var header []string
-	var items [][]string
+	var header = make([]string, maxCols)
+	var items = make([][]string, maxRows)
 
 	if maxCols > d.NumColumns() {
 		maxCols = d.NumColumns()
 	}
 
-	for _, v := range d.OrderedColumns() {
-		if cnt > maxCols-1 {
+	for k, v := range d.OrderedColumns() {
+		if k > maxCols-1 {
 			break
 		}
-		header = append(header, v)
-		cnt++
+		header[k] = v
 	}
 
 	if maxRows > d.NumRows() {
@@ -798,7 +773,7 @@ func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
 
 	// for each header, get MaxRows
 	for j := 0; j < maxRows; j++ {
-		var row []string
+		var row = make([]string, 0, 2000)
 		for _, b := range header {
 			r := d.Columns[b].Rows[j]
 			kind := d.Columns[b].Kind
@@ -823,7 +798,8 @@ func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
 				panic(fmt.Errorf("unknown type - possible corruption"))
 			}
 		}
-		items = append(items, row)
+		items[j] = row
+		//items = append(items, row)
 	}
 	return header, items
 }

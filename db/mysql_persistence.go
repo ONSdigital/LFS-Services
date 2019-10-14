@@ -254,6 +254,13 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 		}
 	}
 
+	if err := s.auditFileUpload(tx, d); err != nil {
+		log.Error().
+			Err(err).
+			Msg("AuditFileUpload failed")
+		return fmt.Errorf("AuditFileUpload, error: %s", err)
+	}
+
 	if err := tx.Commit(); err != nil {
 		log.Error().
 			Err(err).
@@ -264,6 +271,33 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 	log.Debug().
 		TimeDiff("elapsedTime", time.Now(), startTime).
 		Msg("Data persisted")
+
+	return nil
+}
+
+type Audit struct {
+	ReferenceDate time.Time `db:"reference_date"`
+	FileName      string    `db:"file_name"`
+	NumVarFile    int       `db:"num_var_file"`
+	NumVarLoaded  int       `db:"num_var_loaded"`
+	NumObFile     int       `db:"num_ob_file"`
+	NumObLoaded   int       `db:"num_ob_loaded"`
+}
+
+func (s MySQL) auditFileUpload(tx sqlbuilder.Tx, d dataset.Dataset) error {
+	a := Audit{
+		FileName:      d.DatasetName,
+		ReferenceDate: time.Now(),
+		NumVarFile:    d.NumVarFile,
+		NumVarLoaded:  d.NumVarLoaded,
+		NumObFile:     d.NumObFile,
+		NumObLoaded:   d.NumObLoaded,
+	}
+	dbAudit := tx.Collection("upload_audit")
+	_, err := dbAudit.Insert(a)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

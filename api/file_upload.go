@@ -101,22 +101,31 @@ func (h RestHandlers) geogUpload(tmpfile, datasetName string) error {
 func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 	startTime := time.Now()
 
-	if source == "GB" {
-
-	} else {
-		// must be NI
-	}
 	d, err := dataset.NewDataset(datasetName)
 	if err != nil {
 		return err
 	}
 
-	err = d.LoadSav(tmpfile, datasetName, dataset.Survey{})
+	var surveyFilter filter.Filter
+	if source == "GB" {
+		surveyFilter = filter.NewGBSurveyFilter(&d)
+	} else {
+		// must be NI
+		surveyFilter = filter.NewGBSurveyFilter(&d)
+	}
+
+	err = d.LoadSav(tmpfile, datasetName, dataset.Survey{}, surveyFilter.DropColumn, surveyFilter.RenameColumn)
 	if err != nil {
 		return err
 	}
 
 	startValidation := time.Now()
+
+	d.ReferenceDate = time.Now()
+	d.NumObFile = d.RowCount
+	d.NumObLoaded = d.RowCount
+	d.NumVarFile = d.ColumnCount
+	d.NumVarLoaded = d.ColumnCount
 
 	val := validate.NewSurveyValidation(&d)
 	validationResponse, err := val.Validate()
@@ -143,17 +152,23 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 		TimeDiff("elapsedTime", time.Now(), startValidation).
 		Msg("Validator complete")
 
-	f := filter.NewSurveyFilter(&d)
-
-	if err := f.AddVariables(); err != nil {
+	cnt, err := surveyFilter.AddVariables()
+	if err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName)
 		return err
 	}
 
+	// add the number of variables added
+	d.NumVarLoaded = d.NumVarLoaded + cnt
+
 	log.Debug().
 		Str("datasetName", datasetName).
+		Int("numObservationsFile", d.NumObFile).
+		Int("numObservationsLoaded", d.NumObLoaded).
+		Int("numVarFile", d.NumVarFile).
+		Int("numVarLoaded", d.NumVarLoaded).
 		Str("status", "Successful").
 		Msg("Filtering complete")
 

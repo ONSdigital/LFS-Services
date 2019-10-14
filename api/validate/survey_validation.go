@@ -21,7 +21,9 @@ func (sf SurveyValidation) Validate() (ValidationResponse, error) {
 	return ok, err
 }
 
-/**
+/*
+Validate the REFDTE field in the Survey file
+
 SPSS stores timestamps as the numbers of seconds between the year 1582 (start of the Gregorian calendar)
 and a given time on a given date. To get the actual date from this we need to:
 

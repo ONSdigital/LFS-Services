@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+/*
+input file names / types
+*/
 const (
 	SurveyFile = "Survey"
 	GeogFile   = "Geog"
@@ -23,6 +26,9 @@ type RestHandlers struct {
 	r *http.Request
 }
 
+/*
+Create a new RestHandler
+*/
 func NewRestHandler() *RestHandlers {
 	log.Debug().
 		Time("startTime", time.Now()).
