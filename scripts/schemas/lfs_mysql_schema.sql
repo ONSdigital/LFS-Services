@@ -12,3 +12,12 @@ create table if not exists columns
 
 create index columns_table_name_index
     on columns (table_name);
+
+create table users
+(
+    username varchar(255) null,
+    password varchar(255) null
+);
+
+insert into users(username, password)
+values ('Paul', 'sucks');
