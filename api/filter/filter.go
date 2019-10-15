@@ -18,16 +18,6 @@ func init() {
 	}
 }
 
-/*
-Base filter. To use this, use composition in concrete structs
-*/
-
-type Filter interface {
-	DropColumn(name string) bool
-	RenameColumn(column string) (string, bool)
-	AddVariables() (int, error)
-}
-
 type BaseFilter struct {
 	dataset *dataset.Dataset
 }
@@ -35,13 +25,13 @@ type BaseFilter struct {
 /*
 Generic drop columns functionality - based on the name of columns to drop in the configuration file
 */
-func (sf GBSurveyFilter) DropColumn(name string) bool {
+func (bf BaseFilter) DropColumn(name string) bool {
 	for _, j := range dropColumns.ColumnNames {
 		if j == name {
 			log.Debug().
 				Str("columnName", name).
 				Msg("Dropping column")
-			sf.dataset.NumVarLoaded = sf.dataset.NumVarLoaded - 1
+			bf.dataset.NumVarLoaded = bf.dataset.NumVarLoaded - 1
 			return true
 		}
 	}
@@ -51,7 +41,7 @@ func (sf GBSurveyFilter) DropColumn(name string) bool {
 /*
 Generic rename columns functionality - based on the name of columns to drop in the configuration file
 */
-func (bf BaseFilter) RenameColumn(column string) (string, bool) {
+func (bf BaseFilter) RenameColumns(column string) (string, bool) {
 	item, ok := renameColumns[column]
 	if ok {
 		log.Debug().

@@ -96,7 +96,6 @@ func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	h.r = r
 
 	w.Header().Set("Content-Type", "application/json")
-	enableCors(&w)
 	w.WriteHeader(http.StatusOK)
 
 	a := OkayResponse{OK}
