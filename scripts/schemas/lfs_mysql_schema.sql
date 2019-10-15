@@ -12,3 +12,15 @@ create table if not exists columns
 
 create index columns_table_name_index
     on columns (table_name);
+
+create table if not exists upload_audit
+(
+    id int auto_increment
+        primary key,
+    file_name varchar(1024) charset utf8 null,
+    reference_date datetime null,
+    num_var_file int null,
+    num_var_loaded int null,
+    num_ob_file int null,
+    num_ob_loaded int null
+);
