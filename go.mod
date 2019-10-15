@@ -17,5 +17,6 @@ require (
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
+	gopkg.in/validator.v2 v2.0.0-20191008145730-5614e8810ea7
 	upper.io/db.v3 v3.6.3+incompatible
 )
