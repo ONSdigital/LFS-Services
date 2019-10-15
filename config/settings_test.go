@@ -35,11 +35,11 @@ func TestConfig(t *testing.T) {
 		t.Logf("database name %s\n", databaseName)
 	}
 
-	debug := conf.Config.Debug
-	if debug != true {
-		t.Errorf("debug = %t; want localhost", debug)
+	maxPoolsize := conf.Config.Database.ConnectionPool.MaxPoolSize
+	if maxPoolsize != 10 {
+		t.Errorf("maxPoolsize = %d; want 10", maxPoolsize)
 	} else {
-		t.Logf("debug %t\n", debug)
+		t.Logf("maxPoolsize %d\n", maxPoolsize)
 	}
 
 	columnsTable := conf.Config.Database.ColumnsTable
@@ -58,7 +58,7 @@ func TestConfig(t *testing.T) {
 	}
 
 	readTimeout := conf.Config.Service.ReadTimeout
-	expectedTimeout := "15s"
+	expectedTimeout := "60s"
 	if readTimeout != expectedTimeout {
 		t.Errorf("readTimeout = %s, want %s", readTimeout, expectedTimeout)
 	} else {
@@ -66,7 +66,7 @@ func TestConfig(t *testing.T) {
 	}
 
 	writeTimeout := conf.Config.Service.WriteTimeout
-	expectedTimeout = "15s"
+	expectedTimeout = "60s"
 	if readTimeout != expectedTimeout {
 		t.Errorf("writeTimeout = %s, want %s", writeTimeout, expectedTimeout)
 	} else {

@@ -1,5 +1,6 @@
 
-debug = true
+logFormat = "Terminal" # one of: Text | Json | Terminal
+logLevel = "Debug" #	one of: "Info" # Trace | Info | Debug | Warn | Error | Fatal
 
 testDirectory = "/Users/paul/LFS/LFS-Services/testdata/"
 #testDirectory = "/Users/paul/ONS/LFS/LFS-Services/testdata/"
@@ -15,7 +16,7 @@ user = "lfs" # set by environment variables
 password = "lfs" # set by environment variables
 verbose = false
 database = "LFS" # set by environment variables
-    [database.pool]
+    [database.connectionPool]
        maxPoolSize = 10
        maxIdleConnections = 2
        maxLifetimeSeconds = 0
@@ -23,16 +24,566 @@ database = "LFS" # set by environment variables
 [service]
 
 listenAddress = "127.0.0.1:8000"
-readTimeout = "15s"
-writeTimeout = "15s"
+readTimeout = "60s"
+writeTimeout = "60s"
 
 [[rename.survey]]
-    from = "YPTCIA"
-    to = "YPTCIA-renamed"
+    from= "ADDR"
+    to = "ADD"
 
 [[rename.survey]]
-    from = "TRONJB"
-    to = "TRONJB-renamed"
+    from = "CHECKWK50"
+    to = "CHEKW50"
+
+[[rename.survey]]
+    from = "CODEINT2"
+    to = "CODINT2"
+
+[[rename.survey]]
+    from = "CODEINT3"
+    to = "CODINTO"
+
+[[rename.survey]]
+    from = "CODEINT4"
+    to = "CODINTR"
+
+[[rename.survey]]
+    from = "CODEINT5"
+    to = "CODINTA"
+
+[[rename.survey]]
+    from = "CODEINTR"
+    to = "CODINTM"
+
+[[rename.survey]]
+    from = "DC"
+    to = "PCODE"
+
+[[rename.survey]]
+    from = "ERNCM0101"
+    to = "ERNCM01"
+
+[[rename.survey]]
+    from = "ERNCM0102"
+    to = "ERNCM02"
+
+[[rename.survey]]
+    from = "ERNCM0103"
+    to = "ERNCM03"
+
+[[rename.survey]]
+    from = "ERNCM0104"
+    to = "ERNCM04"
+
+[[rename.survey]]
+    from = "ERNCM0105"
+    to = "ERNCM05"
+
+[[rename.survey]]
+    from = "ERNCM0106"
+    to = "ERNCM06"
+
+[[rename.survey]]
+    from = "ERNCM0107"
+    to = "ERNCM07"
+
+[[rename.survey]]
+    from = "ERNCM0108"
+    to = "ERNCM08"
+
+[[rename.survey]]
+    from = "ERNCM0109"
+    to = "ERNCM09"
+
+[[rename.survey]]
+    from = "ERNCM0110"
+    to = "ERNCM10"
+
+[[rename.survey]]
+    from = "ERNCM0111"
+    to = "ERNCM11"
+
+[[rename.survey]]
+    from = "IEMPSTA2"
+    to = "IEMPSTC"
+
+[[rename.survey]]
+    from = "IEMPSTA3"
+    to = "IEMPST2"
+
+[[rename.survey]]
+    from = "IEMPSTA4"
+    to = "IEMPST2C"
+
+[[rename.survey]]
+    from = "IEMPSTAT"
+    to = "IEMPST"
+
+[[rename.survey]]
+    from = "INDOUT"
+    to = "IOUTCOME"
+
+[[rename.survey]]
+    from = "OYIEMPST"
+    to = "IEMPSTO"
+
+[[rename.survey]]
+   from = "S90ST2_INDEX"
+    to = "S90ST2"
+
+[[rename.survey]]
+   from = "S90ST2C_INDEX"
+    to = "S90S2CI"
+
+[[rename.survey]]
+   from = "S90ST2U_INDEX"
+    to = "S90S2UI"
+
+[[rename.survey]]
+   from = "S90STA_INDEX"
+    to = "S90STA"
+
+[[rename.survey]]
+   from = "S90STAC_INDEX"
+    to = "S90SACI"
+
+[[rename.survey]]
+   from = "S90STAU_INDEX"
+    to = "S90SAUI"
+
+[[rename.survey]]
+   from = "S90STF_INDEX"
+    to = "S90STM"
+
+[[rename.survey]]
+   from = "S90STM_INDEX"
+    to = "S90STM"
+
+[[rename.survey]]
+   from = "S90STMC_INDEX"
+    to = "S90SMCI"
+
+[[rename.survey]]
+   from = "S90STMU_INDEX"
+    to = "S90SMU"
+
+[[rename.survey]]
+   from = "S90STO_INDEX"
+    to = "S90STO"
+
+[[rename.survey]]
+   from = "S90STOY_INDEX"
+    to = "S90SOYI"
+
+[[rename.survey]]
+   from = "S90STR_INDEX"
+    to = "S90STR"
+
+[[rename.survey]]
+   from = "S90STRD_INDEX"
+    to = "S90SRDI"
+
+[[rename.survey]]
+   from = "SECFLAG2"
+    to = "SECFLG2"
+
+[[rename.survey]]
+   from = "SECFLAGM"
+    to = "SECFLGM"
+
+[[rename.survey]]
+   from = "SECFLAGO"
+    to = "SECFLGO"
+
+[[rename.survey]]
+   from = "SECFLAGR"
+    to = "SECFLGR"
+
+[[rename.survey]]
+   from = "SERNO2_INDEX"
+    to = "S2KNO2"
+
+[[rename.survey]]
+   from = "SERNO2C_INDEX"
+    to = "S2KN2CI"
+
+[[rename.survey]]
+   from = "SERNO2U_INDEX"
+    to = "S2KN2UI"
+
+[[rename.survey]]
+   from = "SERNOA_INDEX"
+    to = "S2KNOA"
+
+[[rename.survey]]
+   from = "SERNOAC_INDEX"
+    to = "S2KNACI"
+
+[[rename.survey]]
+   from = "SERNOAU_INDEX"
+    to = "S2KNAUI"
+
+[[rename.survey]]
+   from = "SERNOF_INDEX"
+    to = "S2KNOM"
+
+[[rename.survey]]
+   from = "SERNOMC_INDEX"
+    to = "S2KNMCI"
+
+[[rename.survey]]
+   from = "SERNOMU_INDEX"
+    to = "S2KNMUI"
+
+[[rename.survey]]
+   from = "SERNOO_INDEX"
+    to = "S2KNOO"
+
+[[rename.survey]]
+   from = "SERNOOY_INDEX"
+    to = "S2KNOYI"
+
+[[rename.survey]]
+   from = "SERNOR_INDEX"
+    to = "S2KNOR"
+
+[[rename.survey]]
+   from = "SERNORD_INDEX"
+    to = "S2KNRDI"
+
+[[rename.survey]]
+   from = "SOC902_INDEX"
+    to = "SOC902"
+
+[[rename.survey]]
+   from = "SOC902C_INDEX"
+    to = "S90C2CI"
+
+[[rename.survey]]
+   from = "SOC902U_INDEX"
+    to = "S90C2UI"
+
+[[rename.survey]]
+   from = "SOC90A_INDEX"
+    to = "SOC90A"
+
+[[rename.survey]]
+   from = "SOC90AC_INDEX"
+    to = "S90CACI"
+
+[[rename.survey]]
+   from = "SOC90AU_INDEX"
+    to = "S90CAUI"
+
+[[rename.survey]]
+   from = "SOC90F_INDEX"
+    to = "SOC90M"
+
+[[rename.survey]]
+   from = "SOC90M_INDEX"
+    to = "SOC90M"
+
+[[rename.survey]]
+   from = "SOC90MC_INDEX"
+    to = "S90CMCI"
+
+[[rename.survey]]
+   from = "SOC90MU_INDEX"
+    to = "S90CMUI"
+
+[[rename.survey]]
+   from = "SOC90O_INDEX"
+    to = "SOC90O"
+
+[[rename.survey]]
+   from = "SOC90OY_INDEX"
+    to = "S90COYI"
+
+[[rename.survey]]
+   from = "SOC90R_INDEX"
+    to = "SOC90R"
+
+[[rename.survey]]
+   from = "SOC90RD_INDEX"
+    to = "S90CRDI"
+
+[[rename.survey]]
+   from = "SUBCODE2"
+    to = "SUBCOD2"
+
+[[rename.survey]]
+   from = "SUBCODE3"
+    to = "SUBCOD3"
+
+[[rename.survey]]
+   from = "SUBCODE4"
+    to = "SUBCOD4"
+
+[[rename.survey]]
+   from = "SUBCODE5"
+    to = "SUBCOD5"
+
+[[rename.survey]]
+   from = "SUBCODE6"
+    to = "SUBCOD6"
+
+[[rename.survey]]
+   from = "SUBCODE7"
+    to = "SUBCOD7"
+
+[[rename.survey]]
+   from = "SUBCODE8"
+    to = "SUBCOD8"
+
+[[rename.survey]]
+   from = "SUPVS2_INDEX"
+    to = "SUPVS2"
+
+[[rename.survey]]
+   from = "SUPVS2C_INDEX"
+    to = "SPV2CI"
+
+[[rename.survey]]
+   from = "SUPVS2U_INDEX"
+    to = "SPV2UI"
+
+[[rename.survey]]
+   from = "SUPVSA_INDEX"
+    to = "SUPVSA"
+
+[[rename.survey]]
+   from = "SUPVSAC_INDEX"
+    to = "SPVACI"
+
+[[rename.survey]]
+   from = "SUPVSAU_INDEX"
+    to = "SPVAUI"
+
+[[rename.survey]]
+   from = "SUPVSF_INDEX"
+    to = "SUPVSM"
+
+[[rename.survey]]
+   from = "SUPVSM_INDEX"
+    to = "SUPVSM"
+
+[[rename.survey]]
+   from = "SUPVSMC_INDEX"
+    to = "SPVMCI"
+
+[[rename.survey]]
+   from = "SUPVSMU_INDEX"
+    to = "SPVMUI"
+
+[[rename.survey]]
+   from = "SUPVSO_INDEX"
+    to = "SUPVSO"
+
+[[rename.survey]]
+   from = "SUPVSOY_INDEX"
+    to = "SPVOYI"
+
+[[rename.survey]]
+   from = "SUPVSR_INDEX"
+    to = "SUPVSR"
+
+[[rename.survey]]
+   from = "SUPVSRD_INDEX"
+    to = "SPVRDI"
+
+[[rename.survey]]
+   from = "QULCH111"
+    to = "QULCHUK1"
+
+[[rename.survey]]
+   from = "QULCH112"
+    to = "QULCHUK2"
+
+[[rename.survey]]
+   from = "QULCH113"
+    to = "QULCHUK3"
+
+[[rename.survey]]
+   from = "QULCH114"
+    to = "QULCHUK4"
+
+[[rename.survey]]
+   from = "QULCH115"
+    to = "QULCHUK5"
+
+[[rename.survey]]
+   from = "QULCH116"
+    to = "QULCHUK6"
+
+[[rename.survey]]
+   from = "NATLDE111"
+    to = "NTLE111"
+
+[[rename.survey]]
+   from = "NATLDE112"
+    to = "NTLE112"
+
+[[rename.survey]]
+   from = "NATLDE113"
+    to = "NTLE113"
+
+[[rename.survey]]
+   from = "NATLDE114"
+    to = "NTLE114"
+
+[[rename.survey]]
+   from = "NATLDE115"
+    to = "NTLE115"
+
+[[rename.survey]]
+   from = "NATLDE116"
+    to = "NTLE116"
+
+[[rename.survey]]
+   from = "NATLDW111"
+    to = "NTLW111"
+
+[[rename.survey]]
+   from = "NATLDW112"
+    to = "NTLW112"
+
+[[rename.survey]]
+   from = "NATLDW113"
+    to = "NTLW113"
+
+[[rename.survey]]
+   from = "NATLDW114"
+    to = "NTLW114"
+
+[[rename.survey]]
+   from = "NATLDW115"
+    to = "NTLW115"
+
+[[rename.survey]]
+   from = "NATLDW116"
+    to = "NTLW116"
+
+[[rename.survey]]
+   from = "NATLDS111"
+    to = "NTLS111"
+
+[[rename.survey]]
+   from = "NATLDS112"
+    to = "NTLS112"
+
+[[rename.survey]]
+   from = "NATLDS113"
+    to = "NTLS113"
+
+[[rename.survey]]
+   from = "NATLDS114"
+    to = "NTLS114"
+
+[[rename.survey]]
+   from = "NATLDS115"
+    to = "NTLS115"
+
+[[rename.survey]]
+   from = "NATLDS116"
+    to = "NTLS116"
+
+[[rename.survey]]
+   from = "NATLDN111"
+    to = "NTLN111"
+
+[[rename.survey]]
+   from = "NATLDN112"
+    to = "NTLN112"
+
+[[rename.survey]]
+   from = "NATLDN113"
+    to = "NTLN113"
+
+[[rename.survey]]
+   from = "NATLDN114"
+    to = "NTLN114"
+
+[[rename.survey]]
+   from = "NATLDN115"
+    to = "NTLN115"
+
+[[rename.survey]]
+   from = "NATLDN116"
+    to = "NTLN116"
+
+[[rename.survey]]
+   from = "R01"
+    to = "XR00"
+
+[[rename.survey]]
+   from = "R02"
+    to = "XR01"
+
+[[rename.survey]]
+   from = "R03"
+    to = "XR02"
+
+[[rename.survey]]
+   from = "R04"
+    to = "XR03"
+
+[[rename.survey]]
+   from = "R05"
+    to = "XR04"
+
+[[rename.survey]]
+   from = "R06"
+    to = "XR05"
+
+[[rename.survey]]
+   from = "R07"
+    to = "XR06"
+
+[[rename.survey]]
+   from = "R08"
+    to = "XR07"
+
+[[rename.survey]]
+   from = "R09"
+    to = "XR08"
+
+[[rename.survey]]
+   from = "R10"
+    to = "XR09"
+
+[[rename.survey]]
+   from = "R11"
+    to = "XR10"
+
+[[rename.survey]]
+   from = "R12"
+    to = "XR11"
+
+[[rename.survey]]
+   from = "R13"
+    to = "XR12"
+
+[[rename.survey]]
+   from = "R14"
+    to = "XR13"
+
+[[rename.survey]]
+   from = "R15"
+    to = "XR14"
+
+[[rename.survey]]
+   from = "R16"
+    to = "XR15"
 
 [dropColumns.survey]
-    ColumnNames = ["SOC2KA_INDEX", "HLDCOUNT"]
+    ColumnNames = [ "ADDRESSK", "ADDRESSN", "CALLDATE", "CALLO", "CALLTYP", "CHK_NUM1", "CHK_NUM2", "CONEMAIL", "DVTEL1", "DVTEL2", "EMAILADD",
+        "FSTNME", "FSTNME10", "FSTNME11", "FSTNME12", "FSTNME13", "FSTNME14", "FSTNME15", "FSTNME16", "FSTNME2", "FSTNME3", "FSTNME4",
+        "FSTNME5", "FSTNME6", "FSTNME7", "FSTNME8", "FSTNME9", "LNAME", "LNAME10", "LNAME11", "LNAME12", "LNAME13", "LNAME14", "LNAME15",
+        "LNAME16", "LNAME2", "LNAME3", "LNAME4", "LNAME5", "LNAME6", "LNAME7", "LNAME8", "LNAME9", "NAME", "NAME01", "NAME02", "NAME03",
+        "NAME04", "NAME05", "NAME06", "NAME07", "NAME08", "NAME09", "NAME10", "NAME11", "NAME12", "NAME13", "NAME14", "NAME15", "NAME16",
+        "NAME17", "NAME18", "NAME19", "NAME2", "NAME20", "NAME21", "NAME22", "NAME23", "NAME24", "NAME25", "NAME26", "NAME27", "NAME28",
+        "NAME29", "NAME3", "NAME30", "NAME31", "NAME32", "NAME33", "NAME34", "NAME35", "NAME36", "NAME37", "NAME38", "NAME39", "NAME4",
+        "NAME5", "NAME6", "NAME7", "NAME8", "NAME9", "NOPHONE", "NOPHONER", "OVSKHR", "OVST", "PHONE", "SURNME", "SURNME10", "SURNME11",
+        "SURNME12", "SURNME13", "SURNME14", "SURNME15", "SURNME16", "SURNME2", "SURNME3", "SURNME4", "SURNME5", "SURNME6",
+        "SURNME7", "SURNME8", "SURNME9", "TELEIN1", "TELEIN2", "TELENO", "TELENO2", "TITLE", "TITLE10", "TITLE11", "TITLE12",
+        "TITLE13", "TITLE14", "TITLE15", "TITLE16", "TITLE2", "TITLE3", "TITLE4", "TITLE5", "TITLE6", "TITLE7", "TITLE8", "TITLE9"]

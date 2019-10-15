@@ -7,5 +7,3 @@ type DropColumns struct {
 type DropColumnNames struct {
 	ColumnNames []string
 }
-
-// [dropColumns.survey] columnNames = ["SOC2KA_INDEX", "HLDCOUNT"]

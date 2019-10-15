@@ -16,7 +16,7 @@ should be
 
 > pacman -S autoconf automake libtool mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-libiconv make
 
-For linux, and maybe MacOS, the LD_LIBRARY_PATH environment variable must include 
+For linux the LD_LIBRARY_PATH environment variable must include 
 _/usr/local/lib_ otherwise the app will be unable to find the Readstat C libraries.
 
 ### Configuration

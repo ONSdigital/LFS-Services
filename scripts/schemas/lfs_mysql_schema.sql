@@ -1,20 +1,14 @@
+create schema if not exists LFS collate utf8mb4_0900_ai_ci;
 
+create table if not exists columns
+(
+    id            int auto_increment primary key,
+    table_name    varchar(255) null,
+    column_name   varchar(255) null,
+    column_number int          null,
+    kind          int(255)     null,
+    rows          longtext     null
+);
 
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
-
--- ----------------------------
--- Table structure for columns
--- ----------------------------
-DROP TABLE IF EXISTS `columns`;
-CREATE TABLE `columns` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `table_name` varchar(255) DEFAULT NULL,
-  `column_name` varchar(255) DEFAULT NULL,
-  `column_number` int(11) DEFAULT NULL,
-  `kind` int(255) DEFAULT NULL,
-  `rows` longtext,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1776 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-SET FOREIGN_KEY_CHECKS = 1;
+create index columns_table_name_index
+    on columns (table_name);
