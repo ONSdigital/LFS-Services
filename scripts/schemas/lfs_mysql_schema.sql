@@ -20,4 +20,4 @@ create table users
 );
 
 insert into users(username, password)
-values ('Paul', 'sucks');
+values ('Paul', '$2a$04$uCR1AINowJXKQxiiPwyLLubTm1k0.PWMhWDHMPE3PNu59ZglB1fLG');

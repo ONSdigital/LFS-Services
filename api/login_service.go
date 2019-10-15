@@ -29,20 +29,20 @@ func (h RestHandlers) login(username string, password string) error {
 
 	// Compare passwords
 	matchErr := comparePasswords(user.Password, password)
-	if matchErr != nil {
-		return matchErr
+	if matchErr == false {
+		return fmt.Errorf("Invalid Password.")
+
 	}
 
-	// Winner, winner, chicken dinner!
 	return nil
 }
 
-func comparePasswords(hashedPwd string, plainPwd string) error {
+func comparePasswords(hashedPwd string, plainPwd string) bool {
 	byteHash := []byte(hashedPwd)
 	bytePlain := []byte(plainPwd)
 	err := bcrypt.CompareHashAndPassword(byteHash, bytePlain)
 	if err != nil {
-		return err
+		return false
 	}
-	return nil
+	return true
 }

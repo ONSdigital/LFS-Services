@@ -317,7 +317,7 @@ func (s MySQL) GetUserID(user string) (types.UserCredentials, error) {
 
 	ok := res.Next(&creds)
 	if !ok {
-		return creds, fmt.Errorf("user %s not foung", user)
+		return creds, fmt.Errorf("user %s not found", user)
 	}
 	return creds, nil
 }

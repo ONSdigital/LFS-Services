@@ -95,8 +95,11 @@ func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	h.w = w
 	h.r = r
 
+	// TODO: Retrieve and replace static variables --->
 	username := "Paul"
-	res := h.login(username)
+	password := "sucks"
+	// TODO: <---
+	res := h.login(username, password)
 
 	w.Header().Set("Content-Type", "application/json")
 	enableCors(&w)
