@@ -80,6 +80,36 @@ func (h RestHandlers) getParameter(parameter string) (string, error) {
 	return keys[0], nil
 }
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
+func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	log.Debug().
+		Str("client", r.RemoteAddr).
+		Str("uri", r.RequestURI).
+		Msg("Received login request")
+
+	startTime := time.Now()
+
+	h.w = w
+	h.r = r
+
+	w.Header().Set("Content-Type", "application/json")
+	enableCors(&w)
+	w.WriteHeader(http.StatusOK)
+
+	a := OkayResponse{OK}
+	sendResponse(h.w, h.r, a)
+
+	log.Debug().
+		Str("client", r.RemoteAddr).
+		Str("uri", r.RequestURI).
+		TimeDiff("elapsedTime", time.Now(), startTime).
+		Msg("Login request completed")
+
+}
+
 type Response interface {
 	sendResponse(w http.ResponseWriter, r *http.Request)
 }

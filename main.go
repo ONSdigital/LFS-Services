@@ -41,6 +41,7 @@ func main() {
 	restHandlers := api.NewRestHandler()
 
 	router.HandleFunc("/import/survey/{run_id}", restHandlers.FileUploadHandler).Methods("POST")
+	router.HandleFunc("/login/{user}", restHandlers.LoginHandler).Methods("GET")
 
 	listenAddress := config.Config.Service.ListenAddress
 
