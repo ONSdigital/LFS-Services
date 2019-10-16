@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/zerolog/log"
+	"math"
 	"os"
 	"reflect"
 	di "services/exportdata/sav"
@@ -626,59 +627,63 @@ func (d *Dataset) populateDataset(datasetName string, rows [][]string, out inter
 				row[header] = a
 
 			case reflect.Int8, reflect.Uint8:
+				if a == "NaN" {
+					a = "0"
+				}
 				i, err := strconv.ParseInt(a, 0, 8)
 				if err != nil {
 					logStructError("populateDataset", header, kind, "Int8")
 					return fmt.Errorf("cannot convert %s into an Int8", a)
 				}
-				if i == MissingIntValue {
-					i = 0
-				}
 				row[header] = i
 
 			case reflect.Int, reflect.Int32, reflect.Uint32:
+				if a == "NaN" {
+					a = "0"
+				}
 				i, err := strconv.ParseInt(a, 0, 32)
 				if err != nil {
 					logStructError("populateDataset", header, kind, "Int32")
 					return fmt.Errorf("cannot convert %s into an Int32", a)
 				}
-				if i == MissingIntValue {
-					i = 0
-				}
 				row[header] = i
 
 			case reflect.Int64, reflect.Uint64:
+				if a == "NaN" {
+					a = "0"
+				}
 				i, err := strconv.ParseInt(a, 0, 64)
 				if err != nil {
 					logStructError("populateDataset", header, kind, "Int64")
 					return fmt.Errorf("cannot convert %s into an Int64", a)
 				}
-				if i == MissingIntValue {
-					i = 0
-				}
 				row[header] = i
 
 			case reflect.Float32:
-				i, err := strconv.ParseFloat(a, 32)
-				if err != nil {
-					logStructError("populateDataset", header, kind, "Float32")
-					return fmt.Errorf("cannot convert %s into an Float32", a)
+				if a == "NaN" {
+					row[header] = math.NaN()
+				} else {
+					i, err := strconv.ParseFloat(a, 32)
+
+					if err != nil {
+						logStructError("populateDataset", header, kind, "Float32")
+						return fmt.Errorf("cannot convert %s into an Float32", a)
+					}
+					row[header] = i
 				}
-				if i == MissingFloatValue {
-					i = 0.0
-				}
-				row[header] = i
 
 			case reflect.Float64:
-				i, err := strconv.ParseFloat(a, 64)
-				if err != nil {
-					logStructError("populateDataset", header, kind, "Float64")
-					return fmt.Errorf("cannot convert %s into an Float64", a)
+				if a == "NaN" {
+					row[header] = math.NaN()
+				} else {
+					i, err := strconv.ParseFloat(a, 64)
+					if err != nil {
+						logStructError("populateDataset", header, kind, "Float64")
+						return fmt.Errorf("cannot convert %s into an Float64", a)
+					}
+
+					row[header] = i
 				}
-				if i == MissingFloatValue {
-					i = 0.0
-				}
-				row[header] = i
 
 			default:
 				logStructError("populateDataset", header, kind, "Unknown")
@@ -740,12 +745,12 @@ func (d *Dataset) GetAllRows() (headers []string, rows [][]string) {
 }
 
 func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
-	var header = make([]string, maxCols)
-	var items = make([][]string, maxRows)
 
 	if maxCols > d.NumColumns() {
 		maxCols = d.NumColumns()
 	}
+
+	var header = make([]string, maxCols)
 
 	for k, v := range d.OrderedColumns() {
 		if k > maxCols-1 {
@@ -757,6 +762,7 @@ func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
 	if maxRows > d.NumRows() {
 		maxRows = d.NumRows()
 	}
+	var items = make([][]string, maxRows)
 
 	// for each header, get MaxRows
 	for j := 0; j < maxRows; j++ {

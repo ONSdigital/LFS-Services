@@ -9,6 +9,9 @@ import (
 var dropColumns = conf.Config.DropColumns.Survey
 var renameColumns map[string]string
 
+/*
+Load the columns to rename from the configuration
+*/
 func init() {
 	cols := conf.Config.Rename.Survey
 	renameColumns = make(map[string]string, len(cols))

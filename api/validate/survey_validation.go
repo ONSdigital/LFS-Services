@@ -2,8 +2,8 @@ package validate
 
 import (
 	"fmt"
+	"math"
 	"services/dataset"
-	"sync"
 	"time"
 )
 
@@ -22,9 +22,6 @@ type Val struct {
 
 func (sf SurveyValidation) Validate() (ValidationResponse, error) {
 
-	out := make(chan Val)
-	var wg sync.WaitGroup
-
 	v, e := sf.validateMissingValues()
 
 	if e != nil {
@@ -34,38 +31,13 @@ func (sf SurveyValidation) Validate() (ValidationResponse, error) {
 	v, e = sf.validateREFDTE()
 	return v, e
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		v, e := sf.validateMissingValues()
-		out <- Val{v, e}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		v, e := sf.validateREFDTE()
-		out <- Val{v, e}
-	}()
-
-	print("waiting")
-	wg.Wait()
-	print("dne waiting")
-
-	a := <-out
-	if a.error != nil {
-		return a.ValidationResponse, a.error
-	}
-
-	a = <-out
-	return a.ValidationResponse, a.error
 }
 
 var columnsToCheck = []string{"REFDTE", "PCODE", "QUOTA", "WEEK", "W1YR", "QRTR", "ADD", "WAVFND", "HHLD", "PERSNO"}
 
 /*
 Check if any rows in the list of columns to check are 'missing' where missing is defined as -99 and -99.99
-for int and float types respectively. Assuming for now that all columns to check are doubles.
+for int and float types respectively.
 */
 func (sf SurveyValidation) validateMissingValues() (ValidationResponse, error) {
 	for _, v := range columnsToCheck {
@@ -79,11 +51,11 @@ func (sf SurveyValidation) validateMissingValues() (ValidationResponse, error) {
 				}, err
 			}
 			for _, j := range rows {
-				if j == dataset.MissingFloatValue {
+				if math.IsNaN(j) {
 					return ValidationResponse{
 						ValidationResult: ValidationFailed,
 						ErrorMessage:     "column %s has a missing value",
-					}, fmt.Errorf("column %s has a missing value", v)
+					}, fmt.Errorf("column %s has a missing value - NaN", v)
 				}
 			}
 			return ValidationResponse{

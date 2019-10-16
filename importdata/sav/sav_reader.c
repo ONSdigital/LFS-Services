@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "readstat.h"
 #include "sav_reader.h"
@@ -87,7 +88,7 @@ int handle_value(int obs_index, readstat_variable_t *variable, readstat_value_t 
 
         case READSTAT_TYPE_INT8:
             if (readstat_value_is_system_missing(value)) {
-                snprintf(buf, sav->buffer_size, "%d", -99);
+                snprintf(buf, sav->buffer_size, "NaN");
             } else {
                 snprintf(buf, sav->buffer_size, "%d", readstat_int8_value(value));
             }
@@ -96,7 +97,7 @@ int handle_value(int obs_index, readstat_variable_t *variable, readstat_value_t 
 
         case READSTAT_TYPE_INT16:
             if (readstat_value_is_system_missing(value)) {
-                snprintf(buf, sav->buffer_size, "%d", -99);
+                snprintf(buf, sav->buffer_size, "NaN");
             } else {
                 snprintf(buf, sav->buffer_size, "%d", readstat_int16_value(value));
             }
@@ -105,7 +106,7 @@ int handle_value(int obs_index, readstat_variable_t *variable, readstat_value_t 
 
         case READSTAT_TYPE_INT32:
             if (readstat_value_is_system_missing(value)) {
-                snprintf(buf, sav->buffer_size, "%d", -99);
+                snprintf(buf, sav->buffer_size, "Nan");
             } else {
                 snprintf(buf, sav->buffer_size, "%d", readstat_int32_value(value));
             }
@@ -114,7 +115,7 @@ int handle_value(int obs_index, readstat_variable_t *variable, readstat_value_t 
 
         case READSTAT_TYPE_FLOAT:
             if (readstat_value_is_system_missing(value)) {
-                snprintf(buf, sav->buffer_size, "%f", -99.99);
+                snprintf(buf, sav->buffer_size, "NaN");
             } else {
                 snprintf(buf, sav->buffer_size, "%f", readstat_float_value(value));
             }
@@ -124,7 +125,7 @@ int handle_value(int obs_index, readstat_variable_t *variable, readstat_value_t 
 
         case READSTAT_TYPE_DOUBLE:
             if (readstat_value_is_system_missing(value)) {
-                snprintf(buf, sav->buffer_size, "%lf", -99.99);
+                snprintf(buf, sav->buffer_size, "NaN");
             } else {
                 snprintf(buf, sav->buffer_size, "%lf", readstat_double_value(value));
             }
