@@ -276,17 +276,8 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 	return nil
 }
 
-type Audit struct {
-	ReferenceDate time.Time `db:"reference_date"`
-	FileName      string    `db:"file_name"`
-	NumVarFile    int       `db:"num_var_file"`
-	NumVarLoaded  int       `db:"num_var_loaded"`
-	NumObFile     int       `db:"num_ob_file"`
-	NumObLoaded   int       `db:"num_ob_loaded"`
-}
-
 func (s MySQL) auditFileUpload(tx sqlbuilder.Tx, d dataset.Dataset) error {
-	a := Audit{
+	a := types.Audit{
 		FileName:      d.DatasetName,
 		ReferenceDate: time.Now(),
 		NumVarFile:    d.NumVarFile,

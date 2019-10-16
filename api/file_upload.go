@@ -10,6 +10,7 @@ import (
 	"services/api/validate"
 	"services/dataset"
 	"services/db"
+	"services/types"
 	"time"
 )
 
@@ -106,26 +107,20 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 		return err
 	}
 
-	var surveyFilter filter.Filter
+	var surveyFilter types.Filter
 	if source == "GB" {
 		surveyFilter = filter.NewGBSurveyFilter(&d)
 	} else {
-		// must be NI
-		surveyFilter = filter.NewGBSurveyFilter(&d)
+		// not GB so must be NI
+		surveyFilter = filter.NewNISurveyFilter(&d)
 	}
 
-	err = d.LoadSav(tmpfile, datasetName, dataset.Survey{}, surveyFilter.DropColumn, surveyFilter.RenameColumn)
+	err = d.LoadSav(tmpfile, datasetName, dataset.Survey{}, surveyFilter)
 	if err != nil {
 		return err
 	}
 
 	startValidation := time.Now()
-
-	d.ReferenceDate = time.Now()
-	d.NumObFile = d.RowCount
-	d.NumObLoaded = d.RowCount
-	d.NumVarFile = d.ColumnCount
-	d.NumVarLoaded = d.ColumnCount
 
 	val := validate.NewSurveyValidation(&d)
 	validationResponse, err := val.Validate()

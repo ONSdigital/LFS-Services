@@ -2,6 +2,7 @@ package validate
 
 import (
 	"fmt"
+	"math"
 	"services/dataset"
 	"time"
 )
@@ -14,11 +15,89 @@ func NewSurveyValidation(dataset *dataset.Dataset) SurveyValidation {
 	return SurveyValidation{Validator: Validator{dataset}}
 }
 
-func (sf SurveyValidation) Validate() (ValidationResponse, error) {
-	ok, err := sf.validateREFDTE()
+type Val struct {
+	ValidationResponse
+	error
+}
 
-	// add additional validations here
-	return ok, err
+func (sf SurveyValidation) Validate() (ValidationResponse, error) {
+
+	v, e := sf.validateMissingValues()
+
+	if e != nil {
+		return v, e
+	}
+
+	v, e = sf.validateREFDTE()
+	return v, e
+
+}
+
+var columnsToCheck = []string{"REFDTE", "PCODE", "QUOTA", "WEEK", "W1YR", "QRTR", "ADD", "WAVFND", "HHLD", "PERSNO"}
+
+/*
+Check if any rows in the list of columns to check are 'missing' where missing is defined as -99 and -99.99
+for int and float types respectively.
+*/
+func (sf SurveyValidation) validateMissingValues() (ValidationResponse, error) {
+	for _, v := range columnsToCheck {
+
+		floatCheck := func() (ValidationResponse, error) {
+			rows, err := sf.dataset.GetRowsAsDouble(v)
+			if err != nil {
+				return ValidationResponse{
+					ValidationResult: ValidationFailed,
+					ErrorMessage:     err.Error(),
+				}, err
+			}
+			for _, j := range rows {
+				if math.IsNaN(j) {
+					return ValidationResponse{
+						ValidationResult: ValidationFailed,
+						ErrorMessage:     "column %s has a missing value",
+					}, fmt.Errorf("column %s has a missing value - NaN", v)
+				}
+			}
+			return ValidationResponse{
+				ValidationResult: ValidationSuccessful,
+				ErrorMessage:     "Successful",
+			}, nil
+		}
+
+		stringCheck := func() (ValidationResponse, error) {
+			rows, err := sf.dataset.GetRowsAsString(v)
+			if err != nil {
+				return ValidationResponse{
+					ValidationResult: ValidationFailed,
+					ErrorMessage:     err.Error(),
+				}, err
+			}
+			for _, j := range rows {
+				if j == "" {
+					return ValidationResponse{
+						ValidationResult: ValidationFailed,
+						ErrorMessage:     "column %s has a missing value",
+					}, fmt.Errorf("column %s has a missing value", v)
+				}
+			}
+			return ValidationResponse{
+				ValidationResult: ValidationSuccessful,
+				ErrorMessage:     "Successful",
+			}, nil
+		}
+
+		if v == "PCODE" {
+			return stringCheck()
+		} else {
+			return floatCheck()
+		}
+
+	}
+
+	return ValidationResponse{
+		ValidationResult: ValidationSuccessful,
+		ErrorMessage:     "Successful",
+	}, nil
 }
 
 /*

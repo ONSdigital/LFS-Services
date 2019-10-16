@@ -7,30 +7,30 @@ import (
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/zerolog/log"
+	"math"
 	"os"
 	"reflect"
 	di "services/exportdata/sav"
 	imcsv "services/importdata/csv"
 	"services/importdata/sav"
 	"services/io/spss"
+	"services/types"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
-type Audit struct {
-	ReferenceDate time.Time `db:"reference_date"`
-	NumVarFile    int       `db:"num_var_file"`
-	NumVarLoaded  int       `db:"num_var_loaded"`
-	NumObFile     int       `db:"num_ob_file"`
-	NumObLoaded   int       `db:"num_ob_loaded"`
-}
-
 type Column struct {
 	ColNo int
 	Kind  reflect.Kind
 	Rows  []interface{}
+}
+
+type ByRowCache struct {
+	headers []string
+	rows    [][]string
+	dirty   bool
 }
 
 type Dataset struct {
@@ -39,24 +39,24 @@ type Dataset struct {
 	mux         *sync.Mutex
 	RowCount    int
 	ColumnCount int
-	Audit
+	types.Audit
+	ByRowCache
 }
 
 const (
 	InitialRowCapacity    = 20000
 	InitialColumnCapacity = 2000
+	MissingFloatValue     = -99.99
+	MissingIntValue       = -99
 )
 
 func NewDataset(name string) (Dataset, error) {
 	mux := sync.Mutex{}
 	cols := make(map[string]Column, InitialColumnCapacity)
-	return Dataset{name, cols, &mux, 0, 0, Audit{}}, nil
+	return Dataset{name, cols, &mux, 0, 0, types.Audit{}, ByRowCache{}}, nil
 }
 
-type DropFunction func(name string) bool
-type RenameFunction func(name string) (string, bool)
-
-func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, dropColumn DropFunction, renameColumns RenameFunction) error {
+func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, filter types.Filter) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
@@ -94,7 +94,7 @@ func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, dropCol
 		Msg("Read CSV file")
 
 	start = time.Now()
-	err = d.populateDataset(datasetName, records, out, dropColumn, renameColumns)
+	err = d.populateDataset(datasetName, records, out, filter)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, dropCol
 	return nil
 }
 
-func (d *Dataset) LoadSav(in string, datasetName string, out interface{}, dropColumns DropFunction, renameColumns RenameFunction) error {
+func (d *Dataset) LoadSav(in string, datasetName string, out interface{}, filter types.Filter) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
@@ -142,7 +142,7 @@ func (d *Dataset) LoadSav(in string, datasetName string, out interface{}, dropCo
 		Msg("Read Sav file")
 
 	start = time.Now()
-	er := d.populateDataset(datasetName, records, out, dropColumns, renameColumns)
+	er := d.populateDataset(datasetName, records, out, filter)
 	if er != nil {
 		return er
 	}
@@ -474,9 +474,10 @@ func (d *Dataset) AddColumn(name string, columnType reflect.Kind) (*Column, erro
 func (d *Dataset) RenameColumn(from, to string) error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
+
 	if _, ok := d.Columns[from]; !ok {
 		log.Warn().
-			Str("method", "RenameColumn").
+			Str("method", "RenameColumns").
 			Str("fromColumn", from).
 			Str("toColumn", to).
 			Msg("Column doesn't exist")
@@ -504,46 +505,6 @@ func (d *Dataset) RenameColumn(from, to string) error {
 
 	d.Columns = m
 	return nil
-}
-
-func isInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-func (d *Dataset) DropColumns(columns []string) (int, error) {
-	d.mux.Lock()
-	defer d.mux.Unlock()
-
-	a := d.OrderedColumns()
-	m := make(map[string]Column, InitialColumnCapacity)
-	var columnsDropped = 0
-
-	var colNo = 0
-	for _, v := range a {
-		if !isInSlice(v, columns) {
-			var col Column
-			old := d.Columns[v]
-			col.Rows = old.Rows
-			col.Kind = old.Kind
-			col.ColNo = colNo
-			m[v] = col
-			colNo++
-		} else {
-			columnsDropped++
-			log.Debug().
-				Str("columnName", v).
-				Msg("Dropping column")
-		}
-	}
-
-	d.Columns = m
-	d.ColumnCount = colNo
-	return columnsDropped, nil
 }
 
 func (d *Dataset) DropColumn(name string) error {
@@ -580,8 +541,7 @@ func (d *Dataset) DropColumn(name string) error {
 	return nil
 }
 
-func (d *Dataset) populateDataset(datasetName string, rows [][]string, out interface{},
-	dropColumn DropFunction, renameColumns RenameFunction) error {
+func (d *Dataset) populateDataset(datasetName string, rows [][]string, out interface{}, filter types.Filter) error {
 
 	var err error
 	*d, err = NewDataset(datasetName)
@@ -603,7 +563,7 @@ func (d *Dataset) populateDataset(datasetName string, rows [][]string, out inter
 	for i := 0; i < t1.NumField(); i++ {
 		a := t1.Field(i)
 		// skip columns that are marked as being dropped
-		if dropColumn(strings.ToUpper(a.Name)) {
+		if filter.DropColumn(strings.ToUpper(a.Name)) {
 			continue
 		}
 		if _, err := d.AddColumn(strings.ToUpper(a.Name), a.Type.Kind()); err != nil {
@@ -620,6 +580,12 @@ func (d *Dataset) populateDataset(datasetName string, rows [][]string, out inter
 
 	headers := rows[0]
 	body := rows[1:]
+
+	d.ReferenceDate = time.Now()
+	d.NumObFile = len(body)
+	d.NumObLoaded = len(body)
+	d.NumVarFile = len(headers)
+	d.NumVarLoaded = len(headers)
 
 	for a := range headers {
 		headers[a] = strings.ToUpper(headers[a])
@@ -654,12 +620,16 @@ func (d *Dataset) populateDataset(datasetName string, rows [][]string, out inter
 			}
 
 			kind := d.Columns[headers[j]].Kind
+
 			switch kind {
 
 			case reflect.String:
 				row[header] = a
 
 			case reflect.Int8, reflect.Uint8:
+				if a == "NaN" {
+					a = "0"
+				}
 				i, err := strconv.ParseInt(a, 0, 8)
 				if err != nil {
 					logStructError("populateDataset", header, kind, "Int8")
@@ -668,6 +638,9 @@ func (d *Dataset) populateDataset(datasetName string, rows [][]string, out inter
 				row[header] = i
 
 			case reflect.Int, reflect.Int32, reflect.Uint32:
+				if a == "NaN" {
+					a = "0"
+				}
 				i, err := strconv.ParseInt(a, 0, 32)
 				if err != nil {
 					logStructError("populateDataset", header, kind, "Int32")
@@ -676,6 +649,9 @@ func (d *Dataset) populateDataset(datasetName string, rows [][]string, out inter
 				row[header] = i
 
 			case reflect.Int64, reflect.Uint64:
+				if a == "NaN" {
+					a = "0"
+				}
 				i, err := strconv.ParseInt(a, 0, 64)
 				if err != nil {
 					logStructError("populateDataset", header, kind, "Int64")
@@ -684,26 +660,40 @@ func (d *Dataset) populateDataset(datasetName string, rows [][]string, out inter
 				row[header] = i
 
 			case reflect.Float32:
-				i, err := strconv.ParseFloat(a, 32)
-				if err != nil {
-					logStructError("populateDataset", header, kind, "Float32")
-					return fmt.Errorf("cannot convert %s into an Float32", a)
+				if a == "NaN" {
+					row[header] = math.NaN()
+				} else {
+					i, err := strconv.ParseFloat(a, 32)
+
+					if err != nil {
+						logStructError("populateDataset", header, kind, "Float32")
+						return fmt.Errorf("cannot convert %s into an Float32", a)
+					}
+					row[header] = i
 				}
-				row[header] = i
 
 			case reflect.Float64:
-				i, err := strconv.ParseFloat(a, 64)
-				if err != nil {
-					logStructError("populateDataset", header, kind, "Float64")
-					return fmt.Errorf("cannot convert %s into an Float64", a)
-				}
+				if a == "NaN" {
+					row[header] = math.NaN()
+				} else {
+					i, err := strconv.ParseFloat(a, 64)
+					if err != nil {
+						logStructError("populateDataset", header, kind, "Float64")
+						return fmt.Errorf("cannot convert %s into an Float64", a)
+					}
 
-				row[header] = i
+					row[header] = i
+				}
 
 			default:
 				logStructError("populateDataset", header, kind, "Unknown")
 				return fmt.Errorf("cannot convert struct variable type from SPSS type")
 			}
+		}
+
+		// call the skipRow filter
+		if filter.SkipRow(row) {
+			continue
 		}
 
 		if err := d.AddRow(row); err != nil {
@@ -718,7 +708,7 @@ func (d *Dataset) populateDataset(datasetName string, rows [][]string, out inter
 	m := make(map[string]Column, d.NumColumns())
 
 	for k, v := range d.Columns {
-		to, ok := renameColumns(k)
+		to, ok := filter.RenameColumns(k)
 		if ok {
 			m[to] = v
 		} else {
@@ -748,17 +738,19 @@ func (d Dataset) OrderedColumns() []string {
 	return keys
 }
 
-func (d *Dataset) GetAllRows() ([]string, [][]string) {
-	return d.getByRow(d.RowCount, d.ColumnCount)
+func (d *Dataset) GetAllRows() (headers []string, rows [][]string) {
+	log.Debug().Msg("Row cache is dirty")
+	headers, rows = d.getByRow(d.RowCount, d.ColumnCount)
+	return
 }
 
 func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
-	var header = make([]string, maxCols)
-	var items = make([][]string, maxRows)
 
 	if maxCols > d.NumColumns() {
 		maxCols = d.NumColumns()
 	}
+
+	var header = make([]string, maxCols)
 
 	for k, v := range d.OrderedColumns() {
 		if k > maxCols-1 {
@@ -770,6 +762,7 @@ func (d *Dataset) getByRow(maxRows int, maxCols int) ([]string, [][]string) {
 	if maxRows > d.NumRows() {
 		maxRows = d.NumRows()
 	}
+	var items = make([][]string, maxRows)
 
 	// for each header, get MaxRows
 	for j := 0; j < maxRows; j++ {
