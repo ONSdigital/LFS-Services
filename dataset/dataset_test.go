@@ -19,8 +19,8 @@ func setupDataset(logger *log.Logger) (*dataset.Dataset, error) {
 		return &dataset.Dataset{}, nil
 	}
 
-	surveyFilter := filter.NewGBSurveyFilter(&d)
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "Test", dataset.Survey{}, surveyFilter)
+	nullFilter := filter.NewNullFilter(&d)
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "Test", dataset.Survey{}, nullFilter)
 	if err != nil {
 		logger.Error(err)
 		return &dataset.Dataset{}, nil
