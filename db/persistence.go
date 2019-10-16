@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"services/config"
 	"services/dataset"
+	"services/types"
 	"sync"
 )
 
@@ -41,4 +42,5 @@ type Persistence interface {
 	Close()
 	PersistDataset(d dataset.Dataset) error
 	UnpersistDataset(tableName string) (dataset.Dataset, error)
+	GetUserID(user string) (types.UserCredentials, error)
 }

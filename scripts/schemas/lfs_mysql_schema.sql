@@ -24,3 +24,12 @@ create table if not exists upload_audit
     num_ob_file int null,
     num_ob_loaded int null
 );
+
+create table users
+(
+    username varchar(255) null,
+    password varchar(255) null
+);
+
+insert into users(username, password)
+values ('Paul', '$2a$04$uCR1AINowJXKQxiiPwyLLubTm1k0.PWMhWDHMPE3PNu59ZglB1fLG');

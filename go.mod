@@ -14,8 +14,10 @@ require (
 	github.com/rs/zerolog v1.15.0
 	github.com/senseyeio/roger v0.0.0-20180904151654-5a944f2c5ceb
 	github.com/sirupsen/logrus v1.4.2
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
+	gopkg.in/validator.v2 v2.0.0-20191008145730-5614e8810ea7
 	upper.io/db.v3 v3.6.3+incompatible
 )
