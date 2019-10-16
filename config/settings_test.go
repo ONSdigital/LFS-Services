@@ -1,7 +1,8 @@
 package config_test
 
 import (
-	conf "lfs/lfs-services/config"
+	"fmt"
+	conf "services/config"
 	"testing"
 )
 
@@ -34,11 +35,11 @@ func TestConfig(t *testing.T) {
 		t.Logf("database name %s\n", databaseName)
 	}
 
-	debug := conf.Config.Debug
-	if debug != true {
-		t.Errorf("debug = %t; want localhost", debug)
+	maxPoolsize := conf.Config.Database.ConnectionPool.MaxPoolSize
+	if maxPoolsize != 10 {
+		t.Errorf("maxPoolsize = %d; want 10", maxPoolsize)
 	} else {
-		t.Logf("debug %t\n", debug)
+		t.Logf("maxPoolsize %d\n", maxPoolsize)
 	}
 
 	columnsTable := conf.Config.Database.ColumnsTable
@@ -48,4 +49,39 @@ func TestConfig(t *testing.T) {
 		t.Logf("columnsTable %s\n", columnsTable)
 	}
 
+	address := conf.Config.Service.ListenAddress
+	expected := "127.0.0.1:8000"
+	if address != expected {
+		t.Errorf("address = %s, want %s", address, expected)
+	} else {
+		t.Logf("port %s\n", address)
+	}
+
+	readTimeout := conf.Config.Service.ReadTimeout
+	expectedTimeout := "60s"
+	if readTimeout != expectedTimeout {
+		t.Errorf("readTimeout = %s, want %s", readTimeout, expectedTimeout)
+	} else {
+		t.Logf("readTimeout %s\n", readTimeout)
+	}
+
+	writeTimeout := conf.Config.Service.WriteTimeout
+	expectedTimeout = "60s"
+	if readTimeout != expectedTimeout {
+		t.Errorf("writeTimeout = %s, want %s", writeTimeout, expectedTimeout)
+	} else {
+		t.Logf("writeTimeout %s\n", writeTimeout)
+	}
+
+	ren := conf.Config.Rename.Survey
+
+	for _, v := range ren {
+		fmt.Printf("Rename from: %s, to: %s\n", v.From, v.To)
+	}
+
+	drop := conf.Config.DropColumns.Survey
+
+	for _, v := range drop.ColumnNames {
+		fmt.Printf("Drop Column: %s\n", v)
+	}
 }

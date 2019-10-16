@@ -1,17 +1,17 @@
 package importdata
 
 import (
-	"lfs/lfs-services/importdata/csv"
-	"lfs/lfs-services/importdata/sav"
+	"services/importdata/csv"
+	"services/importdata/sav"
 )
 
 type ImportFunction func(fileName string, out interface{}) error
 
-type ImportData interface {
+type Importer interface {
 	Import(fileName string, out interface{}) error
 }
 
-func importFile(i ImportData) ImportFunction {
+func importFile(i Importer) ImportFunction {
 	return func(fileName string, out interface{}) error {
 		return i.Import(fileName, out)
 	}

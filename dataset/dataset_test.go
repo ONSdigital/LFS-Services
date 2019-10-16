@@ -1,22 +1,26 @@
 package dataset_test
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
-	conf "lfs/lfs-services/config"
-	"lfs/lfs-services/dataset"
-	"lfs/lfs-services/db"
 	"math"
+	"services/api/filter"
+	conf "services/config"
+	"services/dataset"
+	"services/db"
 	"testing"
+	"time"
 )
 
 func setupDataset(logger *log.Logger) (*dataset.Dataset, error) {
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Error(err)
 		return &dataset.Dataset{}, nil
 	}
 
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", dataset.BigDataset{})
+	nullFilter := filter.NewNullFilter(&d)
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "Test", dataset.Survey{}, nullFilter)
 	if err != nil {
 		logger.Error(err)
 		return &dataset.Dataset{}, nil
@@ -70,18 +74,19 @@ func TestFromSav(t *testing.T) {
 
 	logger := log.New()
 
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
 	}
 
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", dataset.BigDataset{})
+	surveyFilter := filter.NewGBSurveyFilter(&d)
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", dataset.Survey{}, surveyFilter)
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
 	}
-	logger.Printf("dataset contains %d row(s)\n", d.NumRows())
+
 	_ = d.Head(5)
 }
 
@@ -98,14 +103,16 @@ func TestToCSV(t *testing.T) {
 		DVLineName   string  `csv:"DVLineName"`
 		DVPortName   string  `csv:"DVPortName"`
 	}
+
 	logger := log.New()
 
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Panic(err)
 	}
 
-	err = d.LoadSav(testDirectory()+"ips1710bv2.sav", TestDataset{})
+	nullFilter := filter.NewNullFilter(&d)
+	err = d.LoadSav(testDirectory()+"ips1710bv2.sav", "test", TestDataset{}, nullFilter)
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -134,12 +141,13 @@ func TestToSav(t *testing.T) {
 
 	logger := log.New()
 
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Panic(err)
 	}
 
-	err = d.LoadSav(testDirectory()+"ips1710bv2.sav", TestDataset{})
+	surveyFilter := filter.NewGBSurveyFilter(&d)
+	err = d.LoadSav(testDirectory()+"ips1710bv2.sav", "test", TestDataset{}, surveyFilter)
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -166,12 +174,13 @@ func TestFromCSV(t *testing.T) {
 
 	logger := log.New()
 
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Panic(err)
 	}
 
-	err = d.LoadCSV(testDirectory()+"out.csv", TestDataset{})
+	surveyFilter := filter.NewGBSurveyFilter(&d)
+	err = d.LoadCSV(testDirectory()+"out.csv", "Test", TestDataset{}, surveyFilter)
 	if err != nil {
 		logger.Panic(err)
 	}
@@ -182,37 +191,88 @@ func TestFromCSV(t *testing.T) {
 
 func TestUnPersist(t *testing.T) {
 	logger := log.New()
-	d, err := db.GetDefaultPersistenceImpl(logger).UnpersistDataset("LFSwk18PERS_non_confidential")
+	pi, err := db.GetDefaultPersistenceImpl()
+
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
 	}
-	logger.Printf("dataset contains %d row(s)\n", d.NumRows())
+
+	d, err := pi.UnpersistDataset("test")
+	if err != nil {
+		logger.Error(err)
+		t.FailNow()
+	}
+
+	logger.Printf("dataset contains %d row(s)", d.NumRows())
+	_ = d.Head(5)
+}
+
+func TestDateClc(t *testing.T) {
+	logger := log.New()
+	pi, err := db.GetDefaultPersistenceImpl()
+
+	if err != nil {
+		logger.Error(err)
+		t.FailNow()
+	}
+
+	d, err := pi.UnpersistDataset("test")
+	if err != nil {
+		logger.Error(err)
+		t.FailNow()
+	}
+
+	rows, err := d.GetRowsAsDouble("REFDTE")
+	if err != nil {
+		logger.Error(err)
+		t.FailNow()
+	}
+
+	for _, b := range rows {
+		i := int64(b) - (141428 * 86400)
+		tm := time.Unix(i, 0)
+		day := tm.Day()
+		month := int(tm.Month())
+		year := tm.Year()
+		weekday := tm.Weekday().String()
+		fmt.Printf("Weekday: %s, day: %d, Month: %d, Year :%d\n", weekday, day, month, year)
+	}
+
+	logger.Printf("dataset contains %d row(s)", d.NumRows())
 	_ = d.Head(5)
 }
 
 func TestPersist(t *testing.T) {
 	logger := log.New()
 
-	d, err := dataset.NewDataset("test", logger)
+	d, err := dataset.NewDataset("test")
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
 	}
 
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", dataset.BigDataset{})
+	surveyFilter := filter.NewGBSurveyFilter(&d)
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", dataset.Survey{}, surveyFilter)
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
 	}
 
-	err = db.GetDefaultPersistenceImpl(logger).PersistDataset(d)
+	pi, err := db.GetDefaultPersistenceImpl()
+
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
 	}
 
-	logger.Printf("dataset contains %d row(s)\n", d.NumRows())
+	err = pi.PersistDataset(d)
+	if err != nil {
+		logger.Error(err)
+		t.FailNow()
+	}
+
+	logger.Printf("dataset contains %d row(s)", d.NumRows())
 }
 
 func testDirectory() (testDirectory string) {

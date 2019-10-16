@@ -13,8 +13,8 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	typ "lfs/lfs-services/io/spss"
 	"os"
+	typ "services/io/spss"
 	"strings"
 	"unsafe"
 )

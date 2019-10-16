@@ -1,7 +1,11 @@
 package config
 
 type configuration struct {
-	Debug         bool
+	LogFormat     string
+	LogLevel      string
 	TestDirectory string
 	Database      DatabaseConfiguration
+	Service       ServiceConfiguration
+	Rename        Rename
+	DropColumns   DropColumns
 }

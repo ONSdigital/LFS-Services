@@ -11,7 +11,7 @@ package sav
 import "C"
 import (
 	"fmt"
-	"lfs/lfs-services/io/spss"
+	"services/io/spss"
 	"unsafe"
 )
 
@@ -24,9 +24,6 @@ type Header struct {
 type DataItem struct {
 	Value []interface{}
 }
-
-var DoubleValue []float64
-var StringValue []string
 
 func Export(fileName string, label string, headers []Header, data []DataItem) int {
 

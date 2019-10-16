@@ -1,0 +1,69 @@
+{
+	"info": {
+		"_postman_id": "e05eccb5-1ef7-4976-a96b-476ebdb87609",
+		"name": "LFS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "FileUpload",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "lfsFile",
+							"type": "file",
+							"src": "/Users/paul/ONS/LFS/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
+						},
+						{
+							"key": "fileType",
+							"value": "Survey",
+							"type": "text"
+						},
+						{
+							"key": "fileName",
+							"value": "myFileName",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/import/survey/123456?lfs-file=test",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"import",
+						"survey",
+						"123456"
+					],
+					"query": [
+						{
+							"key": "lfs-file",
+							"value": "test"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,15 +1,15 @@
 package exportdata
 
-import "lfs/lfs-services/exportdata/sav"
-import "lfs/lfs-services/exportdata/csv"
+import "services/exportdata/sav"
+import "services/exportdata/csv"
 
 type ExportFunction func(fileName string, out interface{}) error
 
-type ExportData interface {
+type Exporter interface {
 	Export(out string, in interface{}) error
 }
 
-func exportFile(i ExportData) ExportFunction {
+func exportFile(i Exporter) ExportFunction {
 	return func(fileName string, out interface{}) error {
 		return i.Export(fileName, out)
 	}
