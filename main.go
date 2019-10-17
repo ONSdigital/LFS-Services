@@ -40,8 +40,8 @@ func main() {
 	router := mux.NewRouter()
 	restHandlers := api.NewRestHandler()
 
-	router.HandleFunc("/import/survey/{run_id}", restHandlers.FileUploadHandler).Methods("POST")
-	router.HandleFunc("/login/{user}", restHandlers.LoginHandler).Methods("GET")
+	router.HandleFunc("/import/{fileType}/{runId}", restHandlers.FileUploadHandler).Methods(http.MethodPost)
+	router.HandleFunc("/login/{user}", restHandlers.LoginHandler).Methods(http.MethodGet)
 
 	listenAddress := config.Config.Service.ListenAddress
 

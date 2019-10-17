@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func (h RestHandlers) fileUpload() error {
+func (h RestHandlers) fileUpload(fileType string) error {
 
 	_ = h.r.ParseMultipartForm(64 << 20)
 
@@ -32,12 +32,6 @@ func (h RestHandlers) fileUpload() error {
 	if fileName == "" {
 		log.Error().Msg("fileName not set")
 		return fmt.Errorf("fileName not set")
-	}
-
-	fileType := h.r.Form.Get("fileType")
-	if fileType == "" {
-		log.Error().Msg("fileName not set")
-		return fmt.Errorf("fileType not set")
 	}
 
 	log.Debug().

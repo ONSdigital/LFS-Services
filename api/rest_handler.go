@@ -1,8 +1,7 @@
 package api
 
 import (
-	"encoding/json"
-	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"time"
@@ -12,8 +11,9 @@ import (
 input file names / types
 */
 const (
-	SurveyFile = "Survey"
-	GeogFile   = "Geog"
+	SurveyFile  = "Survey"
+	AddressFile = "Address"
+	GeogFile    = "Geog"
 )
 
 const (
@@ -30,9 +30,6 @@ type RestHandlers struct {
 Create a new RestHandler
 */
 func NewRestHandler() *RestHandlers {
-	log.Debug().
-		Time("startTime", time.Now()).
-		Msg("Creating new RestHandler")
 	return &RestHandlers{nil, nil}
 }
 
@@ -47,16 +44,18 @@ func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) 
 	h.w = w
 	h.r = r
 
-	res := h.fileUpload()
+	vars := mux.Vars(r)
+	fileType := vars["fileType"]
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 
-	if res != nil {
-		ErrorResponse{Status: Error, ErrorMessage: res.Error()}.sendResponse(w, r)
-	} else {
-		a := OkayResponse{OK}
-		sendResponse(h.w, h.r, a)
+	switch fileType {
+	case AddressFile:
+	case SurveyFile:
+		h.uploadSurvey(w, r).sendResponse(w, r)
+	default:
+		w.WriteHeader(http.StatusBadRequest)
+		UnknownFileType{Status: Error, ErrorMessage: "file path in URI not recognised"}.sendResponse(w, r)
 	}
 
 	log.Debug().
@@ -64,20 +63,24 @@ func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) 
 		Str("uri", r.RequestURI).
 		TimeDiff("elapsedTime", time.Now(), startTime).
 		Msg("FileUpload request completed")
-
 }
 
-func (h RestHandlers) getParameter(parameter string) (string, error) {
-	keys, ok := h.r.URL.Query()[parameter]
+func (h RestHandlers) uploadSurvey(w http.ResponseWriter, r *http.Request) Response {
+	vars := mux.Vars(r)
+	runId := vars["runId"]
 
-	if !ok || len(keys[0]) < 1 {
-		log.Error().
-			Str("parameter", parameter).
-			Msg("URL parameter missing")
-		return "", fmt.Errorf("URL parameter, %s, is missing", parameter)
+	if runId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Warn().Msg("runId not set")
+		return ErrorResponse{Status: Error, ErrorMessage: "runId not set"}
 	}
 
-	return keys[0], nil
+	if err := h.fileUpload(SurveyFile); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return ErrorResponse{Status: Error, ErrorMessage: err.Error()}
+	}
+
+	return OkayResponse{OK}
 }
 
 func enableCors(w *http.ResponseWriter) {
@@ -109,8 +112,7 @@ func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if res != nil {
 		ErrorResponse{Status: Error, ErrorMessage: res.Error()}.sendResponse(w, r)
 	} else {
-		a := OkayResponse{OK}
-		sendResponse(h.w, h.r, a)
+		OkayResponse{OK}.sendResponse(w, r)
 	}
 
 	log.Debug().
@@ -118,35 +120,4 @@ func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Str("uri", r.RequestURI).
 		TimeDiff("elapsedTime", time.Now(), startTime).
 		Msg("Login request completed")
-
-}
-
-type Response interface {
-	sendResponse(w http.ResponseWriter, r *http.Request)
-}
-
-type ErrorResponse struct {
-	Status       string `json:"status"`
-	ErrorMessage string `json:"errorMessage"`
-}
-
-type OkayResponse struct {
-	Status string `json:"status"`
-}
-
-func (response OkayResponse) sendResponse(w http.ResponseWriter, r *http.Request) {
-	sendResponse(w, r, response)
-}
-
-func (response ErrorResponse) sendResponse(w http.ResponseWriter, r *http.Request) {
-	sendResponse(w, r, response)
-}
-
-func sendResponse(w http.ResponseWriter, r *http.Request, response Response) {
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Error().
-			Str("client", r.RemoteAddr).
-			Str("uri", r.RequestURI).
-			Msg("json.NewEncoder() failed in FileUploadHandler")
-	}
 }
