@@ -100,19 +100,10 @@ func (s MySQL) Close() {
 	}
 }
 
-type Column struct {
-	TableName    string `db:"table_name"`
-	ColumnName   string `db:"column_name"`
-	ColumnNumber int    `db:"column_number"`
-	Kind         int    `db:"kind"`
-	Rows         string `db:"rows"`
-}
+func (s MySQL) insertColumnData(tx sqlbuilder.Tx, columns types.Columns) error {
 
-func (s MySQL) insertColumnData(tx sqlbuilder.Tx, tableName string, columnName string, columnNumber int, kind int, rows string) error {
-
-	c := Column{tableName, columnName, columnNumber, kind, rows}
 	col := tx.Collection(columnsTable)
-	_, err := col.Insert(c)
+	_, err := col.Insert(columns)
 	if err != nil {
 		return err
 	}
@@ -137,7 +128,7 @@ func (s MySQL) UnpersistDataset(tableName string) (dataset.Dataset, error) {
 	log.Info().Msg("starting unpersist into Dataset")
 
 	req := s.DB.Collection(columnsTable).Find().Where("table_name = '" + tableName + "'").OrderBy("column_number")
-	var column Column
+	var column types.Columns
 	for req.Next(&column) {
 		a := strings.Split(column.Rows, ",")
 		s := make([]interface{}, len(a))
@@ -250,7 +241,15 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 			i++
 		}
 
-		if err := s.insertColumnData(tx, d.DatasetName, colName, column.ColNo, int(columnKind), kBuffer.String()); err != nil {
+		column := types.Columns{
+			TableName:    d.DatasetName,
+			ColumnName:   colName,
+			ColumnNumber: column.ColNo,
+			Kind:         int(columnKind),
+			Rows:         kBuffer.String(),
+		}
+
+		if err := s.insertColumnData(tx, column); err != nil {
 			return fmt.Errorf("cannot insert column, error: %s", err)
 		}
 	}
