@@ -1,9 +1,5 @@
 package types
 
-//type DropFunction func(name string) bool
-//type RenameFunction func(name string) (string, bool)
-//type SkipRowFunction func(row map[string]interface{}) bool
-
 /*
 Base filter. To use this, use composition in concrete structs
 */
