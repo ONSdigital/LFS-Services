@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"time"
@@ -95,12 +96,13 @@ func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	h.w = w
 	h.r = r
 
-	// TODO: Retrieve and replace static variables --->
-	username := "Paul"
-	password := "sucks"
-	// TODO: <---
+	vars := mux.Vars(r)
+	username := vars["user"]
+	password := h.r.Header.Get("password")
+
 	res := h.login(username, password)
 
+	enableCors(&w)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
