@@ -89,7 +89,7 @@ func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, filter 
 	log.Info().
 		Str("method", "readCSV").
 		Str("file", fileName).
-		Str("records", string(len(records)-1)).
+		Int("records", len(records)-1).
 		TimeDiff("elapsedTime", time.Now(), start).
 		Msg("Read CSV file")
 
@@ -102,9 +102,9 @@ func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, filter 
 	log.Debug().
 		Str("method", "readCSV").
 		Str("file", "in").
-		Str("records", string(d.NumRows())).
+		Int("records", d.NumRows()).
 		TimeDiff("elapsedTime", time.Now(), start).
-		Msg("Read CSV file")
+		Msg("Populated Dataset")
 
 	return nil
 }
@@ -616,7 +616,11 @@ func (d *Dataset) populateDataset(datasetName string, rows [][]string, out inter
 			// check type is valid
 			a := spssRow[j]
 			if a == "" {
-				a = "NULL"
+				if d.Columns[headers[j]].Kind == reflect.String {
+					a = "NULL"
+				} else {
+					a = "NaN"
+				}
 			}
 
 			kind := d.Columns[headers[j]].Kind

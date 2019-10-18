@@ -1,4 +1,4 @@
-package dataset
+package types
 
 type Survey struct {
 	Quota         float64 `spss:"Quota"`

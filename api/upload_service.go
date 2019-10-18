@@ -2,12 +2,15 @@ package api
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"services/api/filter"
 	"services/api/validate"
+	"services/config"
 	"services/dataset"
 	"services/db"
 	"services/types"
@@ -41,10 +44,14 @@ func (h RestHandlers) fileUpload(fileType string) error {
 
 	startTime := time.Now()
 
-	tmpfile, err := ioutil.TempFile("", fileName)
+	dir := config.Config.TmpDirectory
+
+	tmpfile, err := ioutil.TempFile(dir, fileName)
 	if err != nil {
 		return fmt.Errorf("cannot create temporary file: %s ", err)
 	}
+
+	tmpfile.Chmod(0777)
 
 	defer func() { _ = os.Remove(tmpfile.Name()) }()
 
@@ -71,8 +78,8 @@ func (h RestHandlers) fileUpload(fileType string) error {
 			return err
 		}
 
-	case GeogFile:
-		if err := h.geogUpload(tmpfile.Name(), fileName); err != nil {
+	case AddressFile:
+		if err := h.addressUpload(tmpfile.Name(), fileName); err != nil {
 			return err
 		}
 
@@ -89,8 +96,83 @@ func (h RestHandlers) fileUpload(fileType string) error {
 	return nil
 }
 
-func (h RestHandlers) geogUpload(tmpfile, datasetName string) error {
+func (h RestHandlers) uploadAddress(w http.ResponseWriter, r *http.Request) Response {
+
+	if err := h.fileUpload(AddressFile); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return ErrorResponse{Status: Error, ErrorMessage: err.Error()}
+	}
+
+	return OkayResponse{OK}
+}
+
+func (h RestHandlers) addressUpload(tmpfile, datasetName string) error {
+
+	//startTime := time.Now()
+
+	database, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("datasetName", datasetName).
+			Msg("Cannot connect to database")
+		return fmt.Errorf("cannot connect to database: %s", err)
+	}
+	//
+	//d, err := dataset.NewDataset(datasetName)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//var nullFilter = filter.NewNullFilter(&d)
+	//err = d.LoadCSV(tmpfile, datasetName, types.Addresses{}, nullFilter)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//database, err := db.GetDefaultPersistenceImpl()
+	//if err != nil {
+	//	log.Error().
+	//		Err(err).
+	//		Str("datasetName", datasetName).
+	//		Msg("Cannot connect to database")
+	//	return fmt.Errorf("cannot connect to database: %s", err)
+	//}
+	//
+	if err := database.PersistAddressDataset(tmpfile); err != nil {
+		log.Error().
+			Err(err).
+			Str("datasetName", datasetName).
+			Msg("Cannot persist dataset")
+		return fmt.Errorf("cannot persist dataset to database: %s", err)
+	}
+
+	//log.Debug().
+	//	Str("datasetName", datasetName).
+	//	Int("rowCount", d.NumRows()).
+	//	Int("columnCount", d.NumColumns()).
+	//	TimeDiff("elapsedTime", time.Now(), startTime).
+	//	Msg("Imported and persisted dataset")
+
 	return nil
+}
+
+func (h RestHandlers) uploadSurvey(w http.ResponseWriter, r *http.Request) Response {
+	vars := mux.Vars(r)
+	runId := vars["runId"]
+
+	if runId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Warn().Msg("runId not set")
+		return ErrorResponse{Status: Error, ErrorMessage: "runId not set"}
+	}
+
+	if err := h.fileUpload(SurveyFile); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return ErrorResponse{Status: Error, ErrorMessage: err.Error()}
+	}
+
+	return OkayResponse{OK}
 }
 
 func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
@@ -105,11 +187,10 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 	if source == "GB" {
 		surveyFilter = filter.NewGBSurveyFilter(&d)
 	} else {
-		// not GB so must be NI
 		surveyFilter = filter.NewNISurveyFilter(&d)
 	}
 
-	err = d.LoadSav(tmpfile, datasetName, dataset.Survey{}, surveyFilter)
+	err = d.LoadSav(tmpfile, datasetName, types.Survey{}, surveyFilter)
 	if err != nil {
 		return err
 	}
@@ -170,7 +251,7 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 		return fmt.Errorf("cannot connect to database: %s", err)
 	}
 
-	if err := database.PersistDataset(d); err != nil {
+	if err := database.PersistSurveyDataset(d); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).

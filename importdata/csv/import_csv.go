@@ -15,9 +15,7 @@ func ImportCSVToSlice(fileName string) (out [][]string, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot open CSV file: %s, error: %w", fileName, err)
 	}
-	defer func() {
-		_ = csvfile.Close()
-	}()
+	defer func() { _ = csvfile.Close() }()
 
 	r := csv.NewReader(csvfile)
 

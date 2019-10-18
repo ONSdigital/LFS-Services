@@ -8,6 +8,7 @@ import (
 	conf "services/config"
 	"services/dataset"
 	"services/db"
+	"services/types"
 	"testing"
 	"time"
 )
@@ -20,7 +21,7 @@ func setupDataset(logger *log.Logger) (*dataset.Dataset, error) {
 	}
 
 	nullFilter := filter.NewNullFilter(&d)
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "Test", dataset.Survey{}, nullFilter)
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "Test", types.Survey{}, nullFilter)
 	if err != nil {
 		logger.Error(err)
 		return &dataset.Dataset{}, nil
@@ -81,7 +82,7 @@ func TestFromSav(t *testing.T) {
 	}
 
 	surveyFilter := filter.NewGBSurveyFilter(&d)
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", dataset.Survey{}, surveyFilter)
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", types.Survey{}, surveyFilter)
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
@@ -198,7 +199,7 @@ func TestUnPersist(t *testing.T) {
 		t.FailNow()
 	}
 
-	d, err := pi.UnpersistDataset("test")
+	d, err := pi.UnpersistSurveyDataset("test")
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
@@ -217,7 +218,7 @@ func TestDateClc(t *testing.T) {
 		t.FailNow()
 	}
 
-	d, err := pi.UnpersistDataset("test")
+	d, err := pi.UnpersistSurveyDataset("test")
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
@@ -253,7 +254,7 @@ func TestPersist(t *testing.T) {
 	}
 
 	surveyFilter := filter.NewGBSurveyFilter(&d)
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", dataset.Survey{}, surveyFilter)
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", types.Survey{}, surveyFilter)
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()
@@ -266,7 +267,7 @@ func TestPersist(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = pi.PersistDataset(d)
+	err = pi.PersistSurveyDataset(d)
 	if err != nil {
 		logger.Error(err)
 		t.FailNow()

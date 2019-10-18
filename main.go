@@ -41,6 +41,7 @@ func main() {
 	restHandlers := api.NewRestHandler()
 
 	router.HandleFunc("/import/{fileType}/{runId}", restHandlers.FileUploadHandler).Methods(http.MethodPost)
+	router.HandleFunc("/import/{fileType}", restHandlers.FileUploadHandler).Methods(http.MethodPost)
 	router.HandleFunc("/login/{user}", restHandlers.LoginHandler).Methods(http.MethodGet)
 
 	listenAddress := config.Config.Service.ListenAddress

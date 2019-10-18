@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"services/config"
 	"services/dataset"
+	"services/db/mysql"
 	"services/types"
 	"sync"
 )
@@ -23,7 +24,7 @@ func GetDefaultPersistenceImpl() (Persistence, error) {
 		return cachedConnection, nil
 	}
 
-	cachedConnection = &MySQL{nil}
+	cachedConnection = &mysql.MySQL{nil}
 
 	if err := cachedConnection.Connect(); err != nil {
 		log.Info().
@@ -40,7 +41,8 @@ func GetDefaultPersistenceImpl() (Persistence, error) {
 type Persistence interface {
 	Connect() error
 	Close()
-	PersistDataset(d dataset.Dataset) error
-	UnpersistDataset(tableName string) (dataset.Dataset, error)
+	PersistSurveyDataset(d dataset.Dataset) error
+	PersistAddressDataset(tmpfile string) error
+	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 	GetUserID(user string) (types.UserCredentials, error)
 }
