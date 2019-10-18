@@ -4,16 +4,16 @@ drop table if exists columns;
 
 create table columns
 (
-    id            int auto_increment primary key,
-    table_name    varchar(255) null,
-    column_name   varchar(255) null,
-    column_number int          null,
-    kind          int(255)     null,
-    column_rows   longtext     null
+    table_name varchar(255) not null,
+    column_name varchar(255) not null,
+    column_number int not null,
+    kind int(255) not null,
+    column_rows longtext not null,
+    primary key (table_name, column_name),
+    constraint columns_pk
+        unique (column_name)
 );
 
-create index columns_table_name_index
-    on columns (table_name);
 
 create table if not exists upload_audit
 (
@@ -37,3 +37,16 @@ create table users
 
 insert into users(username, password)
 values ('Paul', '$2a$04$uCR1AINowJXKQxiiPwyLLubTm1k0.PWMhWDHMPE3PNu59ZglB1fLG');
+
+create table if not exists export_definitions
+(
+    Variables varchar(10) not null
+        primary key,
+    Research tinyint(1) not null,
+    Regional_Client tinyint(1) not null,
+    Government tinyint(1) not null,
+    Special_License tinyint(1) not null,
+    End_User tinyint(1) not null,
+    Adhoc tinyint(1) not null
+);
+
