@@ -8,6 +8,7 @@ import (
 	"services/config"
 	"services/dataset"
 	"services/types"
+	"services/util"
 	"strconv"
 	"strings"
 	"time"
@@ -117,7 +118,7 @@ func (s MySQL) UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 
 	log.Debug().
 		Err(err).
-		TimeDiff("elapsedTime", time.Now(), startTime).
+		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Data unpersisted")
 	return d, nil
 }
@@ -206,8 +207,8 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset) error {
 	}
 
 	log.Debug().
-		TimeDiff("elapsedTime", time.Now(), startTime).
-		Msg("Data persisted")
+		Str("elapsedTime", util.FmtDuration(startTime)).
+		Msg("Survey data persisted")
 
 	return nil
 }

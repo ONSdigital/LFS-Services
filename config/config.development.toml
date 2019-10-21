@@ -3,7 +3,7 @@ logFormat = "Terminal" # one of: Text | Json | Terminal
 logLevel = "Debug" #	one of: "Info" # Trace | Info | Debug | Warn | Error | Fatal
 
 TmpDirectory= "/private/tmp" # this must be the same directory configured in mysql's secure_file_priv option
-testDirectory = "/Users/paul/LFS/LFS-Services/testdata/"
+testDirectory = "/home/paul/GolandProjects/LFS-Services/testdata/"
 #testDirectory = "/Users/paul/ONS/LFS/LFS-Services/testdata/"
 
 [database]

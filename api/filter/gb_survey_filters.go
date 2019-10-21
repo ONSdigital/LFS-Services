@@ -3,8 +3,10 @@ package filter
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"math"
 	"services/dataset"
 	"services/types"
+	"services/util"
 	"time"
 )
 
@@ -28,13 +30,13 @@ func (sf GBSurveyFilter) findLocation(headers []string, column string) (int, err
 func (sf GBSurveyFilter) SkipRow(row map[string]interface{}) bool {
 
 	sex, ok := row["SEX"].(float64)
-	if !ok || sex == dataset.MissingFloatValue {
+	if !ok || math.IsNaN(sex) {
 		sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
 		log.Debug().Msg("Dropping row because column SEX is missing")
 		return true
 	}
 	age, ok := row["AGE"].(float64)
-	if !ok || age == dataset.MissingFloatValue {
+	if !ok || math.IsNaN(age) {
 		sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
 		log.Debug().Msg("Dropping row because column AGE is missing")
 		return true
@@ -92,7 +94,7 @@ func (sf GBSurveyFilter) AddVariables() (int, error) {
 
 	log.Debug().
 		Str("variable", "CASENO").
-		TimeDiff("elapsedTime", time.Now(), startTime).
+		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Finished adding variable")
 
 	startTime = time.Now()
@@ -108,7 +110,7 @@ func (sf GBSurveyFilter) AddVariables() (int, error) {
 
 	log.Debug().
 		Str("variable", "HSERIAL").
-		TimeDiff("elapsedTime", time.Now(), startTime).
+		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Finished adding variable")
 
 	return 2, nil

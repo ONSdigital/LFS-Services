@@ -42,7 +42,7 @@ type Persistence interface {
 	Connect() error
 	Close()
 	PersistSurveyDataset(d dataset.Dataset) error
-	PersistAddressDataset(tmpfile string) error
+	PersistAddressDataset(headers []string, rows [][]string) error
 	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 	GetUserID(user string) (types.UserCredentials, error)
 }

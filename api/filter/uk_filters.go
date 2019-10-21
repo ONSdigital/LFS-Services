@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"reflect"
+	"services/util"
 	"strconv"
 	"time"
 )
@@ -30,7 +31,7 @@ func (sf UKFilter) addHSerial() error {
 	startAllrows := time.Now()
 	header, items := sf.dataset.GetAllRows()
 	log.Debug().
-		TimeDiff("elapsedTime", time.Now(), startAllrows).
+		Str("elapsedTime", util.FmtDuration(startAllrows)).
 		Msg("Get all rows")
 
 	// get indexes of items we are interested in for the calculation
@@ -119,7 +120,7 @@ func (sf UKFilter) addCASENO() error {
 	startAllrows := time.Now()
 	header, items := sf.dataset.GetAllRows()
 	log.Debug().
-		TimeDiff("elapsedTime", time.Now(), startAllrows).
+		Str("elapsedTime", util.FmtDuration(startAllrows)).
 		Msg("Get all rows")
 
 	// get indexes of items we are interested in for the calculation

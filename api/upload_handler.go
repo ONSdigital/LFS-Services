@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"net/http"
+	"services/util"
 	"time"
 )
 
@@ -36,6 +37,6 @@ func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) 
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
-		TimeDiff("elapsedTime", time.Now(), startTime).
+		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("FileUpload request completed")
 }

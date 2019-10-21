@@ -10,10 +10,11 @@ import (
 	"os"
 	"services/api/filter"
 	"services/api/validate"
-	"services/config"
 	"services/dataset"
 	"services/db"
+	"services/importdata/csv"
 	"services/types"
+	"services/util"
 	"time"
 )
 
@@ -44,14 +45,10 @@ func (h RestHandlers) fileUpload(fileType string) error {
 
 	startTime := time.Now()
 
-	dir := config.Config.TmpDirectory
-
-	tmpfile, err := ioutil.TempFile(dir, fileName)
+	tmpfile, err := ioutil.TempFile("", fileName)
 	if err != nil {
 		return fmt.Errorf("cannot create temporary file: %s ", err)
 	}
-
-	tmpfile.Chmod(0777)
 
 	defer func() { _ = os.Remove(tmpfile.Name()) }()
 
@@ -61,7 +58,7 @@ func (h RestHandlers) fileUpload(fileType string) error {
 		Str("fileName", fileName).
 		Str("fileType", fileType).
 		Int64("bytesRead", n).
-		TimeDiff("elapsedTime", time.Now(), startTime).
+		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("File uploaded")
 
 	_ = tmpfile.Close()
@@ -106,9 +103,26 @@ func (h RestHandlers) uploadAddress(w http.ResponseWriter, r *http.Request) Resp
 	return OkayResponse{OK}
 }
 
-func (h RestHandlers) addressUpload(tmpfile, datasetName string) error {
+func (h RestHandlers) addressUpload(fileName, datasetName string) error {
 
-	//startTime := time.Now()
+	startTime := time.Now()
+
+	rows, err := csv.ImportCSVToSlice(fileName)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("method", "addressUpload").
+			Str("file", fileName).
+			Msg("Cannot import CSV file")
+		return fmt.Errorf("cannot import CSV file %w", err)
+	}
+
+	if len(rows) < 2 {
+		log.Warn().
+			Str("method", "addressUpload").
+			Msg("The CSV file is empty")
+		return fmt.Errorf("csv file: %s is empty", fileName)
+	}
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -118,28 +132,8 @@ func (h RestHandlers) addressUpload(tmpfile, datasetName string) error {
 			Msg("Cannot connect to database")
 		return fmt.Errorf("cannot connect to database: %s", err)
 	}
-	//
-	//d, err := dataset.NewDataset(datasetName)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//var nullFilter = filter.NewNullFilter(&d)
-	//err = d.LoadCSV(tmpfile, datasetName, types.Addresses{}, nullFilter)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//database, err := db.GetDefaultPersistenceImpl()
-	//if err != nil {
-	//	log.Error().
-	//		Err(err).
-	//		Str("datasetName", datasetName).
-	//		Msg("Cannot connect to database")
-	//	return fmt.Errorf("cannot connect to database: %s", err)
-	//}
-	//
-	if err := database.PersistAddressDataset(tmpfile); err != nil {
+
+	if err := database.PersistAddressDataset(rows[0], rows[1:]); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
@@ -147,12 +141,10 @@ func (h RestHandlers) addressUpload(tmpfile, datasetName string) error {
 		return fmt.Errorf("cannot persist dataset to database: %s", err)
 	}
 
-	//log.Debug().
-	//	Str("datasetName", datasetName).
-	//	Int("rowCount", d.NumRows()).
-	//	Int("columnCount", d.NumColumns()).
-	//	TimeDiff("elapsedTime", time.Now(), startTime).
-	//	Msg("Imported and persisted dataset")
+	log.Debug().
+		Str("datasetName", datasetName).
+		Str("elapsedTime", util.FmtDuration(startTime)).
+		Msg("Imported and persisted dataset")
 
 	return nil
 }
@@ -203,7 +195,7 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 		log.Warn().
 			Err(err).
 			Str("status", "Failed").
-			TimeDiff("elapsedTime", time.Now(), startValidation).
+			Str("elapsedTime", util.FmtDuration(startValidation)).
 			Msg("Validator failed")
 		return err
 	}
@@ -212,14 +204,14 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 		log.Warn().
 			Str("status", "Failed").
 			Str("errorMessage", validationResponse.ErrorMessage).
-			TimeDiff("elapsedTime", time.Now(), startValidation).
+			Str("elapsedTime", util.FmtDuration(startTime)).
 			Msg("Validator failed")
 		return fmt.Errorf(validationResponse.ErrorMessage)
 	}
 
 	log.Debug().
 		Str("status", "Successful").
-		TimeDiff("elapsedTime", time.Now(), startValidation).
+		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Validator complete")
 
 	cnt, err := surveyFilter.AddVariables()
@@ -263,7 +255,7 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 		Str("datasetName", datasetName).
 		Int("rowCount", d.NumRows()).
 		Int("columnCount", d.NumColumns()).
-		TimeDiff("elapsedTime", time.Now(), startTime).
+		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Imported and persisted dataset")
 
 	return nil
