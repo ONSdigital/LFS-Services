@@ -32,4 +32,4 @@ create table users
 );
 
 insert into users(username, password)
-values ('Paul', '$2a$04$uCR1AINowJXKQxiiPwyLLubTm1k0.PWMhWDHMPE3PNu59ZglB1fLG');
+values ('Admin', '$2a$04$Su7c9o6E9pLaGut2Nv9FqO2ZUbntDmUweOlO/Vj3hczi86qrnbKK2');

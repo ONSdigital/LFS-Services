@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"time"
@@ -88,25 +89,31 @@ func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
-		Msg("Received login request")
+		Msg("Received login request.")
 
 	startTime := time.Now()
 
 	h.w = w
 	h.r = r
 
-	// TODO: Retrieve and replace static variables --->
-	username := "Paul"
-	password := "sucks"
-	// TODO: <---
+	// Assign username and password variables
+	vars := mux.Vars(r)
+	username := vars["user"]
+	password := h.r.Header.Get("password")
+
+	// Call login function to validate
 	res := h.login(username, password)
 
+	// Enable "Cross-Origin Resource Sharing"
+	enableCors(&w)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
 	if res != nil {
 		ErrorResponse{Status: Error, ErrorMessage: res.Error()}.sendResponse(w, r)
 	} else {
+		log.Debug().
+			Msg("Login request successful")
 		a := OkayResponse{OK}
 		sendResponse(h.w, h.r, a)
 	}
@@ -116,7 +123,6 @@ func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Str("uri", r.RequestURI).
 		TimeDiff("elapsedTime", time.Now(), startTime).
 		Msg("Login request completed")
-
 }
 
 type Response interface {
