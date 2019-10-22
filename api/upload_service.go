@@ -2,12 +2,7 @@ package api
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"os"
 	"services/api/filter"
 	"services/api/validate"
 	"services/dataset"
@@ -18,50 +13,13 @@ import (
 	"time"
 )
 
-func (h RestHandlers) fileUpload(fileType string) error {
-
-	_ = h.r.ParseMultipartForm(64 << 20)
-
-	file, _, err := h.r.FormFile("lfsFile")
-	if err != nil {
-		log.Error().
-			Err(err).
-			Msg("Error getting formfile")
-		return err
-	}
-
-	defer func() { _ = file.Close() }()
+func (h RestHandlers) parseInputFile(fileType, tmpfile string) error {
 
 	fileName := h.r.Form.Get("fileName")
 	if fileName == "" {
 		log.Error().Msg("fileName not set")
 		return fmt.Errorf("fileName not set")
 	}
-
-	log.Debug().
-		Str("fileName", fileName).
-		Str("fileType", fileType).
-		Msg("Uploading file")
-
-	startTime := time.Now()
-
-	tmpfile, err := ioutil.TempFile("", fileName)
-	if err != nil {
-		return fmt.Errorf("cannot create temporary file: %s ", err)
-	}
-
-	defer func() { _ = os.Remove(tmpfile.Name()) }()
-
-	n, err := io.Copy(tmpfile, file)
-
-	log.Debug().
-		Str("fileName", fileName).
-		Str("fileType", fileType).
-		Int64("bytesRead", n).
-		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("File uploaded")
-
-	_ = tmpfile.Close()
 
 	switch fileType {
 
@@ -71,12 +29,12 @@ func (h RestHandlers) fileUpload(fileType string) error {
 			log.Error().Msg("fileSource must be NI or GB")
 			return fmt.Errorf("invalid fileSource or fileSource not set - must be GB or NI")
 		}
-		if err := h.surveyUpload(tmpfile.Name(), fileName, source); err != nil {
+		if err := h.parseSurveyFile(tmpfile, fileName, source); err != nil {
 			return err
 		}
 
 	case AddressFile:
-		if err := h.addressUpload(tmpfile.Name(), fileName); err != nil {
+		if err := h.parseAddressFile(tmpfile, fileName); err != nil {
 			return err
 		}
 
@@ -84,7 +42,6 @@ func (h RestHandlers) fileUpload(fileType string) error {
 		log.Warn().
 			Str("fileName", fileName).
 			Str("fileType", fileType).
-			Int64("bytesRead", n).
 			Str("error", "filetype not recognised").
 			Msg("Error getting formfile")
 		return fmt.Errorf("fileType, %s, not recognised", fileType)
@@ -93,17 +50,8 @@ func (h RestHandlers) fileUpload(fileType string) error {
 	return nil
 }
 
-func (h RestHandlers) uploadAddress(w http.ResponseWriter, r *http.Request) Response {
-
-	if err := h.fileUpload(AddressFile); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrorResponse{Status: Error, ErrorMessage: err.Error()}
-	}
-
-	return OkayResponse{OK}
-}
-
-func (h RestHandlers) addressUpload(fileName, datasetName string) error {
+// TODO: Run in goroutine
+func (h RestHandlers) parseAddressFile(fileName, datasetName string) error {
 
 	startTime := time.Now()
 
@@ -111,7 +59,7 @@ func (h RestHandlers) addressUpload(fileName, datasetName string) error {
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("method", "addressUpload").
+			Str("method", "parseAddressFile").
 			Str("file", fileName).
 			Msg("Cannot import CSV file")
 		return fmt.Errorf("cannot import CSV file %w", err)
@@ -119,7 +67,7 @@ func (h RestHandlers) addressUpload(fileName, datasetName string) error {
 
 	if len(rows) < 2 {
 		log.Warn().
-			Str("method", "addressUpload").
+			Str("method", "parseAddressFile").
 			Msg("The CSV file is empty")
 		return fmt.Errorf("csv file: %s is empty", fileName)
 	}
@@ -149,25 +97,8 @@ func (h RestHandlers) addressUpload(fileName, datasetName string) error {
 	return nil
 }
 
-func (h RestHandlers) uploadSurvey(w http.ResponseWriter, r *http.Request) Response {
-	vars := mux.Vars(r)
-	runId := vars["runId"]
-
-	if runId == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Warn().Msg("runId not set")
-		return ErrorResponse{Status: Error, ErrorMessage: "runId not set"}
-	}
-
-	if err := h.fileUpload(SurveyFile); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrorResponse{Status: Error, ErrorMessage: err.Error()}
-	}
-
-	return OkayResponse{OK}
-}
-
-func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
+// TODO: Run in goroutine
+func (h RestHandlers) parseSurveyFile(tmpfile, datasetName, source string) error {
 	startTime := time.Now()
 
 	d, err := dataset.NewDataset(datasetName)
@@ -182,6 +113,7 @@ func (h RestHandlers) surveyUpload(tmpfile, datasetName, source string) error {
 		surveyFilter = filter.NewNISurveyFilter(&d)
 	}
 
+	// TODO: Load directly bypassing dataset
 	err = d.LoadSav(tmpfile, datasetName, types.Survey{}, surveyFilter)
 	if err != nil {
 		return err
