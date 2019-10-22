@@ -35,11 +35,16 @@
 							"key": "fileName",
 							"value": "myFileName",
 							"type": "text"
+						},
+						{
+							"key": "fileSource",
+							"value": "GB",
+							"type": "text"
 						}
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/import/survey/123456?lfs-file=test",
+					"raw": "http://localhost:8000/import/Survey/123456",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -47,14 +52,8 @@
 					"port": "8000",
 					"path": [
 						"import",
-						"survey",
+						"Survey",
 						"123456"
-					],
-					"query": [
-						{
-							"key": "lfs-file",
-							"value": "test"
-						}
 					]
 				}
 			},
@@ -94,7 +93,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/import/survey/123456?lfs-file=test",
+					"raw": "http://localhost:8000/import/Address",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -102,14 +101,57 @@
 					"port": "8000",
 					"path": [
 						"import",
-						"survey",
-						"123456"
-					],
-					"query": [
+						"Address"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/x-www-form-urlencoded"
+					},
+					{
+						"key": "password",
+						"type": "text",
+						"value": "admin"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
 						{
-							"key": "lfs-file",
-							"value": "test"
+							"key": "lfsFile",
+							"type": "file",
+							"src": "/home/paul/Documents/SouleTech Ltd/Projects/ONS Project/LFS/CSV Import Files/2019_ADDRESS_FILE_FOR_CASPA.csv"
+						},
+						{
+							"key": "fileName",
+							"value": "myFileName",
+							"type": "text"
 						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/login/Admin",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"login",
+						"Admin"
 					]
 				}
 			},
