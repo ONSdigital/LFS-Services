@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"services/api"
+	"services/api/ws"
 	"services/config"
 	"time"
 )
@@ -28,6 +29,7 @@ func main() {
 
 	// Command line flag overrides the configuration file
 	debug := flag.Bool("debug", false, "sets log level to debug")
+
 	flag.Parse()
 	if *debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -43,6 +45,7 @@ func main() {
 	router.HandleFunc("/import/{fileType}/{runId}", restHandlers.FileUploadHandler).Methods(http.MethodPost)
 	router.HandleFunc("/import/{fileType}", restHandlers.FileUploadHandler).Methods(http.MethodPost)
 	router.HandleFunc("/login/{user}", restHandlers.LoginHandler).Methods(http.MethodGet)
+	router.HandleFunc("/ws", ws.WebSocketHandler{}.ServeWs).Methods(http.MethodGet)
 
 	listenAddress := config.Config.Service.ListenAddress
 
