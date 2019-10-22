@@ -8,6 +8,7 @@ import (
 	_ "services/api/validate"
 	"services/db"
 	"services/types"
+	"strings"
 )
 
 func (h RestHandlers) login(username string, password string) error {
@@ -47,10 +48,13 @@ func (h RestHandlers) login(username string, password string) error {
 		Str("uri", h.r.RequestURI).
 		Msg("Assert user credentials match.")
 
-	// Compare passwords
+	// Compare and assert credentials match
 	matchErr := comparePasswords(user.Password, password)
-	if matchErr == false {
-		return fmt.Errorf("Invalid Password.")
+
+	if strings.Compare(username, user.Username) != 0 || matchErr == false {
+		log.Error().
+			Msg("Invalid username or password")
+		return fmt.Errorf("Invalid username or password")
 	}
 
 	return nil
@@ -61,8 +65,6 @@ func comparePasswords(hashedPwd string, plainPwd string) bool {
 	bytePlain := []byte(plainPwd)
 	err := bcrypt.CompareHashAndPassword(byteHash, bytePlain)
 	if err != nil {
-		log.Error().
-			Msg(err.Error())
 		return false
 	}
 	return true
