@@ -15,6 +15,7 @@ import (
 	"services/importdata/sav"
 	"services/io/spss"
 	"services/types"
+	"services/util"
 	"strconv"
 	"strings"
 	"sync"
@@ -46,8 +47,6 @@ type Dataset struct {
 const (
 	InitialRowCapacity    = 20000
 	InitialColumnCapacity = 2000
-	MissingFloatValue     = -99.99
-	MissingIntValue       = -99
 )
 
 func NewDataset(name string) (Dataset, error) {
@@ -79,7 +78,7 @@ func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, filter 
 		return fmt.Errorf("cannot import CSV file %w", err)
 	}
 
-	if len(records) == 0 {
+	if len(records) < 2 {
 		log.Warn().
 			Str("method", "readCSV").
 			Msg("The CSV file is empty")
@@ -89,8 +88,8 @@ func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, filter 
 	log.Info().
 		Str("method", "readCSV").
 		Str("file", fileName).
-		Str("records", string(len(records)-1)).
-		TimeDiff("elapsedTime", time.Now(), start).
+		Int("records", len(records)-1).
+		Str("elapsedTime", util.FmtDuration(start)).
 		Msg("Read CSV file")
 
 	start = time.Now()
@@ -102,9 +101,9 @@ func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, filter 
 	log.Debug().
 		Str("method", "readCSV").
 		Str("file", "in").
-		Str("records", string(d.NumRows())).
-		TimeDiff("elapsedTime", time.Now(), start).
-		Msg("Read CSV file")
+		Int("records", d.NumRows()).
+		Str("elapsedTime", util.FmtDuration(start)).
+		Msg("Populated Dataset")
 
 	return nil
 }
@@ -138,7 +137,7 @@ func (d *Dataset) LoadSav(in string, datasetName string, out interface{}, filter
 	log.Debug().
 		Str("file", in).
 		Int("records", len(records)-1).
-		TimeDiff("elapsedTime", time.Now(), start).
+		Str("elapsedTime", util.FmtDuration(start)).
 		Msg("Read Sav file")
 
 	start = time.Now()
@@ -616,7 +615,11 @@ func (d *Dataset) populateDataset(datasetName string, rows [][]string, out inter
 			// check type is valid
 			a := spssRow[j]
 			if a == "" {
-				a = "NULL"
+				if d.Columns[headers[j]].Kind == reflect.String {
+					a = "NULL"
+				} else {
+					a = "NaN"
+				}
 			}
 
 			kind := d.Columns[headers[j]].Kind

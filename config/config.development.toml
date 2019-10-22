@@ -2,13 +2,17 @@
 logFormat = "Terminal" # one of: Text | Json | Terminal
 logLevel = "Debug" #	one of: "Info" # Trace | Info | Debug | Warn | Error | Fatal
 
-testDirectory = "/Users/paul/LFS/LFS-Services/testdata/"
+TmpDirectory= "/private/tmp" # this must be the same directory configured in mysql's secure_file_priv option
+testDirectory = "/home/paul/GolandProjects/LFS-Services/testdata/"
 #testDirectory = "/Users/paul/ONS/LFS/LFS-Services/testdata/"
 
 [database]
 
 # database tables configuration
 columnsTable = "columns"
+addressesTable="addr_test"
+#addressesTable="addrersses"
+uploadAuditTable="upload_audit"
 
 # connections configuration
 server = "localhost" # set by environment variables

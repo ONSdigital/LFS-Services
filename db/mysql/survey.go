@@ -1,4 +1,4 @@
-package db
+package mysql
 
 import (
 	"bytes"
@@ -8,16 +8,12 @@ import (
 	"services/config"
 	"services/dataset"
 	"services/types"
+	"services/util"
 	"strconv"
 	"strings"
 	"time"
 	"upper.io/db.v3/lib/sqlbuilder"
-	"upper.io/db.v3/mysql"
 )
-
-type MySQL struct {
-	DB sqlbuilder.Database
-}
 
 var columnsTable string
 
@@ -28,62 +24,8 @@ func init() {
 	}
 }
 
-func (s *MySQL) Connect() error {
-
-	var settings = mysql.ConnectionURL{
-		Database: config.Config.Database.Database,
-		Host:     config.Config.Database.Server,
-		User:     config.Config.Database.User,
-		Password: config.Config.Database.Password,
-	}
-
-	log.Debug().
-		Str("databaseName", config.Config.Database.Database).
-		Msg("Connecting to database")
-
-	sess, err := mysql.Open(settings)
-
-	if err != nil {
-		log.Error().
-			Err(err).
-			Str("databaseName", config.Config.Database.Database).
-			Msg("Cannot connect to database")
-		return err
-	}
-
-	log.Debug().
-		Str("databaseName", config.Config.Database.Database).
-		Msg("Connected to database")
-
-	if config.Config.Database.Verbose {
-		sess.SetLogging(true)
-	}
-
-	s.DB = sess
-
-	poolSize := config.Config.Database.ConnectionPool.MaxPoolSize
-	maxIdle := config.Config.Database.ConnectionPool.MaxIdleConnections
-	maxLifetime := config.Config.Database.ConnectionPool.MaxLifetimeSeconds
-
-	if maxLifetime > 0 {
-		maxLifetime = maxLifetime * time.Second
-		sess.SetConnMaxLifetime(maxLifetime)
-	}
-
-	log.Debug().
-		Int("MaxPoolSize", poolSize).
-		Int("MaxIdleConnections", maxIdle).
-		Dur("MaxLifetime", maxLifetime*time.Second).
-		Msg("Connection Attributes")
-
-	sess.SetMaxOpenConns(poolSize)
-	sess.SetMaxIdleConns(maxIdle)
-
-	return nil
-}
-
 func (s MySQL) DeleteColumnData(name string) error {
-	col := s.DB.Collection("columns")
+	col := s.DB.Collection(columnsTable)
 	res := col.Find("table_name", name)
 	if res == nil {
 		return nil
@@ -94,25 +36,10 @@ func (s MySQL) DeleteColumnData(name string) error {
 	return nil
 }
 
-func (s MySQL) Close() {
-	if s.DB != nil {
-		_ = s.DB.Close()
-	}
-}
+func (s MySQL) insertColumnData(tx sqlbuilder.Tx, columns types.Columns) error {
 
-type Column struct {
-	TableName    string `db:"table_name"`
-	ColumnName   string `db:"column_name"`
-	ColumnNumber int    `db:"column_number"`
-	Kind         int    `db:"kind"`
-	Rows         string `db:"rows"`
-}
-
-func (s MySQL) insertColumnData(tx sqlbuilder.Tx, tableName string, columnName string, columnNumber int, kind int, rows string) error {
-
-	c := Column{tableName, columnName, columnNumber, kind, rows}
 	col := tx.Collection(columnsTable)
-	_, err := col.Insert(c)
+	_, err := col.Insert(columns)
 	if err != nil {
 		return err
 	}
@@ -120,7 +47,7 @@ func (s MySQL) insertColumnData(tx sqlbuilder.Tx, tableName string, columnName s
 	return nil
 }
 
-func (s MySQL) UnpersistDataset(tableName string) (dataset.Dataset, error) {
+func (s MySQL) UnpersistSurveyDataset(tableName string) (dataset.Dataset, error) {
 	d, err := dataset.NewDataset(tableName)
 
 	startTime := time.Now()
@@ -129,7 +56,7 @@ func (s MySQL) UnpersistDataset(tableName string) (dataset.Dataset, error) {
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("methodName", "UnpersistDataset").
+			Str("methodName", "UnpersistSurveyDataset").
 			Msg("Cannot create a new DataSet")
 		return dataset.Dataset{}, fmt.Errorf("cannot create a new DataSet: %s", err)
 	}
@@ -137,7 +64,7 @@ func (s MySQL) UnpersistDataset(tableName string) (dataset.Dataset, error) {
 	log.Info().Msg("starting unpersist into Dataset")
 
 	req := s.DB.Collection(columnsTable).Find().Where("table_name = '" + tableName + "'").OrderBy("column_number")
-	var column Column
+	var column types.Columns
 	for req.Next(&column) {
 		a := strings.Split(column.Rows, ",")
 		s := make([]interface{}, len(a))
@@ -148,32 +75,32 @@ func (s MySQL) UnpersistDataset(tableName string) (dataset.Dataset, error) {
 			case reflect.Int8, reflect.Uint8:
 				s[i], err = strconv.ParseInt(v, 10, 8)
 				if err != nil {
-					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistDataset: unpersist error on int8 - possible corruption")
+					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on int8 - possible corruption")
 				}
 			case reflect.Int, reflect.Int32, reflect.Uint32:
 				s[i], err = strconv.ParseInt(v, 10, 32)
 				if err != nil {
-					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistDataset: unpersist error on int32 - possible corruption")
+					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on int32 - possible corruption")
 				}
 			case reflect.Int64, reflect.Uint64:
 				s[i], err = strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistDataset: unpersist error on int64 - possible corruption")
+					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on int64 - possible corruption")
 				}
 			case reflect.Float32:
 				s[i], err = strconv.ParseFloat(v, 32)
 				if err != nil {
-					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistDataset: unpersist error on float32 - possible corruption")
+					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on float32 - possible corruption")
 				}
 			case reflect.Float64:
 				s[i], err = strconv.ParseFloat(v, 64)
 				if err != nil {
-					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistDataset: unpersist error on float64 - possible corruption")
+					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on float64 - possible corruption")
 				}
 			default:
 				log.Error().
 					Err(err).
-					Str("methodName", "UnpersistDataset").
+					Str("methodName", "UnpersistSurveyDataset").
 					Str("type", string(reflect.Kind(column.Kind))).
 					Msg("Unknown type - possible corruption")
 				return dataset.Dataset{}, fmt.Errorf("unknown type - possible corruption")
@@ -191,12 +118,12 @@ func (s MySQL) UnpersistDataset(tableName string) (dataset.Dataset, error) {
 
 	log.Debug().
 		Err(err).
-		TimeDiff("elapsedTime", time.Now(), startTime).
+		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Data unpersisted")
 	return d, nil
 }
 
-func (s MySQL) PersistDataset(d dataset.Dataset) error {
+func (s MySQL) PersistSurveyDataset(d dataset.Dataset) error {
 	var kBuffer bytes.Buffer
 
 	startTime := time.Now()
@@ -238,7 +165,7 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 				kBuffer.WriteString(fmt.Sprintf("%g", v))
 			default:
 				log.Error().
-					Str("methodName", "PersistDataset").
+					Str("methodName", "PersistSurveyDataset").
 					Int("type", int(columnKind)).
 					Msg("Unknown type - possible corruption")
 				return fmt.Errorf("unknown type - possible corruption")
@@ -250,12 +177,22 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 			i++
 		}
 
-		if err := s.insertColumnData(tx, d.DatasetName, colName, column.ColNo, int(columnKind), kBuffer.String()); err != nil {
+		column := types.Columns{
+			TableName:    d.DatasetName,
+			ColumnName:   colName,
+			ColumnNumber: column.ColNo,
+			Kind:         int(columnKind),
+			Rows:         kBuffer.String(),
+		}
+
+		if err := s.insertColumnData(tx, column); err != nil {
 			return fmt.Errorf("cannot insert column, error: %s", err)
 		}
 	}
 
-	if err := s.auditFileUpload(tx, d); err != nil {
+	var f = DBAudit{s}
+
+	if err := f.AuditFileUploadEvent(tx, d); err != nil {
 		log.Error().
 			Err(err).
 			Msg("AuditFileUpload failed")
@@ -270,45 +207,8 @@ func (s MySQL) PersistDataset(d dataset.Dataset) error {
 	}
 
 	log.Debug().
-		TimeDiff("elapsedTime", time.Now(), startTime).
-		Msg("Data persisted")
+		Str("elapsedTime", util.FmtDuration(startTime)).
+		Msg("Survey data persisted")
 
 	return nil
-}
-
-func (s MySQL) auditFileUpload(tx sqlbuilder.Tx, d dataset.Dataset) error {
-	a := types.Audit{
-		FileName:      d.DatasetName,
-		ReferenceDate: time.Now(),
-		NumVarFile:    d.NumVarFile,
-		NumVarLoaded:  d.NumVarLoaded,
-		NumObFile:     d.NumObFile,
-		NumObLoaded:   d.NumObLoaded,
-	}
-	dbAudit := tx.Collection("upload_audit")
-	_, err := dbAudit.Insert(a)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s MySQL) GetUserID(user string) (types.UserCredentials, error) {
-	var creds types.UserCredentials
-
-	col := s.DB.Collection("users")
-	res := col.Find("username", user)
-
-	if res == nil {
-		return creds, fmt.Errorf("user %s not found", user)
-	}
-
-	defer func() { _ = res.Close() }()
-
-	ok := res.Next(&creds)
-	if !ok {
-		return creds, fmt.Errorf("user %s not found", user)
-	}
-	return creds, nil
 }
