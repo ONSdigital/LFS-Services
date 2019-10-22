@@ -49,13 +49,7 @@ CREATE TABLE `users`
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
 
--- ----------------------------
--- Records of users
--- ----------------------------
-BEGIN;
-INSERT INTO `users`
-VALUES ('Paul', '$2a$04$uCR1AINowJXKQxiiPwyLLubTm1k0.PWMhWDHMPE3PNu59ZglB1fLG');
-COMMIT;
+
 
 -- ----------------------------
 -- Table structure for export_definitions
@@ -146,4 +140,9 @@ CREATE TABLE `addresses`
     decile2015            DECIMAL(38, 0),
     `CombinedAuthorities` VARCHAR(9) NOT NULL
 );
-SET FOREIGN_KEY_CHECKS = 1;
+-- ----------------------------
+-- Records of users
+-- ----------------------------
+
+nsert into users(username, password)
+values ('Admin', '$2a$04$Su7c9o6E9pLaGut2Nv9FqO2ZUbntDmUweOlO/Vj3hczi86qrnbKK2');
