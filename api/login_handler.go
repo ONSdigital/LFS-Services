@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-}
-
 func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug().
 		Str("client", r.RemoteAddr).
@@ -31,8 +27,6 @@ func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Call login service to validate
 	res := h.login(username, password)
 
-	// Enable "Cross-Origin Resource Sharing"
-	enableCors(&w)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
