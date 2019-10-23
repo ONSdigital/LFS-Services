@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -64,6 +65,12 @@ func main() {
 			Str("service", "LFS").
 			Msgf("readTimeout configuration error")
 	}
+
+	// we'll allow anything for now. May need or want to restrict this to just the UI when we know its endpoint
+	origins := []string{"*"}
+	var c = handlers.AllowedOrigins(origins)
+
+	handlers.CORS(c)(router)
 
 	srv := &http.Server{
 		Handler:      router,

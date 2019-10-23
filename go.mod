@@ -6,6 +6,7 @@ require (
 	github.com/caarlos0/env/v6 v6.0.0
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/gocarina/gocsv v0.0.0-20190821091544-020a928c6f4e
+	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
 	github.com/kr/pretty v0.1.0 // indirect
