@@ -22,7 +22,6 @@ func TestWS(t *testing.T) {
 		t.FailNow()
 	}
 
-	defer c.Close()
 
 	m := types.WSMessage{
 		Filename:   "Test file",
@@ -42,5 +41,6 @@ func TestWS(t *testing.T) {
 		t.FailNow()
 	}
 	log.Printf("recv: %s", message)
+	c.Close()
 
 }
