@@ -12,8 +12,7 @@ CREATE TABLE `columns`
     `column_number` int(11)      NOT NULL,
     `kind`          int(255)     NOT NULL,
     `column_rows`   longtext     NOT NULL,
-    PRIMARY KEY (`table_name`, `column_name`),
-    UNIQUE KEY `columns_pk` (`column_name`)
+    PRIMARY KEY (`table_name`, `column_name`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
@@ -48,8 +47,6 @@ CREATE TABLE `users`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
-
-
 
 -- ----------------------------
 -- Table structure for export_definitions

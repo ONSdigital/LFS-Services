@@ -5,7 +5,6 @@ import (
 	"services/dataset"
 	"services/types"
 	"time"
-	"upper.io/db.v3/lib/sqlbuilder"
 )
 
 type DBAudit struct {
@@ -21,7 +20,7 @@ func init() {
 	}
 }
 
-func (a MySQL) AuditFileUploadEvent(tx sqlbuilder.Tx, d dataset.Dataset) error {
+func (s MySQL) AuditFileUploadEvent(d dataset.Dataset) error {
 	event := types.Audit{
 		FileName:      d.DatasetName,
 		ReferenceDate: time.Now(),
@@ -30,7 +29,7 @@ func (a MySQL) AuditFileUploadEvent(tx sqlbuilder.Tx, d dataset.Dataset) error {
 		NumObFile:     d.NumObFile,
 		NumObLoaded:   d.NumObLoaded,
 	}
-	dbAudit := tx.Collection(uploadAuditTable)
+	dbAudit := s.DB.Collection(uploadAuditTable)
 	_, err := dbAudit.Insert(event)
 	if err != nil {
 		return err

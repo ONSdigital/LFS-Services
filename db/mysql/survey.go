@@ -127,9 +127,7 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset) error {
 	var kBuffer bytes.Buffer
 
 	startTime := time.Now()
-	log.Debug().
-		Str("tableName", d.DatasetName).
-		Msg("Starting persistence into DB")
+	log.Debug().Msg("Starting persistence into DB")
 
 	_ = s.DeleteColumnData(d.DatasetName)
 
@@ -190,20 +188,20 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset) error {
 		}
 	}
 
-	var f = DBAudit{s}
-
-	if err := f.AuditFileUploadEvent(tx, d); err != nil {
-		log.Error().
-			Err(err).
-			Msg("AuditFileUpload failed")
-		return fmt.Errorf("AuditFileUpload, error: %s", err)
-	}
-
 	if err := tx.Commit(); err != nil {
 		log.Error().
 			Err(err).
 			Msg("Commit transaction failed")
 		return fmt.Errorf("commit failed, error: %s", err)
+	}
+
+	var f = DBAudit{s}
+
+	if err := f.AuditFileUploadEvent(d); err != nil {
+		log.Error().
+			Err(err).
+			Msg("AuditFileUpload failed")
+		return fmt.Errorf("AuditFileUpload, error: %s", err)
 	}
 
 	log.Debug().

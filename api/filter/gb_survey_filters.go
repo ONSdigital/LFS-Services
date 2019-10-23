@@ -32,32 +32,32 @@ func (sf GBSurveyFilter) SkipRow(row map[string]interface{}) bool {
 	sex, ok := row["SEX"].(float64)
 	if !ok || math.IsNaN(sex) {
 		sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column SEX is missing")
+		//log.Debug().Msg("Dropping row because column SEX is missing")
 		return true
 	}
 	age, ok := row["AGE"].(float64)
 	if !ok || math.IsNaN(age) {
 		sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column AGE is missing")
+		//log.Debug().Msg("Dropping row because column AGE is missing")
 		return true
 	}
 	indout, ok := row["INDOUT"].(float64)
 	if !ok || indout == 5.0 {
 		sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column INDOUT is == 5")
+		//log.Debug().Msg("Dropping row because column INDOUT is == 5")
 		return true
 	}
 
 	HOut, ok := row["HOUT"].(float64)
 	if !ok {
 		sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column HOUT is not found")
+		//log.Debug().Msg("Dropping row because column HOUT is not found")
 		return true
 	}
 	lstho, ok := row["LSTHO"].(float64)
 	if !ok {
 		sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column ISTHO is not found")
+		//log.Debug().Msg("Dropping row because column ISTHO is not found")
 		return true
 	}
 
@@ -75,7 +75,7 @@ func (sf GBSurveyFilter) SkipRow(row map[string]interface{}) bool {
 
 	// skip all other rows
 	sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
-	log.Debug().Msg("Dropping row because criteia not met")
+	//log.Debug().Msg("Dropping row because criteia not met")
 	return true
 }
 

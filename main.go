@@ -43,8 +43,9 @@ func main() {
 	router := mux.NewRouter()
 	restHandlers := api.NewRestHandler()
 
-	router.HandleFunc("/import/{fileType}/{runId}", restHandlers.FileUploadHandler).Methods(http.MethodPost)
-	router.HandleFunc("/import/{fileType}", restHandlers.FileUploadHandler).Methods(http.MethodPost)
+	router.HandleFunc("/import/survey/gb/{batchId}/{month}/{week}", restHandlers.SurveyUploadGBHandler).Methods(http.MethodPost)
+	router.HandleFunc("/import/survey/ni/{batchId}/{month}", restHandlers.SurveyUploadNIHandler).Methods(http.MethodPost)
+	router.HandleFunc("/import/address", restHandlers.AddressUploadHandler).Methods(http.MethodPost)
 	router.HandleFunc("/login/{user}", restHandlers.LoginHandler).Methods(http.MethodGet)
 	router.HandleFunc("/ws", ws.WebSocketHandler{}.ServeWs).Methods(http.MethodGet)
 

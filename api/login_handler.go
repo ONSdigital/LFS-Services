@@ -16,13 +16,10 @@ func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	startTime := time.Now()
 
-	h.w = w
-	h.r = r
-
 	// Assign username and password variables
 	vars := mux.Vars(r)
 	username := vars["user"]
-	password := h.r.Header.Get("password")
+	password := r.Header.Get("password")
 
 	// Call login service to validate
 	res := h.login(username, password)

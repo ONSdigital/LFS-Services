@@ -1,9 +1,11 @@
 package ws
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
 	"net/http"
+	"services/types"
 )
 
 type WebSocketHandler struct {
@@ -28,8 +30,12 @@ func (wsh WebSocketHandler) ServeWs(w http.ResponseWriter, r *http.Request) {
 
 	defer func() { _ = ws.Close() }()
 
+	var message types.WSMessage
+
+	ws.EnableWriteCompression(true)
+
 	for {
-		mt, message, err := ws.ReadMessage()
+		err := ws.ReadJSON(&message)
 		if err != nil {
 			log.Warn().
 				Err(err).
@@ -38,9 +44,14 @@ func (wsh WebSocketHandler) ServeWs(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Debug().
-			Str("received via websocket: %s", string(message))
+			Str("fileName", message.Filename).
+			Str("percentage", fmt.Sprintf("%02.2f", message.Percentage)).
+			Int("status", message.Status).
+			Msg("recieved message")
 
-		err = ws.WriteMessage(mt, message)
+		message.Percentage = 100
+
+		err = ws.WriteJSON(&message)
 		if err != nil {
 			log.Error().
 				Err(err).

@@ -12,30 +12,22 @@ import (
 )
 
 func (h RestHandlers) login(username string, password string) error {
-	log.Debug().
-		Str("client", h.r.RemoteAddr).
-		Str("uri", h.r.RequestURI).
-		Msg("Validating login input.")
+	log.Debug().Msg("Validating login input")
 
 	// Validate user input
 	userCreds := types.UserCredentials{Username: username, Password: password}
 
 	if errs := validator.Validate(userCreds); errs != nil {
-		log.Error().
-			Msg("Invalid Username or Password.")
-		return fmt.Errorf("Invalid Username or Password.")
+		log.Error().Msg("Invalid Username or Password.")
+		return fmt.Errorf("invalid username or password")
 	}
 
-	log.Debug().
-		Str("client", h.r.RemoteAddr).
-		Str("uri", h.r.RequestURI).
-		Msg("Retrieving user credentials from database.")
+	log.Debug().Msg("Retrieving user credentials from database")
 
 	// Get user creds from database
 	creds, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
-		log.Error().
-			Msg(err.Error())
+		log.Error().Err(err)
 		return err
 	}
 	user, err := creds.GetUserID(username)
@@ -43,18 +35,14 @@ func (h RestHandlers) login(username string, password string) error {
 		return err
 	}
 
-	log.Debug().
-		Str("client", h.r.RemoteAddr).
-		Str("uri", h.r.RequestURI).
-		Msg("Assert user credentials match.")
+	log.Debug().Msg("Assert user credentials match")
 
 	// Compare and assert credentials match
 	matchErr := comparePasswords(user.Password, password)
 
 	if strings.Compare(username, user.Username) != 0 || matchErr == false {
-		log.Error().
-			Msg("Invalid username or password")
-		return fmt.Errorf("Invalid username or password")
+		log.Error().Msg("Invalid username or password")
+		return fmt.Errorf("invalid username or password")
 	}
 
 	return nil

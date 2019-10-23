@@ -36,7 +36,7 @@ func (sf SurveyValidation) Validate() (ValidationResponse, error) {
 var columnsToCheck = []string{"REFDTE", "PCODE", "QUOTA", "WEEK", "W1YR", "QRTR", "ADD", "WAVFND", "HHLD", "PERSNO"}
 
 /*
-Check if any rows in the list of columns to check are 'missing' where missing is defined as -99 and -99.99
+Check if any rows in the list of columns to check are 'missing' where missing is defined as a NaN
 for int and float types respectively.
 */
 func (sf SurveyValidation) validateMissingValues() (ValidationResponse, error) {

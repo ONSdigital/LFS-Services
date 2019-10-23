@@ -1,9 +1,5 @@
 package api
 
-import (
-	"net/http"
-)
-
 /*
 input file names / types
 */
@@ -17,14 +13,11 @@ const (
 	OK    = "OK"
 )
 
-type RestHandlers struct {
-	w http.ResponseWriter
-	r *http.Request
-}
+type RestHandlers struct{}
 
 /*
 Create a new RestHandler
 */
 func NewRestHandler() *RestHandlers {
-	return &RestHandlers{nil, nil}
+	return &RestHandlers{}
 }

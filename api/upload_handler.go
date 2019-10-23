@@ -12,85 +12,128 @@ import (
 	"time"
 )
 
-func (h RestHandlers) FileUploadHandler(w http.ResponseWriter, r *http.Request) {
+func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Request) {
+
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
-		Msg("Received FileUpload request")
-
-	startTime := time.Now()
-
-	h.w = w
-	h.r = r
-
-	vars := mux.Vars(r)
-	fileType := vars["fileType"]
+		Msg("Received GB survey file upload request")
 
 	w.Header().Set("Content-Type", "application/json")
 
-	switch fileType {
-	case AddressFile:
-		h.addressUploadHandler(w, r).sendResponse(w, r)
-	case SurveyFile:
-		h.surveyUploadHandler(w, r).sendResponse(w, r)
-	default:
+	vars := mux.Vars(r)
+	batchId := vars["batchId"]
+
+	if batchId == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		UnknownFileType{Status: Error, ErrorMessage: "file path in URI not recognised"}.sendResponse(w, r)
+		log.Warn().Msg("batchId not set")
+		ErrorResponse{Status: Error, ErrorMessage: "batchId not set"}.sendResponse(w, r)
+		return
 	}
+
+	fileName := r.FormValue("fileName")
+	if fileName == "" {
+		log.Error().Msg("fileName not set")
+		ErrorResponse{Status: Error, ErrorMessage: "fileName not set"}.sendResponse(w, r)
+		return
+	}
+
+	tmpfile, err := h.saveStreamToTempFile(w, r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
+	}
+
+	defer func() { _ = os.Remove(tmpfile) }()
+
+	if err := h.parseGBSurveyFile(tmpfile, fileName); err != nil {
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
+	}
+
+	OkayResponse{OK}.sendResponse(w, r)
+
+}
+func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
-		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("FileUpload request completed")
-}
+		Msg("Received NI survey file upload request")
 
-func (h RestHandlers) surveyUploadHandler(w http.ResponseWriter, r *http.Request) Response {
+	w.Header().Set("Content-Type", "application/json")
+
 	vars := mux.Vars(r)
-	runId := vars["runId"]
+	batchId := vars["batchId"]
 
-	if runId == "" {
+	if batchId == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Warn().Msg("runId not set")
-		return ErrorResponse{Status: Error, ErrorMessage: "runId not set"}
+		log.Warn().Msg("batchId not set")
+		ErrorResponse{Status: Error, ErrorMessage: "batchId not set"}.sendResponse(w, r)
+		return
 	}
 
-	tmpfile, err := h.saveStreamToTempFile()
+	fileName := r.FormValue("fileName")
+	if fileName == "" {
+		log.Error().Msg("fileName not set")
+		ErrorResponse{Status: Error, ErrorMessage: "fileName not set"}.sendResponse(w, r)
+		return
+	}
+
+	tmpfile, err := h.saveStreamToTempFile(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return ErrorResponse{Status: Error, ErrorMessage: err.Error()}
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
 	}
 
 	defer func() { _ = os.Remove(tmpfile) }()
 
-	if err := h.parseInputFile(SurveyFile, tmpfile); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrorResponse{Status: Error, ErrorMessage: err.Error()}
+	if err := h.parseNISurveyFile(tmpfile, fileName); err != nil {
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
 	}
 
-	return OkayResponse{OK}
+	OkayResponse{OK}.sendResponse(w, r)
 }
 
-func (h RestHandlers) addressUploadHandler(w http.ResponseWriter, r *http.Request) Response {
+func (h RestHandlers) AddressUploadHandler(w http.ResponseWriter, r *http.Request) {
 
-	tmpfile, err := h.saveStreamToTempFile()
+	log.Debug().
+		Str("client", r.RemoteAddr).
+		Str("uri", r.RequestURI).
+		Msg("Received address file upload request")
+
+	w.Header().Set("Content-Type", "application/json")
+
+	fileName := r.FormValue("fileName")
+	if fileName == "" {
+		log.Error().Msg("address upload - fileName not set")
+		ErrorResponse{Status: Error, ErrorMessage: "address upload - fileName not set"}.sendResponse(w, r)
+		return
+	}
+
+	tmpfile, err := h.saveStreamToTempFile(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return ErrorResponse{Status: Error, ErrorMessage: err.Error()}
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
 	}
 
 	defer func() { _ = os.Remove(tmpfile) }()
 
-	if err := h.parseInputFile(AddressFile, tmpfile); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrorResponse{Status: Error, ErrorMessage: err.Error()}
+	if err := h.parseAddressFile(tmpfile, fileName); err != nil {
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
 	}
 
-	return OkayResponse{OK}
+	OkayResponse{OK}.sendResponse(w, r)
 }
 
-func (h RestHandlers) saveStreamToTempFile() (string, error) {
-	file, _, err := h.r.FormFile("lfsFile")
+func (h RestHandlers) saveStreamToTempFile(w http.ResponseWriter, r *http.Request) (string, error) {
+
+	file, _, err := r.FormFile("lfsFile")
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -104,9 +147,9 @@ func (h RestHandlers) saveStreamToTempFile() (string, error) {
 		}
 	}()
 
-	_ = h.r.ParseMultipartForm(64 << 20)
+	_ = r.ParseMultipartForm(64 << 20)
 
-	fileName := h.r.Form.Get("fileName")
+	fileName := r.Form.Get("fileName")
 	if fileName == "" {
 		log.Error().Msg("fileName not set")
 		return "", fmt.Errorf("fileName not set")
