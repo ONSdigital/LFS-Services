@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"services/util"
+	"strconv"
 	"time"
 )
 
@@ -23,18 +24,27 @@ func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Reque
 
 	vars := mux.Vars(r)
 	batchId := vars["batchId"]
-
-	if batchId == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Warn().Msg("batchId not set")
-		ErrorResponse{Status: Error, ErrorMessage: "batchId not set"}.sendResponse(w, r)
-		return
-	}
+	week := vars["week"]
+	year := vars["year"]
 
 	fileName := r.FormValue("fileName")
 	if fileName == "" {
 		log.Error().Msg("fileName not set")
 		ErrorResponse{Status: Error, ErrorMessage: "fileName not set"}.sendResponse(w, r)
+		return
+	}
+
+	weekNo, err := strconv.Atoi(week)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
+	}
+
+	yearNo, err := strconv.Atoi(year)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
 
@@ -47,7 +57,7 @@ func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Reque
 
 	defer func() { _ = os.Remove(tmpfile) }()
 
-	if err := h.parseGBSurveyFile(tmpfile, fileName); err != nil {
+	if err := h.parseGBSurveyFile(tmpfile, fileName, batchId, weekNo, yearNo); err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
@@ -66,18 +76,27 @@ func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Reque
 
 	vars := mux.Vars(r)
 	batchId := vars["batchId"]
-
-	if batchId == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Warn().Msg("batchId not set")
-		ErrorResponse{Status: Error, ErrorMessage: "batchId not set"}.sendResponse(w, r)
-		return
-	}
+	month := vars["month"]
+	year := vars["year"]
 
 	fileName := r.FormValue("fileName")
 	if fileName == "" {
 		log.Error().Msg("fileName not set")
 		ErrorResponse{Status: Error, ErrorMessage: "fileName not set"}.sendResponse(w, r)
+		return
+	}
+
+	monthNo, err := strconv.Atoi(month)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
+	}
+
+	yearNo, err := strconv.Atoi(year)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
 
@@ -90,7 +109,7 @@ func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Reque
 
 	defer func() { _ = os.Remove(tmpfile) }()
 
-	if err := h.parseNISurveyFile(tmpfile, fileName); err != nil {
+	if err := h.parseNISurveyFile(tmpfile, fileName, batchId, monthNo, yearNo); err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}

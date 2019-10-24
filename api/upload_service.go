@@ -60,12 +60,8 @@ func (h RestHandlers) parseAddressFile(fileName, datasetName string) error {
 	return nil
 }
 
-/*
-NI and GB are in seperate functions for now - need to see how different they really are
-*/
-
 // TODO: Run in goroutine
-func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName string) error {
+func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName, batchId string, week, year int) error {
 	startTime := time.Now()
 
 	d, err := dataset.NewDataset(datasetName)
@@ -82,8 +78,8 @@ func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName string) error {
 
 	startValidation := time.Now()
 
-	val := validate.NewSurveyValidation(&d)
-	validationResponse, err := val.Validate()
+	val := validate.NewSurveyValidation(&d, validate.GB)
+	validationResponse, err := val.Validate(week, year)
 	if err != nil {
 		log.Warn().
 			Err(err).
@@ -155,7 +151,7 @@ func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName string) error {
 }
 
 // TODO: Run in goroutine
-func (h RestHandlers) parseNISurveyFile(tmpfile, datasetName string) error {
+func (h RestHandlers) parseNISurveyFile(tmpfile, datasetName, batchId string, month, year int) error {
 	startTime := time.Now()
 
 	d, err := dataset.NewDataset(datasetName)
@@ -172,8 +168,8 @@ func (h RestHandlers) parseNISurveyFile(tmpfile, datasetName string) error {
 
 	startValidation := time.Now()
 
-	val := validate.NewSurveyValidation(&d)
-	validationResponse, err := val.Validate()
+	val := validate.NewSurveyValidation(&d, validate.GB)
+	validationResponse, err := val.Validate(month, year)
 	if err != nil {
 		log.Warn().
 			Err(err).

@@ -10,9 +10,14 @@ testDirectory = "/home/paul/GolandProjects/LFS-Services/testdata/"
 
 # database tables configuration
 columnsTable = "columns"
-addressesTable="addr_test"
-#addressesTable="addrersses"
+addressesTable="addresses"
 uploadAuditTable="upload_audit"
+
+monthlyBatchTable="monthly_batch"
+quarterlyBatchTable="quarterly_batch"
+annualBatchTable="annual_batch"
+gbBatchTable="gb_batch_items"
+niBatchTable="ni_batch_item"
 
 # connections configuration
 server = "localhost" # set by environment variables

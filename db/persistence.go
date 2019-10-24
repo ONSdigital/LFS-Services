@@ -45,4 +45,6 @@ type Persistence interface {
 	PersistAddressDataset(headers []string, rows [][]string) error
 	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 	GetUserID(user string) (types.UserCredentials, error)
+	MonthlyBatchExists(month, year int) bool
+	CreateMonthlyBatch(batch types.MonthlyBatch) error
 }
