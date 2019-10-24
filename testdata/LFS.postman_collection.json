@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "9542f823-fc18-4308-aaa2-19895be7c486",
+		"_postman_id": "38c68aef-da86-4fda-a3cf-3ea855290bb5",
 		"name": "LFS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -44,7 +44,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8000/import/Survey/123456",
+					"raw": "http://localhost:8000/import/Survey/123456",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -67,8 +67,8 @@
 					{
 						"key": "Content-Type",
 						"name": "Content-Type",
-						"type": "text",
-						"value": "application/x-www-form-urlencoded"
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
 					},
 					{
 						"key": "",
@@ -93,7 +93,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8000/import/Address",
+					"raw": "http://localhost:8000/import/Address",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -143,7 +143,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8000/login/Admin",
+					"raw": "http://localhost:8000/login/Admin",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -153,6 +153,17 @@
 						"login",
 						"Admin"
 					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateBatch",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": ""
 				}
 			},
 			"response": []
