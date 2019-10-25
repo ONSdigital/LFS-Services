@@ -41,10 +41,14 @@ func GetDefaultPersistenceImpl() (Persistence, error) {
 type Persistence interface {
 	Connect() error
 	Close()
-	PersistSurveyDataset(d dataset.Dataset) error
+
+	PersistSurveyDataset(d dataset.Dataset, id int) error
 	PersistAddressDataset(headers []string, rows [][]string) error
 	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 	GetUserID(user string) (types.UserCredentials, error)
 	MonthlyBatchExists(month, year int) bool
 	CreateMonthlyBatch(batch types.MonthlyBatch) error
+
+	FindGBBatchInfo(week, year int) (types.GBBatchInfo, error)
+	FindNIBatchInfo(month, year int) (types.NIBatchInfo, error)
 }

@@ -2,13 +2,23 @@ package mysql
 
 import (
 	"fmt"
+	"services/config"
 	"services/types"
 )
+
+var userTable string
+
+func init() {
+	userTable = config.Config.Database.UserTable
+	if userTable == "" {
+		panic("user table configuration not set")
+	}
+}
 
 func (s MySQL) GetUserID(user string) (types.UserCredentials, error) {
 	var creds types.UserCredentials
 
-	col := s.DB.Collection("users")
+	col := s.DB.Collection(userTable)
 	res := col.Find("username", user)
 
 	if res == nil {

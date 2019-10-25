@@ -13,8 +13,8 @@
 					{
 						"key": "Content-Type",
 						"name": "Content-Type",
-						"type": "text",
-						"value": "application/x-www-form-urlencoded"
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
 					},
 					{
 						"key": "",
@@ -27,33 +27,36 @@
 					"mode": "formdata",
 					"formdata": [
 						{
-							"key": "lfsFile",
-							"type": "file",
-							"src": "/home/paul/GolandProjects/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
-						},
-						{
-							"key": "fileName",
-							"value": "myFileName",
-							"type": "text"
-						},
-						{
 							"key": "fileSource",
 							"value": "GB",
 							"type": "text"
+						},
+						{
+							"key": "fileName",
+							"value": "paul",
+							"type": "text"
+						},
+						{
+							"key": "lfsFile",
+							"type": "file",
+							"src": "/Users/paul/ONS/LFS/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
 						}
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/import/Survey/123456",
+					"raw": "http://localhost:8000/imports/survey/gb/123456/18/2014",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
-						"import",
-						"Survey",
-						"123456"
+						"imports",
+						"survey",
+						"gb",
+						"123456",
+						"18",
+						"2014"
 					]
 				}
 			},

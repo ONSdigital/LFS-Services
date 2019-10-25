@@ -17,12 +17,16 @@ type DatabaseConfiguration struct {
 	Database            string `env:"DB_DATABASE"`
 	Verbose             bool
 	ConnectionPool      Pool
-	ColumnsTable        string
+	SurveyTable         string
 	AddressesTable      string
-	UploadAuditTable    string
+	SurveyAuditTable    string
+	BatchInfoView       string
+	GbInfoView          string
+	NiInfoView          string
 	MonthlyBatchTable   string
 	QuarterlyBatchTable string
 	AnnualBatchTable    string
 	GbBatchTable        string
 	NiBatchTable        string
+	UserTable           string
 }

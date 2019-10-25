@@ -15,17 +15,17 @@ import (
 	"upper.io/db.v3/lib/sqlbuilder"
 )
 
-var columnsTable string
+var surveyTable string
 
 func init() {
-	columnsTable = config.Config.Database.ColumnsTable
-	if columnsTable == "" {
-		panic("columns table configuration not set")
+	surveyTable = config.Config.Database.SurveyTable
+	if surveyTable == "" {
+		panic("survey table configuration not set")
 	}
 }
 
-func (s MySQL) DeleteColumnData(name string) error {
-	col := s.DB.Collection(columnsTable)
+func (s MySQL) DeleteSurveyData(name string) error {
+	col := s.DB.Collection(surveyTable)
 	res := col.Find("table_name", name)
 	if res == nil {
 		return nil
@@ -36,9 +36,9 @@ func (s MySQL) DeleteColumnData(name string) error {
 	return nil
 }
 
-func (s MySQL) insertColumnData(tx sqlbuilder.Tx, columns types.Columns) error {
+func (s MySQL) insertSurveyData(tx sqlbuilder.Tx, columns types.Columns) error {
 
-	col := tx.Collection(columnsTable)
+	col := tx.Collection(surveyTable)
 	_, err := col.Insert(columns)
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (s MySQL) UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 
 	log.Info().Msg("starting unpersist into Dataset")
 
-	req := s.DB.Collection(columnsTable).Find().Where("table_name = '" + tableName + "'").OrderBy("column_number")
+	req := s.DB.Collection(surveyTable).Find().Where("table_name = '" + tableName + "'").OrderBy("column_number")
 	var column types.Columns
 	for req.Next(&column) {
 		a := strings.Split(column.Rows, ",")
@@ -123,13 +123,13 @@ func (s MySQL) UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 	return d, nil
 }
 
-func (s MySQL) PersistSurveyDataset(d dataset.Dataset) error {
+func (s MySQL) PersistSurveyDataset(d dataset.Dataset, id int) error {
 	var kBuffer bytes.Buffer
 
 	startTime := time.Now()
 	log.Debug().Msg("Starting persistence into DB")
 
-	_ = s.DeleteColumnData(d.DatasetName)
+	_ = s.DeleteSurveyData(d.DatasetName)
 
 	tx, err := s.DB.NewTx(nil)
 	if err != nil {
@@ -176,6 +176,7 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset) error {
 		}
 
 		column := types.Columns{
+			Id:           id,
 			TableName:    d.DatasetName,
 			ColumnName:   colName,
 			ColumnNumber: column.ColNo,
@@ -183,7 +184,7 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset) error {
 			Rows:         kBuffer.String(),
 		}
 
-		if err := s.insertColumnData(tx, column); err != nil {
+		if err := s.insertSurveyData(tx, column); err != nil {
 			return fmt.Errorf("cannot insert column, error: %s", err)
 		}
 	}
@@ -197,7 +198,7 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset) error {
 
 	var f = DBAudit{s}
 
-	if err := f.AuditFileUploadEvent(d); err != nil {
+	if err := f.AuditFileUploadEvent(d, id); err != nil {
 		log.Error().
 			Err(err).
 			Msg("AuditFileUpload failed")

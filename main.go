@@ -43,13 +43,14 @@ func main() {
 	router := mux.NewRouter()
 	restHandlers := api.NewRestHandler()
 
-	router.HandleFunc("/batches/{year}", restHandlers.CreateBatchHandler).Methods(http.MethodPost)
 	router.HandleFunc("/batches/{year}/{period}", restHandlers.CreateBatchHandler).Methods(http.MethodPost)
 
-	router.HandleFunc("/imports/survey/gb/{batchId}/{week}/{year}", restHandlers.SurveyUploadGBHandler).Methods(http.MethodPost)
-	router.HandleFunc("/imports/survey/ni/{batchId}/{month}/{year}", restHandlers.SurveyUploadNIHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/gb/{week}/{year}", restHandlers.SurveyUploadGBHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/ni/{month}/{year}", restHandlers.SurveyUploadNIHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/address", restHandlers.AddressUploadHandler).Methods(http.MethodPost)
+
 	router.HandleFunc("/login/{user}", restHandlers.LoginHandler).Methods(http.MethodGet)
+
 	router.HandleFunc("/ws", ws.WebSocketHandler{}.ServeWs).Methods(http.MethodGet)
 
 	listenAddress := config.Config.Service.ListenAddress

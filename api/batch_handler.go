@@ -14,7 +14,7 @@ func (h RestHandlers) CreateBatchHandler(w http.ResponseWriter, r *http.Request)
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
-		Msg("Received new Batch ID request")
+		Msg("Received create batch request")
 
 	startTime := time.Now()
 
@@ -66,7 +66,7 @@ func (h RestHandlers) CreateBatchHandler(w http.ResponseWriter, r *http.Request)
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
 		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Batch ID request complete")
+		Msg("Create batch complete")
 }
 
 func (h RestHandlers) handleMonth(month int, year int, description string) error {

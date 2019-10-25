@@ -3,6 +3,7 @@ package types
 import "time"
 
 type Audit struct {
+	Id            int       `db:"id"`
 	ReferenceDate time.Time `db:"reference_date"`
 	FileName      string    `db:"file_name"`
 	NumVarFile    int       `db:"num_var_file"`

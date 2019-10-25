@@ -11,17 +11,18 @@ type DBAudit struct {
 	MySQL
 }
 
-var uploadAuditTable string
+var surveyAuditTable string
 
 func init() {
-	uploadAuditTable = config.Config.Database.UploadAuditTable
-	if uploadAuditTable == "" {
-		panic("upload audit table configuration not set")
+	surveyAuditTable = config.Config.Database.SurveyAuditTable
+	if surveyAuditTable == "" {
+		panic("survey audit table configuration not set")
 	}
 }
 
-func (s MySQL) AuditFileUploadEvent(d dataset.Dataset) error {
+func (s MySQL) AuditFileUploadEvent(d dataset.Dataset, id int) error {
 	event := types.Audit{
+		Id:            id,
 		FileName:      d.DatasetName,
 		ReferenceDate: time.Now(),
 		NumVarFile:    d.NumVarFile,
@@ -29,7 +30,7 @@ func (s MySQL) AuditFileUploadEvent(d dataset.Dataset) error {
 		NumObFile:     d.NumObFile,
 		NumObLoaded:   d.NumObLoaded,
 	}
-	dbAudit := s.DB.Collection(uploadAuditTable)
+	dbAudit := s.DB.Collection(surveyAuditTable)
 	_, err := dbAudit.Insert(event)
 	if err != nil {
 		return err

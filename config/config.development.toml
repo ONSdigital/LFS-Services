@@ -9,9 +9,13 @@ testDirectory = "/home/paul/GolandProjects/LFS-Services/testdata/"
 [database]
 
 # database tables configuration
-columnsTable = "columns"
+surveyTable = "survey"
 addressesTable="addresses"
-uploadAuditTable="upload_audit"
+surveyAuditTable="survey_audit"
+
+batchInfoView="batch_info"
+gbInfoView="gb_batch_info"
+niInfoView="ni_batch_info"
 
 monthlyBatchTable="monthly_batch"
 quarterlyBatchTable="quarterly_batch"
@@ -19,12 +23,14 @@ annualBatchTable="annual_batch"
 gbBatchTable="gb_batch_items"
 niBatchTable="ni_batch_item"
 
+userTable="users"
+
 # connections configuration
 server = "localhost" # set by environment variables
 user = "lfs" # set by environment variables
 password = "lfs" # set by environment variables
 verbose = false
-database = "LFS" # set by environment variables
+database = "lfs" # set by environment variables
     [database.connectionPool]
        maxPoolSize = 10
        maxIdleConnections = 2

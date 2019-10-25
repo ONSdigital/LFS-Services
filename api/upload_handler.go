@@ -23,7 +23,6 @@ func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Reque
 	w.Header().Set("Content-Type", "application/json")
 
 	vars := mux.Vars(r)
-	batchId := vars["batchId"]
 	week := vars["week"]
 	year := vars["year"]
 
@@ -48,6 +47,13 @@ func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	gbInfo, err := getGBBatch(weekNo, yearNo)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
+	}
+
 	tmpfile, err := h.saveStreamToTempFile(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -57,7 +63,7 @@ func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Reque
 
 	defer func() { _ = os.Remove(tmpfile) }()
 
-	if err := h.parseGBSurveyFile(tmpfile, fileName, batchId, weekNo, yearNo); err != nil {
+	if err := h.parseGBSurveyFile(tmpfile, fileName, weekNo, yearNo, gbInfo.Id); err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
@@ -65,6 +71,7 @@ func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Reque
 	OkayResponse{OK}.sendResponse(w, r)
 
 }
+
 func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug().
@@ -75,7 +82,6 @@ func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Reque
 	w.Header().Set("Content-Type", "application/json")
 
 	vars := mux.Vars(r)
-	batchId := vars["batchId"]
 	month := vars["month"]
 	year := vars["year"]
 
@@ -100,6 +106,13 @@ func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	niInfo, err := getNIBatch(monthNo, yearNo)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
+	}
+
 	tmpfile, err := h.saveStreamToTempFile(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -109,7 +122,7 @@ func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Reque
 
 	defer func() { _ = os.Remove(tmpfile) }()
 
-	if err := h.parseNISurveyFile(tmpfile, fileName, batchId, monthNo, yearNo); err != nil {
+	if err := h.parseNISurveyFile(tmpfile, fileName, monthNo, yearNo, niInfo.Id); err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}

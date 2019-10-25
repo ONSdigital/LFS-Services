@@ -13,6 +13,46 @@ import (
 	"time"
 )
 
+func getNIBatch(monthNo, yearNo int) (types.NIBatchInfo, error) {
+
+	database, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("Cannot connect to database")
+		return types.NIBatchInfo{}, fmt.Errorf("cannot connect to database: %s", err)
+	}
+
+	info, err := database.FindNIBatchInfo(monthNo, yearNo)
+	if err != nil {
+		log.Error().Err(err)
+		return types.NIBatchInfo{},
+			fmt.Errorf("cannot upload the survey file as the batch for month %d and year %d does not exist", monthNo, yearNo)
+	}
+
+	return info, nil
+}
+
+func getGBBatch(weekNo, yearNo int) (types.GBBatchInfo, error) {
+
+	database, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("Cannot connect to database")
+		return types.GBBatchInfo{}, fmt.Errorf("cannot connect to database: %s", err)
+	}
+
+	info, err := database.FindGBBatchInfo(weekNo, yearNo)
+	if err != nil {
+		log.Error().Err(err)
+		return types.GBBatchInfo{},
+			fmt.Errorf("cannot upload the survey file as the batch for week %d and year %d does not exist", weekNo, yearNo)
+	}
+
+	return info, nil
+}
+
 // TODO: Run in goroutine
 func (h RestHandlers) parseAddressFile(fileName, datasetName string) error {
 
@@ -61,7 +101,7 @@ func (h RestHandlers) parseAddressFile(fileName, datasetName string) error {
 }
 
 // TODO: Run in goroutine
-func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName, batchId string, week, year int) error {
+func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName string, week, year, id int) error {
 	startTime := time.Now()
 
 	d, err := dataset.NewDataset(datasetName)
@@ -132,7 +172,7 @@ func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName, batchId string, we
 		return fmt.Errorf("cannot connect to database: %s", err)
 	}
 
-	if err := database.PersistSurveyDataset(d); err != nil {
+	if err := database.PersistSurveyDataset(d, id); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
@@ -151,7 +191,7 @@ func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName, batchId string, we
 }
 
 // TODO: Run in goroutine
-func (h RestHandlers) parseNISurveyFile(tmpfile, datasetName, batchId string, month, year int) error {
+func (h RestHandlers) parseNISurveyFile(tmpfile, datasetName string, month, year, id int) error {
 	startTime := time.Now()
 
 	d, err := dataset.NewDataset(datasetName)
@@ -222,7 +262,7 @@ func (h RestHandlers) parseNISurveyFile(tmpfile, datasetName, batchId string, mo
 		return fmt.Errorf("cannot connect to database: %s", err)
 	}
 
-	if err := database.PersistSurveyDataset(d); err != nil {
+	if err := database.PersistSurveyDataset(d, id); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
