@@ -19,389 +19,253 @@ DROP SCHEMA IF EXISTS `lfs`;
 CREATE SCHEMA IF NOT EXISTS `lfs` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 USE `lfs`;
 
--- -----------------------------------------------------
--- Table `lfs`.`addresses`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`addresses`;
-
-CREATE TABLE IF NOT EXISTS `lfs`.`addresses`
+create table addresses
 (
-    `pcd7`                VARCHAR(7)       NOT NULL,
-    `tlec99`              VARCHAR(3)       NULL DEFAULT NULL,
-    `ELWA`                DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `SCOTER`              VARCHAR(6)       NULL DEFAULT NULL,
-    `Walespca`            DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `ward03`              VARCHAR(6)       NULL DEFAULT NULL,
-    `scotpca`             DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `ukpca`               DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `TTWA07`              DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `ttwa08`              DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `pca2010`             VARCHAR(3)       NULL DEFAULT NULL,
-    `nuts2`               VARCHAR(4)       NULL DEFAULT NULL,
-    `nuts3`               VARCHAR(5)       NULL DEFAULT NULL,
-    `nuts4`               VARCHAR(7)       NULL DEFAULT NULL,
-    `nuts10`              VARCHAR(10)      NULL DEFAULT NULL,
-    `nuts102`             VARCHAR(4)       NULL DEFAULT NULL,
-    `nuts103`             VARCHAR(5)       NULL DEFAULT NULL,
-    `nuts104`             VARCHAR(7)       NULL DEFAULT NULL,
-    `eregn10`             VARCHAR(2)       NULL DEFAULT NULL,
-    `eregn103`            VARCHAR(3)       NULL DEFAULT NULL,
-    `NUTS133`             VARCHAR(5)       NULL DEFAULT NULL,
-    `NUTS132`             VARCHAR(4)       NULL DEFAULT NULL,
-    `eregn133`            VARCHAR(3)       NULL DEFAULT NULL,
-    `eregn13`             VARCHAR(2)       NULL DEFAULT NULL,
-    `DEGURBA`             DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `dzone1`              VARCHAR(9)       NULL DEFAULT NULL,
-    `dzone2`              VARCHAR(9)       NULL DEFAULT NULL,
-    `soa1`                VARCHAR(9)       NULL DEFAULT NULL,
-    `soa2`                VARCHAR(9)       NULL DEFAULT NULL,
-    `ward05`              VARCHAR(6)       NULL DEFAULT NULL,
-    `oacode`              VARCHAR(10)      NULL DEFAULT NULL,
-    `urind`               DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `urindsul`            DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `lea`                 VARCHAR(3)       NULL DEFAULT NULL,
-    `ward98`              VARCHAR(6)       NULL DEFAULT NULL,
-    `OSLAUA9d`            VARCHAR(9)       NULL DEFAULT NULL,
-    `ctry9d`              VARCHAR(9)       NOT NULL,
-    `casward`             VARCHAR(6)       NULL DEFAULT NULL,
-    `oa11`                VARCHAR(9)       NULL DEFAULT NULL,
-    `CTY`                 VARCHAR(9)       NULL DEFAULT NULL,
-    `LAUA`                VARCHAR(9)       NULL DEFAULT NULL,
-    `WARD`                VARCHAR(9)       NULL DEFAULT NULL,
-    `CED`                 VARCHAR(9)       NULL DEFAULT NULL,
-    `GOR9d`               VARCHAR(9)       NULL DEFAULT NULL,
-    `PCON9d`              VARCHAR(9)       NULL DEFAULT NULL,
-    `TECLEC9d`            VARCHAR(9)       NULL DEFAULT NULL,
-    `TTWA9d`              VARCHAR(9)       NULL DEFAULT NULL,
-    `lau2`                VARCHAR(9)       NULL DEFAULT NULL,
-    `PARK`                VARCHAR(9)       NULL DEFAULT NULL,
-    `LSOA11`              VARCHAR(9)       NULL DEFAULT NULL,
-    `MSOA11`              VARCHAR(9)       NULL DEFAULT NULL,
-    `CCG`                 VARCHAR(9)       NULL DEFAULT NULL,
-    `RU11IND`             VARCHAR(2)       NULL DEFAULT NULL,
-    `OAC11`               VARCHAR(3)       NULL DEFAULT NULL,
-    `LEP1`                VARCHAR(9)       NULL DEFAULT NULL,
-    `LEP2`                VARCHAR(9)       NULL DEFAULT NULL,
-    `IMD`                 DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `ru11indsul`          DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `NUTS163`             VARCHAR(5)       NULL DEFAULT NULL,
-    `NUTS162`             VARCHAR(4)       NULL DEFAULT NULL,
-    `eregn163`            VARCHAR(3)       NULL DEFAULT NULL,
-    `eregn16`             VARCHAR(2)       NOT NULL,
-    `METCTY`              VARCHAR(9)       NOT NULL,
-    `UTLA`                VARCHAR(9)       NOT NULL,
-    `WIMD2014quintile`    DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `decile2015`          DECIMAL(38, 0)   NULL DEFAULT NULL,
-    `CombinedAuthorities` VARCHAR(9)       NOT NULL,
-    `id`                  INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `lfs`.`annual_batch`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`annual_batch`;
-
-CREATE TABLE IF NOT EXISTS `lfs`.`annual_batch`
-(
-    `id`          INT(10) UNSIGNED NOT NULL,
-    `year`        INT(11)          NULL DEFAULT NULL,
-    `status`      INT(11)          NULL DEFAULT NULL,
-    `description` MEDIUMTEXT       NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
-    CONSTRAINT `ab_to_mb`
-        FOREIGN KEY (`id`)
-            REFERENCES `lfs`.`monthly_batch` (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `lfs`.`export_definitions`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`export_definitions`;
-
-CREATE TABLE IF NOT EXISTS `lfs`.`export_definitions`
-(
-    `Variables`       VARCHAR(10) NOT NULL,
-    `Research`        TINYINT(1)  NOT NULL,
-    `Regional_Client` TINYINT(1)  NOT NULL,
-    `Government`      TINYINT(1)  NOT NULL,
-    `Special_License` TINYINT(1)  NOT NULL,
-    `End_User`        TINYINT(1)  NOT NULL,
-    `Adhoc`           TINYINT(1)  NOT NULL,
-    PRIMARY KEY (`Variables`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `lfs`.`gb_batch_items`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`gb_batch_items`;
-
-CREATE TABLE IF NOT EXISTS `lfs`.`gb_batch_items`
-(
-    `id`     INT(10) UNSIGNED NOT NULL,
-    `year`   INT(11)          NULL DEFAULT NULL,
-    `month`  INT(11)          NULL DEFAULT NULL,
-    `week`   INT(11)          NOT NULL,
-    `status` INT(11)          NULL DEFAULT NULL,
-    PRIMARY KEY (`week`, `id`),
-    INDEX `batch` (`id` ASC) VISIBLE,
-    CONSTRAINT `batch`
-        FOREIGN KEY (`id`)
-            REFERENCES `lfs`.`monthly_batch` (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `lfs`.`monthly_batch`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`monthly_batch`;
-
-CREATE TABLE IF NOT EXISTS `lfs`.`monthly_batch`
-(
-    `id`          INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `month`       INT(11)          NOT NULL DEFAULT '0',
-    `year`        INT(11)          NOT NULL,
-    `status`      INT(11)          NOT NULL DEFAULT '0',
-    `description` TEXT             NULL     DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `idf_UNIQUE` (`id` ASC) VISIBLE
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 2
-    DEFAULT CHARACTER SET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `lfs`.`ni_batch_item`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`ni_batch_item`;
-
-CREATE TABLE IF NOT EXISTS `lfs`.`ni_batch_item`
-(
-    `id`     INT(10) UNSIGNED NOT NULL,
-    `year`   INT(11)          NULL DEFAULT NULL,
-    `month`  INT(11)          NULL DEFAULT NULL,
-    `status` INT(11)          NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
-    CONSTRAINT `monthly`
-        FOREIGN KEY (`id`)
-            REFERENCES `lfs`.`monthly_batch` (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `lfs`.`quarterly_batch`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`quarterly_batch`;
-
-CREATE TABLE IF NOT EXISTS `lfs`.`quarterly_batch`
-(
-    `id`          INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `quarter`     INT(11)          NULL DEFAULT NULL,
-    `year`        INT(11)          NULL DEFAULT NULL,
-    `status`      INT(11)          NULL DEFAULT NULL,
-    `description` MEDIUMTEXT       NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
-    CONSTRAINT `qb_to_mb`
-        FOREIGN KEY (`id`)
-            REFERENCES `lfs`.`monthly_batch` (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `lfs`.`survey`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`survey`;
-
-CREATE TABLE IF NOT EXISTS `lfs`.`survey`
-(
-    `id`            INT(10) UNSIGNED NOT NULL,
-    `table_name`    VARCHAR(255)     NOT NULL,
-    `column_name`   VARCHAR(255)     NOT NULL,
-    `column_number` INT(11)          NOT NULL,
-    `kind`          INT(255)         NOT NULL,
-    `column_rows`   LONGTEXT         NOT NULL,
-    PRIMARY KEY (`id`, `table_name`, `column_name`),
-    CONSTRAINT `gb_key`
-        FOREIGN KEY (`id`)
-            REFERENCES `lfs`.`gb_batch_items` (`id`),
-    CONSTRAINT `ni_key`
-        FOREIGN KEY (`id`)
-            REFERENCES `lfs`.`ni_batch_item` (`id`)
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `lfs`.`survey_audit`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`survey_audit`;
-
-CREATE TABLE IF NOT EXISTS `lfs`.`survey_audit`
-(
-    `id`             INT(10) UNSIGNED                   NOT NULL,
-    `file_name`      VARCHAR(1024) CHARACTER SET 'utf8' NULL DEFAULT NULL,
-    `reference_date` DATETIME                           NULL DEFAULT NULL,
-    `num_var_file`   INT(11)                            NULL DEFAULT NULL,
-    `num_var_loaded` INT(11)                            NULL DEFAULT NULL,
-    `num_ob_file`    INT(11)                            NULL DEFAULT NULL,
-    `num_ob_loaded`  INT(11)                            NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    CONSTRAINT `sur_key`
-        FOREIGN KEY (`id`)
-            REFERENCES `lfs`.`survey` (`id`)
-            ON DELETE NO ACTION
-            ON UPDATE NO ACTION
-)
-    ENGINE = InnoDB
-    AUTO_INCREMENT = 7
-    DEFAULT CHARACTER SET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci;
-
-
--- -----------------------------------------------------
--- Table `lfs`.`users`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`users`;
-
-CREATE TABLE IF NOT EXISTS `lfs`.`users`
-(
-    `username` VARCHAR(255) NULL DEFAULT NULL,
-    `password` VARCHAR(255) NULL DEFAULT NULL
-)
-    ENGINE = InnoDB
-    DEFAULT CHARACTER SET = utf8mb4
-    COLLATE = utf8mb4_0900_ai_ci;
-
-USE `lfs`;
-
--- -----------------------------------------------------
--- Placeholder table for view `lfs`.`batch_info`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `lfs`.`batch_info`
-(
-    `id`          INT,
-    `m_month`     INT,
-    `m_year`      INT,
-    `m_status`    INT,
-    `description` INT,
-    `ni_year`     INT,
-    `ni_month`    INT,
-    `ni_status`   INT,
-    `gb_year`     INT,
-    `gb_month`    INT,
-    `gb_week`     INT,
-    `gb_status`   INT
+    id                  int unsigned auto_increment,
+    pcd7                varchar(7)  not null,
+    tlec99              varchar(3)  null,
+    ELWA                decimal(38) null,
+    SCOTER              varchar(6)  null,
+    Walespca            decimal(38) null,
+    ward03              varchar(6)  null,
+    scotpca             decimal(38) null,
+    ukpca               decimal(38) null,
+    TTWA07              decimal(38) null,
+    ttwa08              decimal(38) null,
+    pca2010             varchar(3)  null,
+    nuts2               varchar(4)  null,
+    nuts3               varchar(5)  null,
+    nuts4               varchar(7)  null,
+    nuts10              varchar(10) null,
+    nuts102             varchar(4)  null,
+    nuts103             varchar(5)  null,
+    nuts104             varchar(7)  null,
+    eregn10             varchar(2)  null,
+    eregn103            varchar(3)  null,
+    NUTS133             varchar(5)  null,
+    NUTS132             varchar(4)  null,
+    eregn133            varchar(3)  null,
+    eregn13             varchar(2)  null,
+    DEGURBA             decimal(38) null,
+    dzone1              varchar(9)  null,
+    dzone2              varchar(9)  null,
+    soa1                varchar(9)  null,
+    soa2                varchar(9)  null,
+    ward05              varchar(6)  null,
+    oacode              varchar(10) null,
+    urind               decimal(38) null,
+    urindsul            decimal(38) null,
+    lea                 varchar(3)  null,
+    ward98              varchar(6)  null,
+    OSLAUA9d            varchar(9)  null,
+    ctry9d              varchar(9)  not null,
+    casward             varchar(6)  null,
+    oa11                varchar(9)  null,
+    CTY                 varchar(9)  null,
+    LAUA                varchar(9)  null,
+    WARD                varchar(9)  null,
+    CED                 varchar(9)  null,
+    GOR9d               varchar(9)  null,
+    PCON9d              varchar(9)  null,
+    TECLEC9d            varchar(9)  null,
+    TTWA9d              varchar(9)  null,
+    lau2                varchar(9)  null,
+    PARK                varchar(9)  null,
+    LSOA11              varchar(9)  null,
+    MSOA11              varchar(9)  null,
+    CCG                 varchar(9)  null,
+    RU11IND             varchar(2)  null,
+    OAC11               varchar(3)  null,
+    LEP1                varchar(9)  null,
+    LEP2                varchar(9)  null,
+    IMD                 decimal(38) null,
+    ru11indsul          decimal(38) null,
+    NUTS163             varchar(5)  null,
+    NUTS162             varchar(4)  null,
+    eregn163            varchar(3)  null,
+    eregn16             varchar(2)  not null,
+    METCTY              varchar(9)  not null,
+    UTLA                varchar(9)  not null,
+    WIMD2014quintile    decimal(38) null,
+    decile2015          decimal(38) null,
+    CombinedAuthorities varchar(9)  not null,
+    constraint id_UNIQUE
+        unique (id)
 );
 
--- -----------------------------------------------------
--- Placeholder table for view `lfs`.`gb_batch_info`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `lfs`.`gb_batch_info`
+alter table addresses
+    add primary key (id);
+
+create table export_definitions
 (
-    `id`          INT,
-    `year`        INT,
-    `month`       INT,
-    `status`      INT,
-    `description` INT,
-    `week`        INT
+    Variables       varchar(10) not null
+        primary key,
+    Research        tinyint(1)  not null,
+    Regional_Client tinyint(1)  not null,
+    Government      tinyint(1)  not null,
+    Special_License tinyint(1)  not null,
+    End_User        tinyint(1)  not null,
+    Adhoc           tinyint(1)  not null
 );
 
--- -----------------------------------------------------
--- Placeholder table for view `lfs`.`ni_batch_info`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `lfs`.`ni_batch_info`
+create table status_values
 (
-    `id`          INT,
-    `year`        INT,
-    `month`       INT,
-    `status`      INT,
-    `description` INT
+    id          int(11)      not null,
+    description varchar(255) not null,
+    constraint status_values_id_uindex
+        unique (id)
 );
 
--- -----------------------------------------------------
--- View `lfs`.`batch_info`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`batch_info`;
-DROP VIEW IF EXISTS `lfs`.`batch_info`;
-USE `lfs`;
-CREATE OR REPLACE ALGORITHM = UNDEFINED DEFINER =`lfs`@`%` SQL SECURITY DEFINER VIEW `lfs`.`batch_info` AS
-select `m`.`id`          AS `id`,
-       `m`.`month`       AS `m_month`,
-       `m`.`year`        AS `m_year`,
-       `m`.`status`      AS `m_status`,
-       `m`.`description` AS `description`,
-       `ni`.`year`       AS `ni_year`,
-       `ni`.`month`      AS `ni_month`,
-       `ni`.`status`     AS `ni_status`,
-       `gb`.`year`       AS `gb_year`,
-       `gb`.`month`      AS `gb_month`,
-       `gb`.`week`       AS `gb_week`,
-       `gb`.`status`     AS `gb_status`
-from ((`lfs`.`monthly_batch` `m` join `lfs`.`ni_batch_item` `ni`)
-         join `lfs`.`gb_batch_items` `gb`)
-where ((`m`.`id` = `ni`.`id`) and (`m`.`id` = `gb`.`id`));
+insert into status_values(id, description)
+values (0, 'Not Started');
 
--- -----------------------------------------------------
--- View `lfs`.`gb_batch_info`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`gb_batch_info`;
-DROP VIEW IF EXISTS `lfs`.`gb_batch_info`;
-USE `lfs`;
-CREATE OR REPLACE ALGORITHM = UNDEFINED DEFINER =`lfs`@`%` SQL SECURITY DEFINER VIEW `lfs`.`gb_batch_info` AS
-select `m`.`id`          AS `id`,
-       `m`.`year`        AS `year`,
-       `m`.`month`       AS `month`,
-       `m`.`status`      AS `status`,
-       `m`.`description` AS `description`,
-       `gb`.`week`       AS `week`
-from (`lfs`.`monthly_batch` `m`
-         join `lfs`.`gb_batch_items` `gb`)
-where (`m`.`id` = `gb`.`id`);
+insert into status_values(id, description)
+values (1, 'File Uploaded');
 
--- -----------------------------------------------------
--- View `lfs`.`ni_batch_info`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `lfs`.`ni_batch_info`;
-DROP VIEW IF EXISTS `lfs`.`ni_batch_info`;
-USE `lfs`;
-CREATE OR REPLACE ALGORITHM = UNDEFINED DEFINER =`lfs`@`%` SQL SECURITY DEFINER VIEW `lfs`.`ni_batch_info` AS
-select `m`.`id`          AS `id`,
-       `ni`.`year`       AS `year`,
-       `ni`.`month`      AS `month`,
-       `ni`.`status`     AS `status`,
-       `m`.`description` AS `description`
-from (`lfs`.`monthly_batch` `m`
-         join `lfs`.`ni_batch_item` `ni`)
-where (`m`.`id` = `ni`.`id`);
+insert into status_values(id, description)
+values (2, 'File Reloaded');
+
+insert into status_values(id, description)
+values (3, 'Upload Failed');
+
+alter table status_values
+    add primary key (id);
+
+create table monthly_batch
+(
+    id          int auto_increment,
+    month       int default 0 not null,
+    year        int           not null,
+    status      int default 0 not null,
+    description text          null,
+    constraint idf_UNIQUE
+        unique (id),
+    constraint monthly_batch_status_values_id_fk
+        foreign key (id) references status_values (id)
+);
+
+alter table monthly_batch
+    add primary key (id);
+
+create table annual_batch
+(
+    id          int        not null,
+    year        int        null,
+    status      int        null,
+    description mediumtext null,
+    constraint id_UNIQUE
+        unique (id),
+    constraint ab_to_mb
+        foreign key (id) references monthly_batch (id),
+    constraint annual_batch_status_values_id_fk
+        foreign key (id) references status_values (id)
+);
+
+alter table annual_batch
+    add primary key (id);
+
+create table gb_batch_items
+(
+    id     int not null,
+    year   int null,
+    month  int null,
+    week   int not null,
+    status int null,
+    primary key (week, id),
+    constraint batch
+        foreign key (id) references monthly_batch (id),
+    constraint gb_batch_items_status_values_id_fk
+        foreign key (id) references status_values (id)
+);
+
+create table ni_batch_item
+(
+    id     int not null,
+    year   int null,
+    month  int null,
+    status int null,
+    constraint id_UNIQUE
+        unique (id),
+    constraint monthly
+        foreign key (id) references monthly_batch (id),
+    constraint ni_batch_item_status_values_id_fk
+        foreign key (id) references status_values (id)
+);
+
+alter table ni_batch_item
+    add primary key (id);
+
+create table quarterly_batch
+(
+    id          int auto_increment,
+    quarter     int        null,
+    year        int        null,
+    status      int        null,
+    description mediumtext null,
+    constraint id_UNIQUE
+        unique (id),
+    constraint qb_to_mb
+        foreign key (id) references monthly_batch (id),
+    constraint quarterly_batch_status_values_id_fk
+        foreign key (id) references status_values (id)
+);
+
+alter table quarterly_batch
+    add primary key (id);
+
+create table survey
+(
+    id            int          not null,
+    file_name     varchar(255) not null,
+    file_source   char(2)      null,
+    week          int          null,
+    month         int          null,
+    year          int          null,
+    column_name   varchar(255) not null,
+    column_number int          not null,
+    kind          int(255)     not null,
+    column_rows   longtext     not null,
+    primary key (id, file_name, column_name),
+    constraint gb_key
+        foreign key (id) references gb_batch_items (id)
+            on delete cascade,
+    constraint ni_key
+        foreign key (id) references ni_batch_item (id)
+            on delete cascade
+);
+
+create table survey_audit
+(
+    id             int                        not null,
+    file_name      varchar(1024) charset utf8 not null,
+    file_source    char(2)                    not null,
+    reference_date datetime                   not null,
+    num_var_file   int                        not null default 0,
+    num_var_loaded int                        not null default 0,
+    num_ob_file    int                        not null default 0,
+    num_ob_loaded  int                        not null default 0,
+    status         int                        not null,
+    message        varchar(1024)              null,
+    constraint survey_audit_status_values_id_fk
+        foreign key (status) references status_values (id)
+);
+
+create index survey_audit_file_name_index
+    on survey_audit (file_name);
+
+create table users
+(
+    username varchar(255) not null,
+    password varchar(255) not null,
+    constraint users_username_uindex
+        unique (username)
+);
+
+alter table users
+    add primary key (username);
+
+insert into users(username, password)
+values ('Admin', '$2a$04$Su7c9o6E9pLaGut2Nv9FqO2ZUbntDmUweOlO/Vj3hczi86qrnbKK2');
 
 SET SQL_MODE = @OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;

@@ -24,22 +24,26 @@ func init() {
 	}
 }
 
-func (s MySQL) DeleteSurveyData(name string) error {
-	col := s.DB.Collection(surveyTable)
-	res := col.Find("table_name", name)
-	if res == nil {
-		return nil
+func (s MySQL) DeleteSurveyData(name string) (bool, error) {
+	cnt, err := s.DB.Collection(surveyTable).Find("file_name", name).Count()
+	if err != nil {
+		return false, err
 	}
-	if err := res.Delete(); err != nil {
-		return err
+	if cnt == 0 {
+		return false, nil
 	}
-	return nil
+	q := s.DB.DeleteFrom(surveyTable).Where("file_name", name)
+	_, err = q.Exec()
+	if err != nil {
+		return true, err
+	}
+	return true, nil
 }
 
-func (s MySQL) insertSurveyData(tx sqlbuilder.Tx, columns types.Columns) error {
+func (s MySQL) insertSurveyData(tx sqlbuilder.Tx, survey types.Survey) error {
 
 	col := tx.Collection(surveyTable)
-	_, err := col.Insert(columns)
+	_, err := col.Insert(survey)
 	if err != nil {
 		return err
 	}
@@ -63,8 +67,11 @@ func (s MySQL) UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 
 	log.Info().Msg("starting unpersist into Dataset")
 
-	req := s.DB.Collection(surveyTable).Find().Where("table_name = '" + tableName + "'").OrderBy("column_number")
-	var column types.Columns
+	req := s.DB.Collection(surveyTable).Find().
+		Where("file_name = '" + tableName + "'").
+		OrderBy("column_number")
+
+	var column types.Survey
 	for req.Next(&column) {
 		a := strings.Split(column.Rows, ",")
 		s := make([]interface{}, len(a))
@@ -123,13 +130,19 @@ func (s MySQL) UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 	return d, nil
 }
 
-func (s MySQL) PersistSurveyDataset(d dataset.Dataset, id int) error {
+func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error {
 	var kBuffer bytes.Buffer
 
 	startTime := time.Now()
 	log.Debug().Msg("Starting persistence into DB")
 
-	_ = s.DeleteSurveyData(d.DatasetName)
+	found, err := s.DeleteSurveyData(vo.FileName)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("Delete existing survey data failed")
+		return fmt.Errorf("delete existing survey data failed, error: %s", err)
+	}
 
 	tx, err := s.DB.NewTx(nil)
 	if err != nil {
@@ -175,17 +188,21 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, id int) error {
 			i++
 		}
 
-		column := types.Columns{
-			Id:           id,
-			TableName:    d.DatasetName,
+		row := types.Survey{
+			Id:           vo.Id,
+			FileName:     vo.FileName,
+			FileSource:   vo.FileSource,
+			Week:         vo.Week,
+			Month:        vo.Month,
+			Year:         vo.Year,
 			ColumnName:   colName,
 			ColumnNumber: column.ColNo,
 			Kind:         int(columnKind),
 			Rows:         kBuffer.String(),
 		}
 
-		if err := s.insertSurveyData(tx, column); err != nil {
-			return fmt.Errorf("cannot insert column, error: %s", err)
+		if err := s.insertSurveyData(tx, row); err != nil {
+			return fmt.Errorf("cannot insert survey row, error: %s", err)
 		}
 	}
 
@@ -196,18 +213,71 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, id int) error {
 		return fmt.Errorf("commit failed, error: %s", err)
 	}
 
-	var f = DBAudit{s}
+	vo.NumObLoaded = d.NumObLoaded
+	vo.NumObFile = d.NumObFile
+	vo.NumVarLoaded = d.NumVarLoaded
+	vo.NumVarFile = d.NumVarFile
 
-	if err := f.AuditFileUploadEvent(d, id); err != nil {
+	weekOrMonth := func() int {
+		if vo.FileSource == types.GBSource {
+			return vo.Week
+		}
+		return vo.Month
+	}()
+
+	var updateMonthlyStatus func(int, int, int) error
+	if vo.FileSource == types.GBSource {
+		updateMonthlyStatus = s.updateGBBatch
+	} else {
+		updateMonthlyStatus = s.updateNIBatch
+	}
+
+	if found {
+		if err := updateMonthlyStatus(weekOrMonth, vo.Year, types.FileReloaded); err != nil {
+			return err
+		}
+		if err := s.insertAudit(vo, types.FileReloaded, "File re-uploaded successfully"); err != nil {
+			return err
+		}
+	} else {
+		if err := updateMonthlyStatus(weekOrMonth, vo.Year, types.FileUploaded); err != nil {
+			return err
+		}
+		if err := s.insertAudit(vo, types.FileUploaded, "File uploaded successfully"); err != nil {
+			return err
+		}
+	}
+
+	log.Debug().
+		Str("elapsedTime", util.FmtDuration(startTime)).
+		Msg("SurveyInput data persisted")
+
+	return nil
+}
+
+func (s MySQL) insertAudit(vo types.SurveyVO, status int, message string) error {
+	audit := types.Audit{
+		Id:            vo.Id,
+		FileName:      surveyTable,
+		FileSource:    vo.FileSource,
+		Week:          vo.Week,
+		Month:         vo.Month,
+		Year:          vo.Year,
+		ReferenceDate: time.Now(),
+		NumVarFile:    vo.NumVarFile,
+		NumVarLoaded:  vo.NumVarLoaded,
+		NumObFile:     vo.NumObFile,
+		NumObLoaded:   vo.NumObLoaded,
+		Status:        status,
+		Message:       message,
+	}
+
+	var f = DBAudit{s}
+	if err := f.AuditFileUploadEvent(audit); err != nil {
 		log.Error().
 			Err(err).
 			Msg("AuditFileUpload failed")
 		return fmt.Errorf("AuditFileUpload, error: %s", err)
 	}
-
-	log.Debug().
-		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Survey data persisted")
-
 	return nil
 }

@@ -41,13 +41,20 @@ func main() {
 		Msg("LFS Services: Starting up")
 
 	router := mux.NewRouter()
+	//TODO: one of these for each type
 	restHandlers := api.NewRestHandler()
+	auditHandler := api.NewAuditHandler()
 
 	router.HandleFunc("/batches/{year}/{period}", restHandlers.CreateBatchHandler).Methods(http.MethodPost)
 
 	router.HandleFunc("/imports/survey/gb/{week}/{year}", restHandlers.SurveyUploadGBHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/survey/ni/{month}/{year}", restHandlers.SurveyUploadNIHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/address", restHandlers.AddressUploadHandler).Methods(http.MethodPost)
+
+	router.HandleFunc("/audits", auditHandler.HandleAllAuditRequest).Methods(http.MethodGet)
+	router.HandleFunc("/audits/year/{year}", auditHandler.HandleYearAuditRequest).Methods(http.MethodGet)
+	router.HandleFunc("/audits/month/{year}/{month}", auditHandler.HandleMonthAuditRequest).Methods(http.MethodGet)
+	router.HandleFunc("/audits/week/{year}/{week}", auditHandler.HandleWeekAuditRequest).Methods(http.MethodGet)
 
 	router.HandleFunc("/login/{user}", restHandlers.LoginHandler).Methods(http.MethodGet)
 

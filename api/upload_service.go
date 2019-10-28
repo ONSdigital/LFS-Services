@@ -13,41 +13,42 @@ import (
 	"time"
 )
 
-func getNIBatch(monthNo, yearNo int) (types.NIBatchInfo, error) {
+func getNIBatch(monthNo, yearNo int) (types.NIBatchItem, error) {
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().
 			Err(err).
 			Msg("Cannot connect to database")
-		return types.NIBatchInfo{}, fmt.Errorf("cannot connect to database: %s", err)
+		return types.NIBatchItem{}, fmt.Errorf("cannot connect to database: %s", err)
 	}
 
 	info, err := database.FindNIBatchInfo(monthNo, yearNo)
 	if err != nil {
 		log.Error().Err(err)
-		return types.NIBatchInfo{},
+		return types.NIBatchItem{},
 			fmt.Errorf("cannot upload the survey file as the batch for month %d and year %d does not exist", monthNo, yearNo)
 	}
 
 	return info, nil
 }
 
-func getGBBatch(weekNo, yearNo int) (types.GBBatchInfo, error) {
+func getGBBatch(weekNo, yearNo int) (types.GBBatchItem, error) {
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().
 			Err(err).
 			Msg("Cannot connect to database")
-		return types.GBBatchInfo{}, fmt.Errorf("cannot connect to database: %s", err)
+		return types.GBBatchItem{}, fmt.Errorf("cannot connect to database: %s", err)
 	}
 
 	info, err := database.FindGBBatchInfo(weekNo, yearNo)
 	if err != nil {
 		log.Error().Err(err)
-		return types.GBBatchInfo{},
-			fmt.Errorf("cannot upload the survey file as the batch for week %d and year %d does not exist", weekNo, yearNo)
+		return types.GBBatchItem{},
+			fmt.Errorf("cannot upload the survey file as the batch for week %d and year %d does not exist",
+				weekNo, yearNo)
 	}
 
 	return info, nil
@@ -111,7 +112,7 @@ func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName string, week, year,
 
 	var surveyFilter = filter.NewGBSurveyFilter(&d)
 
-	err = d.LoadSav(tmpfile, datasetName, types.Survey{}, surveyFilter)
+	err = d.LoadSav(tmpfile, datasetName, types.SurveyInput{}, surveyFilter)
 	if err != nil {
 		return err
 	}
@@ -172,7 +173,15 @@ func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName string, week, year,
 		return fmt.Errorf("cannot connect to database: %s", err)
 	}
 
-	if err := database.PersistSurveyDataset(d, id); err != nil {
+	surveyVo := types.SurveyVO{
+		Id:         id,
+		FileName:   d.DatasetName,
+		FileSource: "GB",
+		Week:       week,
+		Month:      0,
+		Year:       year,
+	}
+	if err := database.PersistSurveyDataset(d, surveyVo); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
@@ -201,7 +210,7 @@ func (h RestHandlers) parseNISurveyFile(tmpfile, datasetName string, month, year
 
 	var surveyFilter = filter.NewNISurveyFilter(&d)
 
-	err = d.LoadSav(tmpfile, datasetName, types.Survey{}, surveyFilter)
+	err = d.LoadSav(tmpfile, datasetName, types.SurveyInput{}, surveyFilter)
 	if err != nil {
 		return err
 	}
@@ -262,7 +271,16 @@ func (h RestHandlers) parseNISurveyFile(tmpfile, datasetName string, month, year
 		return fmt.Errorf("cannot connect to database: %s", err)
 	}
 
-	if err := database.PersistSurveyDataset(d, id); err != nil {
+	surveyVo := types.SurveyVO{
+		Id:         id,
+		FileName:   d.DatasetName,
+		FileSource: "NI",
+		Week:       0,
+		Month:      month,
+		Year:       year,
+	}
+
+	if err := database.PersistSurveyDataset(d, surveyVo); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).

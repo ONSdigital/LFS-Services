@@ -15,16 +15,18 @@ import (
 
 func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Request) {
 
-	log.Debug().
-		Str("client", r.RemoteAddr).
-		Str("uri", r.RequestURI).
-		Msg("Received GB survey file upload request")
-
 	w.Header().Set("Content-Type", "application/json")
 
 	vars := mux.Vars(r)
 	week := vars["week"]
 	year := vars["year"]
+
+	log.Debug().
+		Str("client", r.RemoteAddr).
+		Str("uri", r.RequestURI).
+		Str("week", week).
+		Str("yeay", year).
+		Msg("Received GB survey file upload request")
 
 	fileName := r.FormValue("fileName")
 	if fileName == "" {

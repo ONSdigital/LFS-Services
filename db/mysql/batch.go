@@ -10,9 +10,6 @@ import (
 var batchTable string
 var gbBatchTable string
 var niBatchTable string
-var batchInfoView string
-var gbInfoView string
-var niInfoView string
 
 func init() {
 	batchTable = config.Config.Database.MonthlyBatchTable
@@ -21,53 +18,95 @@ func init() {
 	}
 	gbBatchTable = config.Config.Database.GbBatchTable
 	niBatchTable = config.Config.Database.NiBatchTable
-	batchInfoView = config.Config.Database.BatchInfoView
-	gbInfoView = config.Config.Database.GbInfoView
-	niInfoView = config.Config.Database.NiInfoView
 }
 
-func (s MySQL) FindNIBatchInfo(month, year int) (types.NIBatchInfo, error) {
-	batchInfo := s.DB.Collection(niInfoView)
+func (s MySQL) FindNIBatchInfo(month, year int) (types.NIBatchItem, error) {
+	batchInfo := s.DB.Collection(niBatchTable)
 	res := batchInfo.Find("month", month, "year", year)
-	var result types.NIBatchInfo
+	var result types.NIBatchItem
 	if err := res.One(&result); err != nil {
 		log.Debug().
 			Int("month", month).
 			Int("year", year).
 			Msg("Batch does not exist")
-		return types.NIBatchInfo{}, err
+		return types.NIBatchItem{}, err
 	}
 	return result, nil
 }
 
-func (s MySQL) FindGBBatchInfo(week, year int) (types.GBBatchInfo, error) {
-	batchInfo := s.DB.Collection(gbInfoView)
+func (s MySQL) FindGBBatchInfo(week, year int) (types.GBBatchItem, error) {
+	batchInfo := s.DB.Collection(gbBatchTable)
 	res := batchInfo.Find("week", week, "year", year)
-	var result types.GBBatchInfo
+	var result types.GBBatchItem
 	if err := res.One(&result); err != nil {
 		log.Debug().
 			Int("week", week).
 			Int("year", year).
-			Msg("Batch does not exist")
-		return types.GBBatchInfo{}, err
+			Msg("GB batch does not exist")
+		return types.GBBatchItem{}, err
 	}
 	return result, nil
 
 }
 
-func (s MySQL) FindBatch(month, year int) (types.BatchInfo, error) {
-	batchInfo := s.DB.Collection(batchInfoView)
-	res := batchInfo.Find("m_month", month, "m_year", year, "gb_week", 1)
-	var result types.BatchInfo
+func (s MySQL) UpdateNIMonthlyStatus(week, month, status int) error {
+	batchInfo := s.DB.Collection(niBatchTable)
+	res := batchInfo.Find("week", week, "mont", month)
+	var result types.NIBatchItem
 	if err := res.One(&result); err != nil {
 		log.Debug().
+			Int("week", week).
 			Int("month", month).
-			Int("year", year).
-			Msg("Batch does not exist")
-		return types.BatchInfo{}, nil
+			Msg("NI batch does not exist")
+		return err
 	}
-	return result, nil
+	result.Status = status
+	if err := res.Update(result); err != nil {
+		log.Debug().
+			Int("week", week).
+			Int("year", month).
+			Msg("NI batch update failed")
+		return err
+	}
+	return nil
+}
 
+func (s MySQL) updateGBBatch(week, year, status int) error {
+	batchInfo := s.DB.Collection(gbBatchTable)
+	res := batchInfo.Find("week", week, "year", year)
+	var result types.GBBatchItem
+
+	if err := res.One(&result); err != nil {
+		log.Debug().Int("week", week).Int("year", year).Msg("Batch does not exist")
+		return err
+	}
+
+	result.Status = status
+
+	if err := res.Update(result); err != nil {
+		log.Debug().Int("week", week).Int("year", year).Msg("GB batch update failed")
+		return err
+	}
+	return nil
+}
+
+func (s MySQL) updateNIBatch(month, year, status int) error {
+	batchInfo := s.DB.Collection(niBatchTable)
+	res := batchInfo.Find("month", month, "year", year)
+	var result types.NIBatchItem
+
+	if err := res.One(&result); err != nil {
+		log.Debug().Int("month", month).Int("year", year).Msg("Batch does not exist")
+		return err
+	}
+
+	result.Status = status
+
+	if err := res.Update(result); err != nil {
+		log.Debug().Int("week", month).Int("year", year).Msg("GB batch update failed")
+		return err
+	}
+	return nil
 }
 
 func (s MySQL) MonthlyBatchExists(month, year int) bool {

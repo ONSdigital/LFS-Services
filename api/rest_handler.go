@@ -1,13 +1,5 @@
 package api
 
-/*
-input file names / types
-*/
-const (
-	SurveyFile  = "Survey"
-	AddressFile = "Address"
-)
-
 const (
 	Error = "ERROR"
 	OK    = "OK"

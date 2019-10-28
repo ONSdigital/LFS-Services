@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "38c68aef-da86-4fda-a3cf-3ea855290bb5",
+		"_postman_id": "9b698619-a585-45ce-9de6-051682872203",
 		"name": "LFS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -39,12 +39,12 @@
 						{
 							"key": "lfsFile",
 							"type": "file",
-							"src": "/Users/paul/ONS/LFS/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
+							"src": "/home/paul/GolandProjects/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
 						}
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/imports/survey/gb/123456/18/2014",
+					"raw": "http://localhost:8000/imports/survey/gb/18/2014",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -54,7 +54,6 @@
 						"imports",
 						"survey",
 						"gb",
-						"123456",
 						"18",
 						"2014"
 					]
@@ -163,10 +162,30 @@
 		{
 			"name": "CreateBatch",
 			"request": {
-				"method": "GET",
+				"method": "POST",
 				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "description",
+							"value": "test batchy",
+							"type": "text"
+						}
+					]
+				},
 				"url": {
-					"raw": ""
+					"raw": "http://localhost:8000/batches/2014/05",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"2014",
+						"05"
+					]
 				}
 			},
 			"response": []
