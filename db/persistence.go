@@ -47,7 +47,9 @@ type Persistence interface {
 	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 	GetUserID(user string) (types.UserCredentials, error)
 	MonthlyBatchExists(month, year int) bool
+	AnnualBatchExists(year int) bool
 	CreateMonthlyBatch(batch types.MonthlyBatch) error
+	CreateAnnualBatch(batch types.AnnualBatch) error
 
 	FindGBBatchInfo(week, year int) (types.GBBatchItem, error)
 	FindNIBatchInfo(month, year int) (types.NIBatchItem, error)

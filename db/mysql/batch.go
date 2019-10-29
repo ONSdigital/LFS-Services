@@ -10,6 +10,7 @@ import (
 var batchTable string
 var gbBatchTable string
 var niBatchTable string
+var annualBatchTable string
 
 func init() {
 	batchTable = config.Config.Database.MonthlyBatchTable
@@ -18,6 +19,7 @@ func init() {
 	}
 	gbBatchTable = config.Config.Database.GbBatchTable
 	niBatchTable = config.Config.Database.NiBatchTable
+	annualBatchTable = config.Config.Database.AnnualBatchTable
 }
 
 func (s MySQL) FindNIBatchInfo(month, year int) (types.NIBatchItem, error) {
@@ -203,6 +205,112 @@ func (s MySQL) CreateMonthlyBatch(batch types.MonthlyBatch) error {
 		weekNo++
 	}
 
+	if err := tx.Commit(); err != nil {
+		log.Error().
+			Err(err).
+			Msg("Commit transaction failed")
+		return fmt.Errorf("commit failed, error: %s", err)
+	}
+
+	return nil
+}
+
+func (s MySQL) AnnualBatchExists(year int) bool {
+	col := s.DB.Collection(annualBatchTable)
+	res := col.Find("year", year)
+
+	type R struct {
+		year int
+	}
+	var result R
+	if err := res.One(&result); err != nil {
+		log.Debug().
+			Int("year", year).
+			Msg("Batch does not exist")
+		return false
+	}
+
+	log.Warn().
+		Int("year", year).
+		Msg("Annual batch check - Batch already exists")
+
+	return true
+}
+
+func (s MySQL) CreateAnnualBatch(batch types.AnnualBatch) error {
+
+	// Create new transaction
+	tx, err := s.DB.NewTx(nil)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("Start transaction failed")
+		return fmt.Errorf("cannot start a transaction, error: %s", err)
+	}
+
+	// Insert into annual_batch
+	b := tx.Collection(annualBatchTable)
+	batchId, err := b.Insert(batch)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("Cannot insert into " + batchTable)
+		return fmt.Errorf("insert into %s failed, error: %s", batchTable, err)
+	}
+
+	print(batchId)
+
+	//niBatch := tx.Collection(niBatchTable)
+	//
+	//var ni types.NIBatchItem
+	//ni.Month = batch.Month
+	//ni.Year = batch.Year
+	//ni.Status = batch.Status
+	//ni.Id = int(batchId.(int64))
+	//_, err = niBatch.Insert(ni)
+	//if err != nil {
+	//	log.Error().
+	//		Err(err).
+	//		Msg("Cannot insert into " + niBatchTable)
+	//	return fmt.Errorf("insert into %s failed, error: %s", niBatchTable, err)
+	//}
+	//
+	//cnt := 4
+	//if batch.Month%3 == 0 {
+	//	cnt = 5
+	//}
+	//
+	//// get week number - if % 3 then 5 weeks else 4
+	//weekNo := 0
+	//for i := 1; i < batch.Month; i++ {
+	//	if i%3 == 0 {
+	//		weekNo = weekNo + 5
+	//	} else {
+	//		weekNo = weekNo + 4
+	//	}
+	//}
+	//
+	//gbBatch := tx.Collection(gbBatchTable)
+	//
+	//for i := 0; i < cnt; i++ {
+	//	var gb types.GBBatchItem
+	//
+	//	gb.Month = batch.Month
+	//	gb.Year = batch.Year
+	//	gb.Status = batch.Status
+	//	gb.Week = weekNo
+	//	gb.Id = int(batchId.(int64))
+	//	_, err = gbBatch.Insert(gb)
+	//	if err != nil {
+	//		log.Error().
+	//			Err(err).
+	//			Msg("Cannot insert into " + gbBatchTable)
+	//		return fmt.Errorf("insert into %s failed, error: %s", gbBatchTable, err)
+	//	}
+	//	weekNo++
+	//}
+
+	// Commit
 	if err := tx.Commit(); err != nil {
 		log.Error().
 			Err(err).

@@ -22,3 +22,10 @@ type NIBatchItem struct {
 	Month  int `db:"month"`
 	Status int `db:"status"`
 }
+
+type AnnualBatch struct {
+	Id          int    `db:"id"`
+	Year        int    `db:"year"`
+	Status      int    `db:"status"`
+	Description string `db:"description"`
+}

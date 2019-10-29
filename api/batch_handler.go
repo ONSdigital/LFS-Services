@@ -86,6 +86,6 @@ func (b BatchHandler) handleQuarter(quarter string, year int) error {
 }
 
 func (b BatchHandler) handleYear(year int) error {
-	//res := b.generateYearBatchId(year)
-	return nil
+	res := b.generateYearBatchId(year)
+	return res
 }

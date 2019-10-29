@@ -128,6 +128,9 @@ values (2, 'File Reloaded');
 insert into status_values(id, description)
 values (3, 'Upload Failed');
 
+insert into status_values(id, description)
+values (4, 'Batch Complete');
+
 alter table status_values
     add primary key (id);
 
