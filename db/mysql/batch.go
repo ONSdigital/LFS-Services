@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"services/config"
 	"services/types"
+	"upper.io/db.v3"
 )
 
 var batchTable string
@@ -113,7 +114,7 @@ func (s MySQL) updateNIBatch(month, year, status int) error {
 
 func (s MySQL) MonthlyBatchExists(month, year int) bool {
 	col := s.DB.Collection(batchTable)
-	res := col.Find("month", month, "year", year)
+	res := col.Find(db.Cond{"month": month, "year": year})
 
 	type R struct {
 		month int
@@ -216,6 +217,7 @@ func (s MySQL) CreateMonthlyBatch(batch types.MonthlyBatch) error {
 }
 
 func (s MySQL) AnnualBatchExists(year int) bool {
+
 	col := s.DB.Collection(annualBatchTable)
 	res := col.Find("year", year)
 
