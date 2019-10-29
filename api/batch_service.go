@@ -7,7 +7,7 @@ import (
 	"services/types"
 )
 
-func (h RestHandlers) generateMonthBatchId(month int, year int, description string) error {
+func (b BatchHandler) generateMonthBatchId(month int, year int, description string) error {
 
 	if month < 1 || month > 12 {
 		return fmt.Errorf("the month value is %d, must be between 1 and 12", month)
@@ -38,13 +38,13 @@ func (h RestHandlers) generateMonthBatchId(month int, year int, description stri
 	return nil
 }
 
-func (h RestHandlers) generateQuarterBatchId(quarter string, year int) error {
+func (b BatchHandler) generateQuarterBatchId(quarter string, year int) error {
 	// Call batch service to validate
 
 	return nil
 }
 
-func (h RestHandlers) generateYearBatchId(year int) error {
+func (b BatchHandler) generateYearBatchId(year int) error {
 	// Call batch service to validate
 
 	return nil

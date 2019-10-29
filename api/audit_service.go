@@ -6,7 +6,7 @@ import (
 	"services/types"
 )
 
-func (h AuditHandler) GetAllAudits() ([]types.Audit, error) {
+func (a AuditHandler) GetAllAudits() ([]types.Audit, error) {
 
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -22,7 +22,7 @@ func (h AuditHandler) GetAllAudits() ([]types.Audit, error) {
 	return res, nil
 }
 
-func (h AuditHandler) GetAuditsForYear(year types.Year) ([]types.Audit, error) {
+func (a AuditHandler) GetAuditsForYear(year types.Year) ([]types.Audit, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
@@ -36,7 +36,7 @@ func (h AuditHandler) GetAuditsForYear(year types.Year) ([]types.Audit, error) {
 	return res, nil
 }
 
-func (h AuditHandler) GetAuditsForWeek(week types.Week, year types.Year) ([]types.Audit, error) {
+func (a AuditHandler) GetAuditsForWeek(week types.Week, year types.Year) ([]types.Audit, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
@@ -51,7 +51,7 @@ func (h AuditHandler) GetAuditsForWeek(week types.Week, year types.Year) ([]type
 	return res, nil
 }
 
-func (h AuditHandler) GetAuditsForMonth(month types.Month, year types.Year) ([]types.Audit, error) {
+func (a AuditHandler) GetAuditsForMonth(month types.Month, year types.Year) ([]types.Audit, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)

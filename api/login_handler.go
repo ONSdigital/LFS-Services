@@ -8,7 +8,13 @@ import (
 	"time"
 )
 
-func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
+type LoginHandler struct{}
+
+func NewLoginHandler() *LoginHandler {
+	return &LoginHandler{}
+}
+
+func (l LoginHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
@@ -22,7 +28,7 @@ func (h RestHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	password := r.Header.Get("password")
 
 	// Call login service to validate
-	res := h.login(username, password)
+	res := l.login(username, password)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

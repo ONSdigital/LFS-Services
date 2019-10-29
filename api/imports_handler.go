@@ -13,7 +13,21 @@ import (
 	"time"
 )
 
-func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Request) {
+const (
+	Error = "ERROR"
+	OK    = "OK"
+)
+
+type ImportsHandler struct{}
+
+/*
+Create a new RestHandler
+*/
+func NewImportsHandler() *ImportsHandler {
+	return &ImportsHandler{}
+}
+
+func (im ImportsHandler) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -49,14 +63,14 @@ func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	gbInfo, err := getGBBatch(weekNo, yearNo)
+	gbInfo, err := findGBBatch(weekNo, yearNo)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
 
-	tmpfile, err := h.saveStreamToTempFile(w, r)
+	tmpfile, err := im.saveStreamToTempFile(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
@@ -65,7 +79,7 @@ func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Reque
 
 	defer func() { _ = os.Remove(tmpfile) }()
 
-	if err := h.parseGBSurveyFile(tmpfile, fileName, weekNo, yearNo, gbInfo.Id); err != nil {
+	if err := im.parseGBSurveyFile(tmpfile, fileName, weekNo, yearNo, gbInfo.Id); err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
@@ -74,7 +88,7 @@ func (h RestHandlers) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Reque
 
 }
 
-func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Request) {
+func (im ImportsHandler) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug().
 		Str("client", r.RemoteAddr).
@@ -108,14 +122,14 @@ func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	niInfo, err := getNIBatch(monthNo, yearNo)
+	niInfo, err := findNIBatch(monthNo, yearNo)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
 
-	tmpfile, err := h.saveStreamToTempFile(w, r)
+	tmpfile, err := im.saveStreamToTempFile(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
@@ -124,7 +138,7 @@ func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Reque
 
 	defer func() { _ = os.Remove(tmpfile) }()
 
-	if err := h.parseNISurveyFile(tmpfile, fileName, monthNo, yearNo, niInfo.Id); err != nil {
+	if err := im.parseNISurveyFile(tmpfile, fileName, monthNo, yearNo, niInfo.Id); err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
@@ -132,7 +146,7 @@ func (h RestHandlers) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Reque
 	OkayResponse{OK}.sendResponse(w, r)
 }
 
-func (h RestHandlers) AddressUploadHandler(w http.ResponseWriter, r *http.Request) {
+func (im ImportsHandler) AddressUploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug().
 		Str("client", r.RemoteAddr).
@@ -148,7 +162,7 @@ func (h RestHandlers) AddressUploadHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	tmpfile, err := h.saveStreamToTempFile(w, r)
+	tmpfile, err := im.saveStreamToTempFile(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
@@ -157,7 +171,7 @@ func (h RestHandlers) AddressUploadHandler(w http.ResponseWriter, r *http.Reques
 
 	defer func() { _ = os.Remove(tmpfile) }()
 
-	if err := h.parseAddressFile(tmpfile, fileName); err != nil {
+	if err := im.parseAddressFile(tmpfile, fileName); err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
@@ -165,7 +179,7 @@ func (h RestHandlers) AddressUploadHandler(w http.ResponseWriter, r *http.Reques
 	OkayResponse{OK}.sendResponse(w, r)
 }
 
-func (h RestHandlers) saveStreamToTempFile(w http.ResponseWriter, r *http.Request) (string, error) {
+func (im ImportsHandler) saveStreamToTempFile(w http.ResponseWriter, r *http.Request) (string, error) {
 
 	file, _, err := r.FormFile("lfsFile")
 	if err != nil {

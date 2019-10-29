@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func (h RestHandlers) login(username string, password string) error {
+func (l LoginHandler) login(username string, password string) error {
 	log.Debug().Msg("Validating login input")
 
 	// Validate user input
@@ -38,7 +38,7 @@ func (h RestHandlers) login(username string, password string) error {
 	log.Debug().Msg("Assert user credentials match")
 
 	// Compare and assert credentials match
-	matchErr := comparePasswords(user.Password, password)
+	matchErr := l.comparePasswords(user.Password, password)
 
 	if strings.Compare(username, user.Username) != 0 || matchErr == false {
 		log.Error().Msg("Invalid username or password")
@@ -48,7 +48,7 @@ func (h RestHandlers) login(username string, password string) error {
 	return nil
 }
 
-func comparePasswords(hashedPwd string, plainPwd string) bool {
+func (l LoginHandler) comparePasswords(hashedPwd string, plainPwd string) bool {
 	byteHash := []byte(hashedPwd)
 	bytePlain := []byte(plainPwd)
 	err := bcrypt.CompareHashAndPassword(byteHash, bytePlain)

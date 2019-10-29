@@ -14,14 +14,11 @@ import (
 
 type AuditHandler struct{}
 
-/*
-Create a new RestHandler
-*/
 func NewAuditHandler() *AuditHandler {
 	return &AuditHandler{}
 }
 
-func (h AuditHandler) HandleAllAuditRequest(w http.ResponseWriter, r *http.Request) {
+func (a AuditHandler) HandleAllAuditRequest(w http.ResponseWriter, r *http.Request) {
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
@@ -32,7 +29,7 @@ func (h AuditHandler) HandleAllAuditRequest(w http.ResponseWriter, r *http.Reque
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	res, err := h.GetAllAudits()
+	res, err := a.GetAllAudits()
 
 	if err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
@@ -47,7 +44,7 @@ func (h AuditHandler) HandleAllAuditRequest(w http.ResponseWriter, r *http.Reque
 		Msg("Retieve audit request completed")
 }
 
-func (h AuditHandler) HandleYearAuditRequest(w http.ResponseWriter, r *http.Request) {
+func (a AuditHandler) HandleYearAuditRequest(w http.ResponseWriter, r *http.Request) {
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
@@ -68,7 +65,7 @@ func (h AuditHandler) HandleYearAuditRequest(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	res, err := h.GetAuditsForYear(types.Year(yearNo))
+	res, err := a.GetAuditsForYear(types.Year(yearNo))
 
 	if err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
@@ -83,7 +80,7 @@ func (h AuditHandler) HandleYearAuditRequest(w http.ResponseWriter, r *http.Requ
 		Msg("Retieve audit request completed")
 }
 
-func (h AuditHandler) HandleWeekAuditRequest(w http.ResponseWriter, r *http.Request) {
+func (a AuditHandler) HandleWeekAuditRequest(w http.ResponseWriter, r *http.Request) {
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
@@ -114,7 +111,7 @@ func (h AuditHandler) HandleWeekAuditRequest(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	res, err := h.GetAuditsForWeek(types.Week(weekNo), types.Year(yearNo))
+	res, err := a.GetAuditsForWeek(types.Week(weekNo), types.Year(yearNo))
 
 	if err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
@@ -129,7 +126,7 @@ func (h AuditHandler) HandleWeekAuditRequest(w http.ResponseWriter, r *http.Requ
 		Msg("Retieve audit request completed")
 }
 
-func (h AuditHandler) HandleMonthAuditRequest(w http.ResponseWriter, r *http.Request) {
+func (a AuditHandler) HandleMonthAuditRequest(w http.ResponseWriter, r *http.Request) {
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
@@ -160,7 +157,7 @@ func (h AuditHandler) HandleMonthAuditRequest(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	res, err := h.GetAuditsForMonth(types.Month(monthNo), types.Year(yearNo))
+	res, err := a.GetAuditsForMonth(types.Month(monthNo), types.Year(yearNo))
 
 	if err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)

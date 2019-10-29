@@ -10,7 +10,13 @@ import (
 	"time"
 )
 
-func (h RestHandlers) CreateBatchHandler(w http.ResponseWriter, r *http.Request) {
+type BatchHandler struct{}
+
+func NewBatchHandler() *BatchHandler {
+	return &BatchHandler{}
+}
+
+func (b BatchHandler) CreateBatchHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
@@ -34,15 +40,15 @@ func (h RestHandlers) CreateBatchHandler(w http.ResponseWriter, r *http.Request)
 
 	switch period {
 	case "":
-		res = h.handleYear(yr)
+		res = b.handleYear(yr)
 	case "Q1", "Q2", "Q3", "Q4":
-		res = h.handleQuarter(period, yr)
+		res = b.handleQuarter(period, yr)
 	default:
 		{
 			month, err := strconv.Atoi(period)
 			description := r.FormValue("description")
 			if err == nil {
-				res = h.handleMonth(month, yr, description)
+				res = b.handleMonth(month, yr, description)
 				break
 			}
 			ErrorResponse{
@@ -69,17 +75,17 @@ func (h RestHandlers) CreateBatchHandler(w http.ResponseWriter, r *http.Request)
 		Msg("Create batch complete")
 }
 
-func (h RestHandlers) handleMonth(month int, year int, description string) error {
-	res := h.generateMonthBatchId(month, year, description)
+func (b BatchHandler) handleMonth(month int, year int, description string) error {
+	res := b.generateMonthBatchId(month, year, description)
 	return res
 }
 
-func (h RestHandlers) handleQuarter(quarter string, year int) error {
-	//res := h.generateQuarterBatchId(quarter, year)
+func (b BatchHandler) handleQuarter(quarter string, year int) error {
+	//res := b.generateQuarterBatchId(quarter, year)
 	return nil
 }
 
-func (h RestHandlers) handleYear(year int) error {
-	//res := h.generateYearBatchId(year)
+func (b BatchHandler) handleYear(year int) error {
+	//res := b.generateYearBatchId(year)
 	return nil
 }

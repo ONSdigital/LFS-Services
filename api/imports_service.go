@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func getNIBatch(monthNo, yearNo int) (types.NIBatchItem, error) {
+func findNIBatch(monthNo, yearNo int) (types.NIBatchItem, error) {
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -33,7 +33,7 @@ func getNIBatch(monthNo, yearNo int) (types.NIBatchItem, error) {
 	return info, nil
 }
 
-func getGBBatch(weekNo, yearNo int) (types.GBBatchItem, error) {
+func findGBBatch(weekNo, yearNo int) (types.GBBatchItem, error) {
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -55,7 +55,7 @@ func getGBBatch(weekNo, yearNo int) (types.GBBatchItem, error) {
 }
 
 // TODO: Run in goroutine
-func (h RestHandlers) parseAddressFile(fileName, datasetName string) error {
+func (im ImportsHandler) parseAddressFile(fileName, datasetName string) error {
 
 	startTime := time.Now()
 
@@ -102,7 +102,7 @@ func (h RestHandlers) parseAddressFile(fileName, datasetName string) error {
 }
 
 // TODO: Run in goroutine
-func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName string, week, year, id int) error {
+func (im ImportsHandler) parseGBSurveyFile(tmpfile, datasetName string, week, year, id int) error {
 	startTime := time.Now()
 
 	d, err := dataset.NewDataset(datasetName)
@@ -200,7 +200,7 @@ func (h RestHandlers) parseGBSurveyFile(tmpfile, datasetName string, week, year,
 }
 
 // TODO: Run in goroutine
-func (h RestHandlers) parseNISurveyFile(tmpfile, datasetName string, month, year, id int) error {
+func (im ImportsHandler) parseNISurveyFile(tmpfile, datasetName string, month, year, id int) error {
 	startTime := time.Now()
 
 	d, err := dataset.NewDataset(datasetName)

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "9b698619-a585-45ce-9de6-051682872203",
+		"_postman_id": "943b0d4e-6bd6-455e-855d-44e744603f00",
 		"name": "LFS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -185,6 +185,25 @@
 						"batches",
 						"2014",
 						"05"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Audit - All",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/audits",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"audits"
 					]
 				}
 			},
