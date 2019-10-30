@@ -128,6 +128,9 @@ values (2, 'File Reloaded');
 insert into status_values(id, description)
 values (3, 'Upload Failed');
 
+insert into status_values(id, description)
+values (4, 'Successful - Complete');
+
 alter table status_values
     add primary key (id);
 
@@ -155,8 +158,8 @@ create table annual_batch
     description mediumtext null,
     constraint id_UNIQUE
         unique (id),
-    constraint ab_to_mb
-        foreign key (id) references monthly_batch (id),
+#     constraint ab_to_mb
+#         foreign key (id) references monthly_batch (id),
     constraint annual_batch_status_values_id_fk
         foreign key (status) references status_values (id)
 );

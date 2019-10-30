@@ -44,14 +44,14 @@ func (b BatchHandler) generateQuarterBatchId(quarter string, year int) error {
 	return nil
 }
 
-func (b BatchHandler) generateYearBatchId(year int) error {
-	//// Set batch variable
-	//batch := types.AnnualBatch{
-	//	Id:          0,
-	//	Year:        year,
-	//	Status:      0,
-	//	Description: "El's static description",
-	//}
+func (b BatchHandler) generateYearBatchId(year int, description string) error {
+	// Set batch variable
+	batch := types.AnnualBatch{
+		Id:          0,
+		Year:        year,
+		Status:      0,
+		Description: description,
+	}
 
 	// Establish DB connection
 	dbase, err := db.GetDefaultPersistenceImpl()
@@ -65,17 +65,20 @@ func (b BatchHandler) generateYearBatchId(year int) error {
 		return fmt.Errorf("annual batch for year %d already exists", year)
 	}
 
+	// Ensure successful monthly exist
+	if found := dbase.SuccessfulMonthlyBatchesExist(year); !found {
+		return fmt.Errorf("12 valid months for year %d required", year)
+	}
+
+	// Ensure successful quarterly exist
+	if found := dbase.SuccessfulQuarterlyBatchesExist(year); !found {
+		return fmt.Errorf("4 valid quarters for year %d required", year)
+	}
+
+	// Create shizznizz
+	if err = dbase.CreateAnnualBatch(batch); err != nil {
+		return err
+	}
+
 	return nil
-
-	//// Validate 12 successful monthly batches exist
-	//if found := dbase.AnnualBatchExists(year); found {
-	//	return fmt.Errorf("annual batch for year %d already exists", year)
-	//}
-
-	//// Create shizznizz
-	//if err = dbase.CreateAnnualBatch(batch); err != nil {
-	//	return err
-	//}
-	//
-	//return nil
 }

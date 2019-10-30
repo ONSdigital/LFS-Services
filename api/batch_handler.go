@@ -37,16 +37,16 @@ func (b BatchHandler) CreateBatchHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	var res error
+	description := r.FormValue("description")
 
 	switch period {
-	case "":
-		res = b.handleYear(yr)
+	case "0":
+		res = b.handleYear(yr, description)
 	case "Q1", "Q2", "Q3", "Q4":
 		res = b.handleQuarter(period, yr)
 	default:
 		{
 			month, err := strconv.Atoi(period)
-			description := r.FormValue("description")
 			if err == nil {
 				res = b.handleMonth(month, yr, description)
 				break
@@ -85,7 +85,7 @@ func (b BatchHandler) handleQuarter(quarter string, year int) error {
 	return nil
 }
 
-func (b BatchHandler) handleYear(year int) error {
-	res := b.generateYearBatchId(year)
+func (b BatchHandler) handleYear(year int, description string) error {
+	res := b.generateYearBatchId(year, description)
 	return res
 }

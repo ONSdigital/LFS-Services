@@ -11,6 +11,7 @@ import (
 var batchTable string
 var gbBatchTable string
 var niBatchTable string
+var quartleryBatchTable string
 var annualBatchTable string
 
 func init() {
@@ -20,6 +21,7 @@ func init() {
 	}
 	gbBatchTable = config.Config.Database.GbBatchTable
 	niBatchTable = config.Config.Database.NiBatchTable
+	quartleryBatchTable = config.Config.Database.QuarterlyBatchTable
 	annualBatchTable = config.Config.Database.AnnualBatchTable
 }
 
@@ -146,9 +148,9 @@ func (s MySQL) MonthlyBatchExists(month, year int) bool {
 	return true
 }
 
-func (s MySQL) AllMonthlyBatchesExists(year int) bool {
+func (s MySQL) SuccessfulMonthlyBatchesExist(year int) bool {
 	col := s.DB.Collection(batchTable)
-	res := col.Find(db.Cond{"year": year, "status": 0})
+	res := col.Find(db.Cond{"year": year, "status": 4})
 
 	total, err := res.Count()
 
@@ -157,21 +159,44 @@ func (s MySQL) AllMonthlyBatchesExists(year int) bool {
 	}
 
 	if total != 12 {
-		log.Debug().
+		log.Warn().
 			Int("year", year).
 			Msg("Cannot continue without 12 valid months")
 		return false
 	}
 
-	log.Warn().
+	log.Debug().
 		Int("year", year).
 		Msg("Annual batch check - All 12 valid months exist")
 
 	return true
 }
 
-func (s MySQL) CreateMonthlyBatch(batch types.MonthlyBatch) error {
+func (s MySQL) SuccessfulQuarterlyBatchesExist(year int) bool {
+	col := s.DB.Collection(quartleryBatchTable)
+	res := col.Find(db.Cond{"year": year, "status": 4})
 
+	total, err := res.Count()
+
+	if err != nil {
+		log.Debug().Msg("Fatal: " + err.Error())
+	}
+
+	if total != 4 {
+		log.Warn().
+			Int("year", year).
+			Msg("Cannot continue without 4 valid quarters")
+		return false
+	}
+
+	log.Debug().
+		Int("year", year).
+		Msg("Annual batch check - All 4 valid quarters exist")
+
+	return true
+}
+
+func (s MySQL) CreateMonthlyBatch(batch types.MonthlyBatch) error {
 	tx, err := s.DB.NewTx(nil)
 	if err != nil {
 		log.Error().
@@ -250,7 +275,6 @@ func (s MySQL) CreateMonthlyBatch(batch types.MonthlyBatch) error {
 }
 
 func (s MySQL) AnnualBatchExists(year int) bool {
-
 	col := s.DB.Collection(annualBatchTable)
 	//res := col.Find("year", year)
 	res := col.Find(db.Cond{"year": year})
@@ -274,7 +298,6 @@ func (s MySQL) AnnualBatchExists(year int) bool {
 }
 
 func (s MySQL) CreateAnnualBatch(batch types.AnnualBatch) error {
-
 	// Create new transaction
 	tx, err := s.DB.NewTx(nil)
 	if err != nil {
@@ -286,65 +309,13 @@ func (s MySQL) CreateAnnualBatch(batch types.AnnualBatch) error {
 
 	// Insert into annual_batch
 	b := tx.Collection(annualBatchTable)
-	batchId, err := b.Insert(batch)
+	_, err = b.Insert(batch)
 	if err != nil {
 		log.Error().
 			Err(err).
 			Msg("Cannot insert into " + batchTable)
 		return fmt.Errorf("insert into %s failed, error: %s", batchTable, err)
 	}
-
-	print(batchId)
-
-	//niBatch := tx.Collection(niBatchTable)
-	//
-	//var ni types.NIBatchItem
-	//ni.Month = batch.Month
-	//ni.Year = batch.Year
-	//ni.Status = batch.Status
-	//ni.Id = int(batchId.(int64))
-	//_, err = niBatch.Insert(ni)
-	//if err != nil {
-	//	log.Error().
-	//		Err(err).
-	//		Msg("Cannot insert into " + niBatchTable)
-	//	return fmt.Errorf("insert into %s failed, error: %s", niBatchTable, err)
-	//}
-	//
-	//cnt := 4
-	//if batch.Month%3 == 0 {
-	//	cnt = 5
-	//}
-	//
-	//// get week number - if % 3 then 5 weeks else 4
-	//weekNo := 0
-	//for i := 1; i < batch.Month; i++ {
-	//	if i%3 == 0 {
-	//		weekNo = weekNo + 5
-	//	} else {
-	//		weekNo = weekNo + 4
-	//	}
-	//}
-	//
-	//gbBatch := tx.Collection(gbBatchTable)
-	//
-	//for i := 0; i < cnt; i++ {
-	//	var gb types.GBBatchItem
-	//
-	//	gb.Month = batch.Month
-	//	gb.Year = batch.Year
-	//	gb.Status = batch.Status
-	//	gb.Week = weekNo
-	//	gb.Id = int(batchId.(int64))
-	//	_, err = gbBatch.Insert(gb)
-	//	if err != nil {
-	//		log.Error().
-	//			Err(err).
-	//			Msg("Cannot insert into " + gbBatchTable)
-	//		return fmt.Errorf("insert into %s failed, error: %s", gbBatchTable, err)
-	//	}
-	//	weekNo++
-	//}
 
 	// Commit
 	if err := tx.Commit(); err != nil {
