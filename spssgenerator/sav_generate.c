@@ -20,10 +20,12 @@ int handle_variable(int index, readstat_variable_t *variable, const char *val_la
 
   const char *name = readstat_variable_get_name(variable);
 
+  int user_width =  variable->storage_width;
+
   if (index == *var_count - 1) {
-    goAddHeaderItem(var_index, (char *)name, (int)type, 1);
+    goAddHeaderItem(var_index, (char *)name, (int)type, 1, (int)user_width);
   } else {
-    goAddHeaderItem(var_index, (char *)name, (int)type, 0);
+    goAddHeaderItem(var_index, (char *)name, (int)type, 0, (int)user_width);
   }
 
   return READSTAT_HANDLER_OK;

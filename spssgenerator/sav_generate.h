@@ -2,6 +2,6 @@
 #define _SAV_GENERATOR_H
 
 int read_header(const char *input_file);
-extern void goAddHeaderItem(int , char *, int, int);
+extern void goAddHeaderItem(int , char *, int, int, int);
 
 #endif

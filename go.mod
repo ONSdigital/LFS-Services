@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/caarlos0/env/v6 v6.0.0
+	github.com/denisenkom/go-mssqldb v0.0.0-20191001013358-cfbb681360f0
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/gocarina/gocsv v0.0.0-20190821091544-020a928c6f4e
 	github.com/gorilla/handlers v1.4.2
@@ -16,7 +17,7 @@ require (
 	github.com/rs/zerolog v1.15.0
 	github.com/senseyeio/roger v0.0.0-20180904151654-5a944f2c5ceb
 	github.com/sirupsen/logrus v1.4.2
-	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
