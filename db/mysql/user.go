@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"services/config"
 	"services/types"
+	"upper.io/db.v3"
 )
 
 var userTable string
@@ -19,7 +20,7 @@ func (s MySQL) GetUserID(user string) (types.UserCredentials, error) {
 	var creds types.UserCredentials
 
 	col := s.DB.Collection(userTable)
-	res := col.Find("username", user)
+	res := col.Find(db.Cond{"username": user})
 
 	if res == nil {
 		return creds, fmt.Errorf("user %s not found", user)

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"upper.io/db.v3"
 	"upper.io/db.v3/lib/sqlbuilder"
 )
 
@@ -25,7 +26,9 @@ func init() {
 }
 
 func (s MySQL) DeleteSurveyData(name string) (bool, error) {
-	cnt, err := s.DB.Collection(surveyTable).Find("file_name", name).Count()
+	//cnt, err := s.DB.Collection(surveyTable).Find("file_name", name).Count()
+	cnt, err := s.DB.Collection(surveyTable).Find(db.Cond{"file_name": name}).Count()
+
 	if err != nil {
 		return false, err
 	}

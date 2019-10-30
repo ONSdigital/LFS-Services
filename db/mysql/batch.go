@@ -25,7 +25,9 @@ func init() {
 
 func (s MySQL) FindNIBatchInfo(month, year int) (types.NIBatchItem, error) {
 	batchInfo := s.DB.Collection(niBatchTable)
-	res := batchInfo.Find("month", month, "year", year)
+	//res := batchInfo.Find("month", month, "year", year)
+	res := batchInfo.Find(db.Cond{"month": month, "year": year})
+
 	var result types.NIBatchItem
 	if err := res.One(&result); err != nil {
 		log.Debug().
@@ -39,7 +41,9 @@ func (s MySQL) FindNIBatchInfo(month, year int) (types.NIBatchItem, error) {
 
 func (s MySQL) FindGBBatchInfo(week, year int) (types.GBBatchItem, error) {
 	batchInfo := s.DB.Collection(gbBatchTable)
-	res := batchInfo.Find("week", week, "year", year)
+	//res := batchInfo.Find("week", week, "year", year)
+	res := batchInfo.Find(db.Cond{"week": week, "year": year})
+
 	var result types.GBBatchItem
 	if err := res.One(&result); err != nil {
 		log.Debug().
@@ -54,7 +58,9 @@ func (s MySQL) FindGBBatchInfo(week, year int) (types.GBBatchItem, error) {
 
 func (s MySQL) UpdateNIMonthlyStatus(week, month, status int) error {
 	batchInfo := s.DB.Collection(niBatchTable)
-	res := batchInfo.Find("week", week, "mont", month)
+	//res := batchInfo.Find("week", week, "mont", month)
+	res := batchInfo.Find(db.Cond{"week": week, "month": month})
+
 	var result types.NIBatchItem
 	if err := res.One(&result); err != nil {
 		log.Debug().
@@ -76,7 +82,9 @@ func (s MySQL) UpdateNIMonthlyStatus(week, month, status int) error {
 
 func (s MySQL) updateGBBatch(week, year, status int) error {
 	batchInfo := s.DB.Collection(gbBatchTable)
-	res := batchInfo.Find("week", week, "year", year)
+	//res := batchInfo.Find("week", week, "year", year)
+	res := batchInfo.Find(db.Cond{"week": week, "year": year})
+
 	var result types.GBBatchItem
 
 	if err := res.One(&result); err != nil {
@@ -95,7 +103,8 @@ func (s MySQL) updateGBBatch(week, year, status int) error {
 
 func (s MySQL) updateNIBatch(month, year, status int) error {
 	batchInfo := s.DB.Collection(niBatchTable)
-	res := batchInfo.Find("month", month, "year", year)
+	//res := batchInfo.Find("month", month, "year", year)
+	res := batchInfo.Find(db.Cond{"month": month, "year": year})
 	var result types.NIBatchItem
 
 	if err := res.One(&result); err != nil {
@@ -219,7 +228,8 @@ func (s MySQL) CreateMonthlyBatch(batch types.MonthlyBatch) error {
 func (s MySQL) AnnualBatchExists(year int) bool {
 
 	col := s.DB.Collection(annualBatchTable)
-	res := col.Find("year", year)
+	//res := col.Find("year", year)
+	res := col.Find(db.Cond{"year": year})
 
 	type R struct {
 		year int

@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"services/config"
 	"services/types"
+	"upper.io/db.v3"
 )
 
 type DBAudit struct {
@@ -52,7 +53,9 @@ func (s MySQL) GetAuditsByYear(year types.Year) ([]types.Audit, error) {
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
-	res := dbAudit.Find("year", year)
+	//res := dbAudit.Find("year", year)
+	res := dbAudit.Find(db.Cond{"year": year})
+
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {
 		return nil, res.Err()
@@ -69,7 +72,8 @@ func (s MySQL) GetAuditsByYearMonth(month types.Month, year types.Year) ([]types
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
-	res := dbAudit.Find("year", year, "month", month)
+	//res := dbAudit.Find("year", year, "month", month)
+	res := dbAudit.Find(db.Cond{"year": year, "month": month})
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {
 		return nil, res.Err()
@@ -86,7 +90,9 @@ func (s MySQL) GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Au
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
-	res := dbAudit.Find("year", year, "week", week)
+	//res := dbAudit.Find("year", year, "week", week)
+	res := dbAudit.Find(db.Cond{"year": year, "week": week})
+
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {
 		return nil, res.Err()
