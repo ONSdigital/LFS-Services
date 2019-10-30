@@ -1,7 +1,43 @@
 
-use lfs;
 
 drop table if exists addresses;
+
+drop table if exists users;
+drop table if exists survey;
+drop table if exists survey_audit;
+
+drop table if exists annual_batch;
+drop table if exists gb_batch_items;
+drop table if exists ni_batch_item;
+drop table if exists quarterly_batch;
+drop table if exists monthly_batch;
+
+drop table if exists status_values;
+drop table if exists addresses;
+drop table if exists export_definitions;
+
+create table status_values
+(
+    id          int primary key,
+    description varchar(255) not null,
+    constraint status_values_id_uindex
+        unique (id)
+);
+
+insert into status_values(id, description)
+values (0, 'Not Started');
+
+insert into status_values(id, description)
+values (1, 'File Uploaded');
+
+insert into status_values(id, description)
+values (2, 'File Reloaded');
+
+insert into status_values(id, description)
+values (3, 'Upload Failed');
+
+insert into status_values(id, description)
+values (4, 'Successful - Complete');
 
 create table addresses
 (
@@ -75,9 +111,9 @@ create table addresses
     CombinedAuthorities varchar(9)  not null,
 );
 
-drop table if exists xport_definitions;
 
-    create table export_definitions
+
+create table export_definitions
 (
     Variables       varchar(10) not null
         primary key,
@@ -89,30 +125,6 @@ drop table if exists xport_definitions;
     Adhoc           tinyint     not null
 );
 
-drop table if exists status_values;
-
-create table status_values
-(
-    id          int primary key,
-    description varchar(255) not null,
-    constraint status_values_id_uindex
-        unique (id)
-);
-
-insert into status_values(id, description)
-values (0, 'Not Started');
-
-insert into status_values(id, description)
-values (1, 'File Uploaded');
-
-insert into status_values(id, description)
-values (2, 'File Reloaded');
-
-insert into status_values(id, description)
-values (3, 'Upload Failed');
-
-insert into status_values(id, description)
-values (4, 'Successful - Complete');
 
 create table monthly_batch
 (
@@ -125,48 +137,44 @@ create table monthly_batch
         foreign key (status) references status_values (id)
 );
 
+
+
 create table annual_batch
 (
     id          int primary key not null,
     year        int             null,
     status      int             null,
     description text            null,
-    constraint id_UNIQUE
-        unique (id),
     constraint annual_batch_status_values_id_fk
         foreign key (status) references status_values (id)
 );
 
+
 create table gb_batch_items
 (
-    id     int not null,
+    id     int not null primary key,
     year   int null,
     month  int null,
     week   int not null,
     status int null,
-    primary key (week, id),
     constraint batch
         foreign key (id) references monthly_batch (id),
     constraint gb_batch_items_status_values_id_fk
         foreign key (status) references status_values (id)
 );
 
+
 create table ni_batch_item
 (
-    id     int not null,
+    id     int not null primary key,
     year   int null,
     month  int null,
     status int null,
-    constraint id_UNIQUE
-        unique (id),
     constraint monthly
         foreign key (id) references monthly_batch (id),
     constraint ni_batch_item_status_values_id_fk
         foreign key (status) references status_values (id)
 );
-
-alter table ni_batch_item
-    add primary key (id);
 
 create table quarterly_batch
 (
@@ -180,6 +188,7 @@ create table quarterly_batch
     constraint quarterly_batch_status_values_id_fk
         foreign key (status) references status_values (id)
 );
+
 
 create table survey
 (
@@ -699,7 +708,7 @@ create table survey
     BHNotA        real sparse         null,
     BHNotB        real sparse         null,
     BHNotC        real sparse         null,
-    [Union]         real sparse         null,
+    [Union]       real sparse         null,
     TUPres        real sparse         null,
     TUCov         real sparse         null,
     LIndD2        varchar(80) sparse  null,
@@ -1968,7 +1977,7 @@ create table survey
 
     cs xml column_set FOR ALL_SPARSE_COLUMNS,
 
-        primary key (file_week, file_month, file_year),
+    primary key (file_week, file_month, file_year),
 
     constraint gb_key
         foreign key (id) references gb_batch_items (id)
@@ -1981,7 +1990,7 @@ create table survey
 
 create table survey_audit
 (
-    id             int           not null,
+    id             int           not null primary key,
     file_name      varchar(1024) not null index survey_audit_file_name_index,
     file_source    char(2)       not null,
     week           int           null,
@@ -1997,6 +2006,7 @@ create table survey_audit
     constraint survey_audit_status_values_id_fk
         foreign key (status) references status_values (id)
 );
+
 
 create table users
 (
