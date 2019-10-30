@@ -52,10 +52,13 @@ type Persistence interface {
 	MonthlyBatchExists(month, year int) bool
 	AnnualBatchExists(year int) bool
 	QuarterBatchExists(quarter, year int) bool
-	SuccessfulMonthlyBatchesExist(year, count int) bool
-	SuccessfulQuarterlyBatchesExist(year int) bool
+
+	ValidateMonthsForAnnualBatch(year int) bool
+	ValidateQuartersForAnnualBatch(year int) bool
+	ValidateMonthsForQuarterlyBatch(period, year int) bool
 
 	CreateMonthlyBatch(batch types.MonthlyBatch) error
+	CreateQuarterlyBatch(batch types.QuarterlyBatch) error
 	CreateAnnualBatch(batch types.AnnualBatch) error
 
 	FindGBBatchInfo(week, year int) (types.GBBatchItem, error)

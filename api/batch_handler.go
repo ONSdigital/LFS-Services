@@ -27,6 +27,7 @@ func (b BatchHandler) CreateBatchHandler(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	year := vars["year"]
 	period := vars["period"]
+	description := r.FormValue("description")
 
 	// Convert year to int
 	yr, err := strconv.Atoi(year)
@@ -38,7 +39,6 @@ func (b BatchHandler) CreateBatchHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	var res error
-	description := r.FormValue("description")
 
 	switch period {
 	case "0":
@@ -54,7 +54,7 @@ func (b BatchHandler) CreateBatchHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		res = b.handleQuarter(p, yr)
+		res = b.handleQuarter(p, yr, description)
 	default:
 		{
 			month, err := strconv.Atoi(period)
@@ -91,8 +91,8 @@ func (b BatchHandler) handleMonth(month int, year int, description string) error
 	return res
 }
 
-func (b BatchHandler) handleQuarter(quarter, year int) error {
-	res := b.generateQuarterBatchId(quarter, year)
+func (b BatchHandler) handleQuarter(quarter int, year int, description string) error {
+	res := b.generateQuarterBatchId(quarter, year, description)
 	return res
 }
 

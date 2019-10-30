@@ -148,7 +148,7 @@ func (s MySQL) MonthlyBatchExists(month, year int) bool {
 	return true
 }
 
-func (s MySQL) SuccessfulMonthlyBatchesExist(year, count int) bool {
+func (s MySQL) ValidateMonthsForAnnualBatch(year int) bool {
 	col := s.DB.Collection(batchTable)
 	res := col.Find(db.Cond{"year": year, "status": 4})
 
@@ -158,21 +158,21 @@ func (s MySQL) SuccessfulMonthlyBatchesExist(year, count int) bool {
 		log.Debug().Msg("Fatal: " + err.Error())
 	}
 
-	if total != uint64(count) {
+	if total != 12 {
 		log.Warn().
 			Int("year", year).
-			Msg("Cannot continue without " + string(count) + " valid months")
+			Msg("Cannot continue without 12 valid months")
 		return false
 	}
 
 	log.Debug().
 		Int("year", year).
-		Msg("All " + string(count) + " valid months exist")
+		Msg("Annual batch check - All 12 valid months exist")
 
 	return true
 }
 
-func (s MySQL) SuccessfulQuarterlyBatchesExist(year int) bool {
+func (s MySQL) ValidateQuartersForAnnualBatch(year int) bool {
 	col := s.DB.Collection(quartleryBatchTable)
 	res := col.Find(db.Cond{"year": year, "status": 4})
 
@@ -351,4 +351,72 @@ func (s MySQL) QuarterBatchExists(quarter, year int) bool {
 		Msg("Monthly batch check - Batch already exists")
 
 	return true
+}
+
+func (s MySQL) ValidateMonthsForQuarterlyBatch(period, year int) bool {
+	var months []int
+
+	switch period {
+	case 1:
+		months = append(months, 1, 2, 3)
+	case 2:
+		months = append(months, 4, 5, 6)
+	case 3:
+		months = append(months, 7, 8, 9)
+	case 4:
+		months = append(months, 10, 11, 12)
+	}
+
+	col := s.DB.Collection(batchTable)
+	res := col.Find(db.Cond{"year": year, "status": 0, "month": months})
+
+	total, err := res.Count()
+
+	if err != nil {
+		log.Debug().Msg("Fatal: " + err.Error())
+	}
+
+	if total != 3 {
+		log.Warn().
+			Int("period", period).
+			Msg("Cannot continue without 3 valid months")
+		return false
+	}
+
+	log.Debug().
+		Int("year", year).
+		Msg("Qarterly batch check - All 3 valid months exist")
+
+	return true
+}
+
+func (s MySQL) CreateQuarterlyBatch(batch types.QuarterlyBatch) error {
+	// Create new transaction
+	tx, err := s.DB.NewTx(nil)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("Start transaction failed")
+		return fmt.Errorf("cannot start a transaction, error: %s", err)
+	}
+
+	// Insert into quarterly_batch
+	b := tx.Collection(quartleryBatchTable)
+	_, err = b.Insert(batch)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("Cannot insert into " + batchTable)
+		return fmt.Errorf("insert into %s failed, error: %s", batchTable, err)
+	}
+
+	// Commit
+	if err := tx.Commit(); err != nil {
+		log.Error().
+			Err(err).
+			Msg("Commit transaction failed")
+		return fmt.Errorf("commit failed, error: %s", err)
+	}
+
+	return nil
 }
