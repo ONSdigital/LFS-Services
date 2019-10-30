@@ -38,14 +38,35 @@ func (b BatchHandler) generateMonthBatchId(month int, year int, description stri
 	return nil
 }
 
-func (b BatchHandler) generateQuarterBatchId(quarter string, year int) error {
-	// Call batch service to validate
+func (b BatchHandler) generateQuarterBatchId(quarter, year int) error {
+	// Assign number of months in a quarter
+	count := 3
+
+	// Establish DB connection
+	dbase, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		log.Error().Err(err)
+		return err
+	}
+
+	// Check if quarter batch already exists
+	if found := dbase.QuarterBatchExists(quarter, year); found {
+		return fmt.Errorf("quarter batch for year %d already exists", year)
+	}
+
+	// Ensure successful monthly exist
+	if found := dbase.SuccessfulMonthlyBatchesExist(year, count); !found {
+		return fmt.Errorf("3 valid months for year %d required", year)
+	}
 
 	return nil
 }
 
 func (b BatchHandler) generateYearBatchId(year int, description string) error {
-	// Set batch variable
+	// Assign number of months in a year
+	count := 12
+
+	// Set batch variables
 	batch := types.AnnualBatch{
 		Id:          0,
 		Year:        year,
@@ -66,7 +87,7 @@ func (b BatchHandler) generateYearBatchId(year int, description string) error {
 	}
 
 	// Ensure successful monthly exist
-	if found := dbase.SuccessfulMonthlyBatchesExist(year); !found {
+	if found := dbase.SuccessfulMonthlyBatchesExist(year, count); !found {
 		return fmt.Errorf("12 valid months for year %d required", year)
 	}
 

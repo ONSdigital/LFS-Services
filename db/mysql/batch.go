@@ -148,7 +148,7 @@ func (s MySQL) MonthlyBatchExists(month, year int) bool {
 	return true
 }
 
-func (s MySQL) SuccessfulMonthlyBatchesExist(year int) bool {
+func (s MySQL) SuccessfulMonthlyBatchesExist(year, count int) bool {
 	col := s.DB.Collection(batchTable)
 	res := col.Find(db.Cond{"year": year, "status": 4})
 
@@ -158,16 +158,16 @@ func (s MySQL) SuccessfulMonthlyBatchesExist(year int) bool {
 		log.Debug().Msg("Fatal: " + err.Error())
 	}
 
-	if total != 12 {
+	if total != uint64(count) {
 		log.Warn().
 			Int("year", year).
-			Msg("Cannot continue without 12 valid months")
+			Msg("Cannot continue without " + string(count) + " valid months")
 		return false
 	}
 
 	log.Debug().
 		Int("year", year).
-		Msg("Annual batch check - All 12 valid months exist")
+		Msg("All " + string(count) + " valid months exist")
 
 	return true
 }
@@ -326,4 +326,29 @@ func (s MySQL) CreateAnnualBatch(batch types.AnnualBatch) error {
 	}
 
 	return nil
+}
+
+func (s MySQL) QuarterBatchExists(quarter, year int) bool {
+	col := s.DB.Collection(quartleryBatchTable)
+	res := col.Find(db.Cond{"quarter": quarter, "year": year})
+
+	type R struct {
+		month int
+		year  int
+	}
+	var result R
+	if err := res.One(&result); err != nil {
+		log.Debug().
+			Int("quarter", quarter).
+			Int("year", year).
+			Msg("Batch does not exist")
+		return false
+	}
+
+	log.Warn().
+		Int("quarter", quarter).
+		Int("year", year).
+		Msg("Monthly batch check - Batch already exists")
+
+	return true
 }

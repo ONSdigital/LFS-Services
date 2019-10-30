@@ -50,9 +50,10 @@ type Persistence interface {
 
 	// Batch
 	MonthlyBatchExists(month, year int) bool
-	SuccessfulMonthlyBatchesExist(year int) bool
-	SuccessfulQuarterlyBatchesExist(year int) bool
 	AnnualBatchExists(year int) bool
+	QuarterBatchExists(quarter, year int) bool
+	SuccessfulMonthlyBatchesExist(year, count int) bool
+	SuccessfulQuarterlyBatchesExist(year int) bool
 
 	CreateMonthlyBatch(batch types.MonthlyBatch) error
 	CreateAnnualBatch(batch types.AnnualBatch) error
