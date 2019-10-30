@@ -146,6 +146,30 @@ func (s MySQL) MonthlyBatchExists(month, year int) bool {
 	return true
 }
 
+func (s MySQL) AllMonthlyBatchesExists(year int) bool {
+	col := s.DB.Collection(batchTable)
+	res := col.Find(db.Cond{"year": year, "status": 0})
+
+	total, err := res.Count()
+
+	if err != nil {
+		log.Debug().Msg("Fatal: " + err.Error())
+	}
+
+	if total != 12 {
+		log.Debug().
+			Int("year", year).
+			Msg("Cannot continue without 12 valid months")
+		return false
+	}
+
+	log.Warn().
+		Int("year", year).
+		Msg("Annual batch check - All 12 valid months exist")
+
+	return true
+}
+
 func (s MySQL) CreateMonthlyBatch(batch types.MonthlyBatch) error {
 
 	tx, err := s.DB.NewTx(nil)

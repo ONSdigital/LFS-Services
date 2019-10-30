@@ -42,18 +42,24 @@ type Persistence interface {
 	Connect() error
 	Close()
 
+	// Import
 	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
 	PersistAddressDataset(headers []string, rows [][]string) error
 	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 	GetUserID(user string) (types.UserCredentials, error)
+
+	// Batch
 	MonthlyBatchExists(month, year int) bool
+	AllMonthlyBatchesExists(year int) bool
 	AnnualBatchExists(year int) bool
+
 	CreateMonthlyBatch(batch types.MonthlyBatch) error
 	CreateAnnualBatch(batch types.AnnualBatch) error
 
 	FindGBBatchInfo(week, year int) (types.GBBatchItem, error)
 	FindNIBatchInfo(month, year int) (types.NIBatchItem, error)
 
+	// Audits
 	GetAllAudits() ([]types.Audit, error)
 	GetAuditsByYear(year types.Year) ([]types.Audit, error)
 	GetAuditsByYearMonth(month types.Month, year types.Year) ([]types.Audit, error)
