@@ -128,6 +128,9 @@ values (2, 'File Reloaded');
 insert into status_values(id, description)
 values (3, 'Upload Failed');
 
+insert into status_values(id, description)
+values (4, 'Successful - Complete');
+
 alter table status_values
     add primary key (id);
 
@@ -141,7 +144,7 @@ create table monthly_batch
     constraint idf_UNIQUE
         unique (id),
     constraint monthly_batch_status_values_id_fk
-        foreign key (id) references status_values (id)
+        foreign key (status) references status_values (id)
 );
 
 alter table monthly_batch
@@ -155,10 +158,10 @@ create table annual_batch
     description mediumtext null,
     constraint id_UNIQUE
         unique (id),
-    constraint ab_to_mb
-        foreign key (id) references monthly_batch (id),
+    #     constraint ab_to_mb
+        #         foreign key (id) references monthly_batch (id),
     constraint annual_batch_status_values_id_fk
-        foreign key (id) references status_values (id)
+        foreign key (status) references status_values (id)
 );
 
 alter table annual_batch
@@ -175,7 +178,7 @@ create table gb_batch_items
     constraint batch
         foreign key (id) references monthly_batch (id),
     constraint gb_batch_items_status_values_id_fk
-        foreign key (id) references status_values (id)
+        foreign key (status) references status_values (id)
 );
 
 create table ni_batch_item
@@ -189,7 +192,7 @@ create table ni_batch_item
     constraint monthly
         foreign key (id) references monthly_batch (id),
     constraint ni_batch_item_status_values_id_fk
-        foreign key (id) references status_values (id)
+        foreign key (status) references status_values (id)
 );
 
 alter table ni_batch_item
@@ -207,7 +210,7 @@ create table quarterly_batch
     constraint qb_to_mb
         foreign key (id) references monthly_batch (id),
     constraint quarterly_batch_status_values_id_fk
-        foreign key (id) references status_values (id)
+        foreign key (status) references status_values (id)
 );
 
 alter table quarterly_batch
