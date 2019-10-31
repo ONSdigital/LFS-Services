@@ -279,7 +279,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8000/batches/display/2015",
+					"raw": "http://localhost:8000/batches/display/annual/2015",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -288,6 +288,7 @@
 					"path": [
 						"batches",
 						"display",
+						"annual",
 						"2015"
 					]
 				}
@@ -300,7 +301,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8000/batches/display/2014/Q1",
+					"raw": "http://localhost:8000/batches/display/quarterly/2015/Q1",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -309,8 +310,32 @@
 					"path": [
 						"batches",
 						"display",
-						"2014",
+						"quarterly",
+						"2015",
 						"Q1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "MonthIDs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/monthly/2014/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"monthly",
+						"2014",
+						"1"
 					]
 				}
 			},

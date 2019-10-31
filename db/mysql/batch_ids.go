@@ -15,10 +15,10 @@ type DBId struct {
 //var surveyAuditTable string
 
 func init() {
-	//batchTable = config.Config.Database.MonthlyBatchTable
-	//if batchTable == "" {
-	//	panic("monthly batch table configuration not set")
-	//}
+	batchTable = config.Config.Database.MonthlyBatchTable
+	if batchTable == "" {
+		panic("monthly batch table configuration not set")
+	}
 	//
 	//gbBatchTable = config.Config.Database.GbBatchTable
 	//if gbBatchTable == "" {
@@ -95,4 +95,32 @@ func (s MySQL) GetIdsByQuarter(year types.Year, quarter types.Quarter) ([]types.
 	}
 
 	return quarterID, nil
+}
+
+func (s MySQL) GetIdsByMonth(year types.Year, month types.Month) ([]types.MonthID, error) {
+	// Variables
+	var monthID []types.MonthID
+
+	// Get table
+	dbMonth := s.DB.Collection(batchTable)
+
+	// Error handling
+	if !dbMonth.Exists() {
+		log.Error().Str("table", batchTable).Msg("Table does not exist")
+		return nil, fmt.Errorf("table: %s does not exist", batchTable)
+	}
+
+	// Get values
+	res := dbMonth.Find(db.Cond{"year": year, "month": month})
+	err := res.All(&monthID)
+
+	// Error handling
+	if err != nil {
+		log.Debug().
+			Int("year", int(year)).
+			Msg("Get Monthly Batch IDs failed: " + err.Error())
+		return nil, err
+	}
+
+	return monthID, nil
 }
