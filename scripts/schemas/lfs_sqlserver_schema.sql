@@ -1,5 +1,3 @@
-
-
 drop table if exists addresses;
 
 drop table if exists users;
@@ -112,7 +110,6 @@ create table addresses
 );
 
 
-
 create table export_definitions
 (
     Variables       varchar(10) not null
@@ -136,7 +133,6 @@ create table monthly_batch
     constraint monthly_batch_status_values_id_fk
         foreign key (status) references status_values (id)
 );
-
 
 
 create table annual_batch
