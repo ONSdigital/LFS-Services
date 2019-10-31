@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "9542f823-fc18-4308-aaa2-19895be7c486",
+		"_postman_id": "943b0d4e-6bd6-455e-855d-44e744603f00",
 		"name": "LFS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -13,8 +13,8 @@
 					{
 						"key": "Content-Type",
 						"name": "Content-Type",
-						"type": "text",
-						"value": "application/x-www-form-urlencoded"
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
 					},
 					{
 						"key": "",
@@ -27,33 +27,35 @@
 					"mode": "formdata",
 					"formdata": [
 						{
-							"key": "lfsFile",
-							"type": "file",
-							"src": "/home/paul/GolandProjects/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
-						},
-						{
-							"key": "fileName",
-							"value": "myFileName",
-							"type": "text"
-						},
-						{
 							"key": "fileSource",
 							"value": "GB",
 							"type": "text"
+						},
+						{
+							"key": "fileName",
+							"value": "paul",
+							"type": "text"
+						},
+						{
+							"key": "lfsFile",
+							"type": "file",
+							"src": "/home/paul/GolandProjects/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
 						}
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8000/import/Survey/123456",
+					"raw": "http://localhost:8000/imports/survey/gb/18/2014",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
-						"import",
-						"Survey",
-						"123456"
+						"imports",
+						"survey",
+						"gb",
+						"18",
+						"2014"
 					]
 				}
 			},
@@ -67,8 +69,8 @@
 					{
 						"key": "Content-Type",
 						"name": "Content-Type",
-						"type": "text",
-						"value": "application/x-www-form-urlencoded"
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
 					},
 					{
 						"key": "",
@@ -93,7 +95,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8000/import/Address",
+					"raw": "http://localhost:8000/import/Address",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -143,7 +145,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8000/login/Admin",
+					"raw": "http://localhost:8000/login/Admin",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -152,6 +154,56 @@
 					"path": [
 						"login",
 						"Admin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateBatch",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "description",
+							"value": "test batchy",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/batches/2014/05",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"2014",
+						"05"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Audit - All",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/audits",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"audits"
 					]
 				}
 			},

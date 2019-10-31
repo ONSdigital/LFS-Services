@@ -28,12 +28,6 @@ type Column struct {
 	Rows  []interface{}
 }
 
-type ByRowCache struct {
-	headers []string
-	rows    [][]string
-	dirty   bool
-}
-
 type Dataset struct {
 	DatasetName string
 	Columns     map[string]Column
@@ -41,7 +35,6 @@ type Dataset struct {
 	RowCount    int
 	ColumnCount int
 	types.Audit
-	ByRowCache
 }
 
 const (
@@ -52,7 +45,7 @@ const (
 func NewDataset(name string) (Dataset, error) {
 	mux := sync.Mutex{}
 	cols := make(map[string]Column, InitialColumnCapacity)
-	return Dataset{name, cols, &mux, 0, 0, types.Audit{}, ByRowCache{}}, nil
+	return Dataset{name, cols, &mux, 0, 0, types.Audit{}}, nil
 }
 
 func (d *Dataset) LoadCSV(fileName, datasetName string, out interface{}, filter types.Filter) error {
@@ -742,7 +735,6 @@ func (d Dataset) OrderedColumns() []string {
 }
 
 func (d *Dataset) GetAllRows() (headers []string, rows [][]string) {
-	log.Debug().Msg("Row cache is dirty")
 	headers, rows = d.getByRow(d.RowCount, d.ColumnCount)
 	return
 }

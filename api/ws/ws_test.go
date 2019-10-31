@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
 	"net/url"
@@ -22,25 +21,31 @@ func TestWS(t *testing.T) {
 		t.FailNow()
 	}
 
-
-	m := types.WSMessage{
+	message := types.WSMessage{
 		Filename:   "Test file",
 		Percentage: 0,
 		Status:     0,
 	}
-	b, err := json.Marshal(m)
-	err = c.WriteMessage(websocket.TextMessage, b)
+	c.EnableWriteCompression(true)
+
+	err = c.WriteJSON(&message)
 	if err != nil {
 		log.Error().Err(err).Msg("write error")
 		t.FailNow()
 	}
 
-	_, message, err := c.ReadMessage()
+	err = c.ReadJSON(&message)
 	if err != nil {
 		log.Error().Err(err).Msg("write error")
 		t.FailNow()
 	}
-	log.Printf("recv: %s", message)
-	c.Close()
+
+	log.Info().
+		Str("fileName", message.Filename).
+		Int("percentage", message.Percentage).
+		Int("status", message.Status).
+		Msg("recieved message")
+
+	_ = c.Close()
 
 }

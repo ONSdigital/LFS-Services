@@ -21,7 +21,7 @@ func setupDataset() (*dataset.Dataset, error) {
 	}
 
 	nullFilter := filter.NewNullFilter(&d)
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "Test", types.Survey{}, nullFilter)
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "Test", types.SurveyInput{}, nullFilter)
 	if err != nil {
 		log.Error().Err(err)
 		return &dataset.Dataset{}, nil
@@ -76,7 +76,7 @@ func TestFromSav(t *testing.T) {
 	}
 
 	surveyFilter := filter.NewGBSurveyFilter(&d)
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", types.Survey{}, surveyFilter)
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", types.SurveyInput{}, surveyFilter)
 	if err != nil {
 		log.Error().Err(err)
 		t.FailNow()
@@ -238,7 +238,7 @@ func TestPersist(t *testing.T) {
 	}
 
 	surveyFilter := filter.NewGBSurveyFilter(&d)
-	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", types.Survey{}, surveyFilter)
+	err = d.LoadSav(testDirectory()+"LFSwk18PERS_non_confidential.sav", "test", types.SurveyInput{}, surveyFilter)
 	if err != nil {
 		log.Error().Err(err)
 		t.FailNow()

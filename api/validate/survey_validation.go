@@ -7,12 +7,20 @@ import (
 	"time"
 )
 
+const (
+	GB = iota
+	NI
+)
+
+type SurveyType int
+
 type SurveyValidation struct {
 	Validator
+	Origin SurveyType
 }
 
-func NewSurveyValidation(dataset *dataset.Dataset) SurveyValidation {
-	return SurveyValidation{Validator: Validator{dataset}}
+func NewSurveyValidation(dataset *dataset.Dataset, origin SurveyType) SurveyValidation {
+	return SurveyValidation{Validator: Validator{dataset}, Origin: origin}
 }
 
 type Val struct {
@@ -20,7 +28,7 @@ type Val struct {
 	error
 }
 
-func (sf SurveyValidation) Validate() (ValidationResponse, error) {
+func (sf SurveyValidation) Validate(period, year int) (ValidationResponse, error) {
 
 	v, e := sf.validateMissingValues()
 
@@ -28,7 +36,7 @@ func (sf SurveyValidation) Validate() (ValidationResponse, error) {
 		return v, e
 	}
 
-	v, e = sf.validateREFDTE()
+	v, e = sf.validateREFDTE(period, year)
 	return v, e
 
 }
@@ -36,7 +44,7 @@ func (sf SurveyValidation) Validate() (ValidationResponse, error) {
 var columnsToCheck = []string{"REFDTE", "PCODE", "QUOTA", "WEEK", "W1YR", "QRTR", "ADD", "WAVFND", "HHLD", "PERSNO"}
 
 /*
-Check if any rows in the list of columns to check are 'missing' where missing is defined as -99 and -99.99
+Check if any rows in the list of columns to check are 'missing' where missing is defined as a NaN
 for int and float types respectively.
 */
 func (sf SurveyValidation) validateMissingValues() (ValidationResponse, error) {
@@ -112,7 +120,7 @@ and a given time on a given date. To get the actual date from this we need to:
 4. Get the date from the Unix time using standard Go functions.
 
 */
-func (sf SurveyValidation) validateREFDTE() (ValidationResponse, error) {
+func (sf SurveyValidation) validateREFDTE(period, year int) (ValidationResponse, error) {
 	rows, err := sf.dataset.GetRowsAsDouble("REFDTE")
 	if err != nil {
 		return ValidationResponse{
@@ -134,6 +142,18 @@ func (sf SurveyValidation) validateREFDTE() (ValidationResponse, error) {
 		}
 	}
 
+	if len(rows) == 0 {
+		// No rows
+		var typ = "GB"
+		if sf.Origin == NI {
+			typ = "NI"
+		}
+		return ValidationResponse{
+			ValidationResult: ValidationFailed,
+			ErrorMessage:     fmt.Sprintf("There are no rows to validate. Are you sure this is a %s file?", typ),
+		}, fmt.Errorf(fmt.Sprintf("there are no rows to validate. Are you sure this is a %s file?", typ))
+	}
+
 	// Take the first row rather than checking in a loop
 	i := int64(rows[0]) - (141428 * 86400)
 	tm := time.Unix(i, 0)
@@ -142,6 +162,33 @@ func (sf SurveyValidation) validateREFDTE() (ValidationResponse, error) {
 			ValidationResult: ValidationFailed,
 			ErrorMessage:     fmt.Sprintf("RFEDTE is not a Sunday - it is a %s", tm.Weekday().String()),
 		}, fmt.Errorf(fmt.Sprintf("RFEDTE is not a Sunday - it is a %s", tm.Weekday().String()))
+	}
+
+	// check week number against RFEDTE
+	y, w := tm.ISOWeek()
+
+	if sf.Origin == GB {
+		if w != period {
+			return ValidationResponse{
+				ValidationResult: ValidationFailed,
+				ErrorMessage:     fmt.Sprintf("Week number in RFEDTE is not the required week %d, it is %d", period, w),
+			}, fmt.Errorf(fmt.Sprintf("week number in RFEDTE is not the required week %d, it is %d", period, w))
+		}
+	} else {
+		//NI
+		if int(tm.Month()) != period {
+			return ValidationResponse{
+				ValidationResult: ValidationFailed,
+				ErrorMessage:     fmt.Sprintf("Month number in RFEDTE is not the required month %d, it is %d", period, w),
+			}, fmt.Errorf(fmt.Sprintf("month number in RFEDTE is not the required month %d, it is %d", period, w))
+		}
+	}
+
+	if y != year {
+		return ValidationResponse{
+			ValidationResult: ValidationFailed,
+			ErrorMessage:     fmt.Sprintf("Year number in RFEDTE is not the required year %d, it is %d", year, y),
+		}, fmt.Errorf(fmt.Sprintf("year number in RFEDTE is not the required year %d, it is %d", year, y))
 	}
 
 	return ValidationResponse{

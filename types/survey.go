@@ -1,6 +1,44 @@
 package types
 
+type FileSource string
+
+const GBSource FileSource = "GB"
+const NISource FileSource = "NI"
+
+const (
+	NotStarted = iota
+	FileUploaded
+	FileReloaded
+	UploadFailed
+)
+
+type SurveyVO struct {
+	Id           int
+	FileName     string
+	FileSource   FileSource
+	Week         int
+	Month        int
+	Year         int
+	NumVarFile   int
+	NumVarLoaded int
+	NumObFile    int
+	NumObLoaded  int
+}
+
 type Survey struct {
+	Id           int        `db:"id"`
+	FileName     string     `db:"file_name"`
+	FileSource   FileSource `db:"file_source"`
+	Week         int        `db:"week"`
+	Month        int        `db:"month"`
+	Year         int        `db:"year"`
+	ColumnName   string     `db:"column_name"`
+	ColumnNumber int        `db:"column_number"`
+	Kind         int        `db:"kind"`
+	Rows         string     `db:"column_rows"`
+}
+
+type SurveyInput struct {
 	Quota         float64 `spss:"Quota"`
 	Week          float64 `spss:"Week"`
 	W1Yr          float64 `spss:"W1Yr"`

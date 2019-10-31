@@ -2,24 +2,35 @@
 logFormat = "Terminal" # one of: Text | Json | Terminal
 logLevel = "Debug" #	one of: "Info" # Trace | Info | Debug | Warn | Error | Fatal
 
-TmpDirectory= "/private/tmp" # this must be the same directory configured in mysql's secure_file_priv option
-testDirectory = "/home/paul/GolandProjects/LFS-Services/testdata/"
+#testDirectory = "/home/paul/GolandProjects/LFS-Services/testdata/"
+testDirectory = "/users/paul/GolandProjects/LFS-Services/testdata/"
 #testDirectory = "/Users/paul/ONS/LFS/LFS-Services/testdata/"
 
 [database]
 
 # database tables configuration
-columnsTable = "columns"
-addressesTable="addr_test"
-#addressesTable="addrersses"
-uploadAuditTable="upload_audit"
+surveyTable = "survey"
+addressesTable="addresses"
+surveyAuditTable="survey_audit"
+
+batchInfoView="batch_info"
+gbInfoView="gb_batch_info"
+niInfoView="ni_batch_info"
+
+monthlyBatchTable="monthly_batch"
+quarterlyBatchTable="quarterly_batch"
+annualBatchTable="annual_batch"
+gbBatchTable="gb_batch_items"
+niBatchTable="ni_batch_item"
+
+userTable="users"
 
 # connections configuration
 server = "localhost" # set by environment variables
 user = "lfs" # set by environment variables
 password = "lfs" # set by environment variables
 verbose = false
-database = "LFS" # set by environment variables
+database = "lfs" # set by environment variables
     [database.connectionPool]
        maxPoolSize = 10
        maxIdleConnections = 2

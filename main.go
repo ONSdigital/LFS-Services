@@ -41,11 +41,25 @@ func main() {
 		Msg("LFS Services: Starting up")
 
 	router := mux.NewRouter()
-	restHandlers := api.NewRestHandler()
 
-	router.HandleFunc("/import/{fileType}/{runId}", restHandlers.FileUploadHandler).Methods(http.MethodPost)
-	router.HandleFunc("/import/{fileType}", restHandlers.FileUploadHandler).Methods(http.MethodPost)
-	router.HandleFunc("/login/{user}", restHandlers.LoginHandler).Methods(http.MethodGet)
+	importsHandler := api.NewImportsHandler()
+	auditHandler := api.NewAuditHandler()
+	batchHandler := api.NewBatchHandler()
+	loginHandler := api.NewLoginHandler()
+
+	router.HandleFunc("/batches/{year}/{period}", batchHandler.CreateBatchHandler).Methods(http.MethodPost)
+
+	router.HandleFunc("/imports/survey/gb/{week}/{year}", importsHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/ni/{month}/{year}", importsHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/address", importsHandler.AddressUploadHandler).Methods(http.MethodPost)
+
+	router.HandleFunc("/audits", auditHandler.HandleAllAuditRequest).Methods(http.MethodGet)
+	router.HandleFunc("/audits/year/{year}", auditHandler.HandleYearAuditRequest).Methods(http.MethodGet)
+	router.HandleFunc("/audits/month/{year}/{month}", auditHandler.HandleMonthAuditRequest).Methods(http.MethodGet)
+	router.HandleFunc("/audits/week/{year}/{week}", auditHandler.HandleWeekAuditRequest).Methods(http.MethodGet)
+
+	router.HandleFunc("/login/{user}", loginHandler.LoginHandler).Methods(http.MethodGet)
+
 	router.HandleFunc("/ws", ws.WebSocketHandler{}.ServeWs).Methods(http.MethodGet)
 
 	listenAddress := config.Config.Service.ListenAddress

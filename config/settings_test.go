@@ -42,7 +42,7 @@ func TestConfig(t *testing.T) {
 		t.Logf("maxPoolsize %d\n", maxPoolsize)
 	}
 
-	columnsTable := conf.Config.Database.ColumnsTable
+	columnsTable := conf.Config.Database.SurveyTable
 	if columnsTable != "columns" {
 		t.Errorf("columnsTable = %s, want columns", columnsTable)
 	} else {

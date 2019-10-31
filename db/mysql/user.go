@@ -2,14 +2,25 @@ package mysql
 
 import (
 	"fmt"
+	"services/config"
 	"services/types"
+	"upper.io/db.v3"
 )
+
+var userTable string
+
+func init() {
+	userTable = config.Config.Database.UserTable
+	if userTable == "" {
+		panic("user table configuration not set")
+	}
+}
 
 func (s MySQL) GetUserID(user string) (types.UserCredentials, error) {
 	var creds types.UserCredentials
 
-	col := s.DB.Collection("users")
-	res := col.Find("username", user)
+	col := s.DB.Collection(userTable)
+	res := col.Find(db.Cond{"username": user})
 
 	if res == nil {
 		return creds, fmt.Errorf("user %s not found", user)
