@@ -38,9 +38,9 @@ func (wsh WebSocketHandler) ServeWs(w http.ResponseWriter, r *http.Request) {
 	for {
 		err := ws.ReadJSON(&message)
 		if err != nil {
-			log.Warn().
-				Err(err).
-				Msg("WebSocket read error")
+			//log.Warn().
+			//	Err(err).
+			//	Msg("WebSocket read error")
 			break
 		}
 

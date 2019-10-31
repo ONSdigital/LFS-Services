@@ -16,6 +16,9 @@ func NewAddressImportHandler() *AddressImportHandler {
 	return &AddressImportHandler{nil}
 }
 
+// we can only handle a single upload to the address file at a time
+var uploadInProgress = false
+
 func (ah AddressImportHandler) AddressUploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug().
@@ -24,6 +27,13 @@ func (ah AddressImportHandler) AddressUploadHandler(w http.ResponseWriter, r *ht
 		Msg("Received address file upload request")
 
 	w.Header().Set("Content-Type", "application/json")
+
+	if uploadInProgress {
+		log.Error().Msg("file is currently being uploaded")
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse{Status: Error, ErrorMessage: "address file is currently being uploaded"}.sendResponse(w, r)
+		return
+	}
 
 	fileName := r.FormValue("fileName")
 	if fileName == "" {
@@ -45,8 +55,11 @@ func (ah AddressImportHandler) AddressUploadHandler(w http.ResponseWriter, r *ht
 	ah.fileUploads = a.Add(fileName)
 
 	go func() {
+		uploadInProgress = true
 		ah.ParseAddressFile(tmpfile, fileName)
+		uploadInProgress = false
 	}()
 
+	w.WriteHeader(http.StatusAccepted)
 	OkayResponse{OK}.sendResponse(w, r)
 }

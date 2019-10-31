@@ -47,6 +47,7 @@ func (up *FileUploads) Add(fileName string) *types.WSMessage {
 
 }
 
+//TODO add code here
 func persistStatus() {
 
 }

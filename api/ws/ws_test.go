@@ -70,7 +70,7 @@ func TestWS(t *testing.T) {
 			t.FailNow()
 		}
 
-		log.Printf("Received status response: %d percentage: %f", message.Status, message.Percentage)
+		log.Printf("Received status response: %d percentage: %02.2f", message.Status, message.Percentage)
 
 		if message.Status == types.UploadError {
 			log.Printf("received an error from upload status: %s", message.ErrorMessage)
@@ -90,17 +90,16 @@ func TestWS(t *testing.T) {
 		Msg("recieved message")
 
 	_ = c.Close()
-
 }
 
 func Upload(client *http.Client, url string, values map[string]io.Reader) (err error) {
-	// Prepare a form that you will submit to that URL.
+
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 	for key, r := range values {
 		var fw io.Writer
 		if x, ok := r.(io.Closer); ok {
-			defer x.Close()
+			defer func() { _ = x.Close() }()
 		}
 
 		if x, ok := r.(*os.File); ok {
@@ -108,7 +107,6 @@ func Upload(client *http.Client, url string, values map[string]io.Reader) (err e
 				return
 			}
 		} else {
-			// Add other fields
 			if fw, err = w.CreateFormField(key); err != nil {
 				return
 			}
@@ -118,28 +116,31 @@ func Upload(client *http.Client, url string, values map[string]io.Reader) (err e
 		}
 
 	}
-	// Don't forget to close the multipart writer.
-	// If you don't close it, your request will be missing the terminating boundary.
-	w.Close()
 
-	// Now that you have a form, you can submit it to your handler.
+	_ = w.Close()
+
 	req, err := http.NewRequest("POST", url, &b)
 	if err != nil {
 		return
 	}
-	// Don't forget to set the content type, this will contain the boundary.
+
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
-	// Submit the request
 	res, err := client.Do(req)
 	if err != nil {
 		return
 	}
 
-	// Check the response
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode == http.StatusBadRequest {
+		log.Info().Msg("File is already being uploaded; this request has been rejected")
+		log.Info().Msg("We will carry on to get the current status")
+		return
+	}
+
+	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusAccepted {
 		err = fmt.Errorf("bad status: %s", res.Status)
 	}
+
 	return
 }
 
