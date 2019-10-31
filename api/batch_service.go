@@ -61,7 +61,7 @@ func (b BatchHandler) generateQuarterBatchId(quarter int, year int, description 
 
 	// Check if quarter batch already exists
 	if found := dbase.QuarterBatchExists(quarter, year); found {
-		return fmt.Errorf("quarter batch for year %d already exists", year)
+		return fmt.Errorf("q%d batch for year %d already exists", quarter, year)
 	}
 
 	// Ensure successful monthly exist

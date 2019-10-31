@@ -42,10 +42,14 @@ type Persistence interface {
 	Connect() error
 	Close()
 
-	// Import
-	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
-	PersistAddressDataset(headers []string, rows [][]string) error
+	// Survey
 	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
+	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
+
+	// Address
+	PersistAddressDataset(headers []string, rows [][]string) error
+
+	// User
 	GetUserID(user string) (types.UserCredentials, error)
 
 	// Batch
@@ -53,9 +57,9 @@ type Persistence interface {
 	AnnualBatchExists(year int) bool
 	QuarterBatchExists(quarter, year int) bool
 
+	ValidateMonthsForQuarterlyBatch(period, year int) bool
 	ValidateMonthsForAnnualBatch(year int) bool
 	ValidateQuartersForAnnualBatch(year int) bool
-	ValidateMonthsForQuarterlyBatch(period, year int) bool
 
 	CreateMonthlyBatch(batch types.MonthlyBatch) error
 	CreateQuarterlyBatch(batch types.QuarterlyBatch) error
