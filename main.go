@@ -42,23 +42,23 @@ func main() {
 
 	router := mux.NewRouter()
 
-	//addressesHandler := api.NewAddressImportHandler()
+	addressesHandler := api.NewAddressImportHandler()
 	batchHandler := api.NewBatchHandler()
 	idHandler := api.NewIdHandler()
 	//importsHandler := api.NewImportsHandler()
 	auditHandler := api.NewAuditHandler()
 	loginHandler := api.NewLoginHandler()
-	//surveyHandler := api.NewSurveyHandler()
+	surveyHandler := api.NewSurveyHandler()
 
-	router.HandleFunc("/batches/monthly/{month}/{year}", batchHandler.CreateMonthlyBatchHandler).Methods(http.MethodPost)
-	router.HandleFunc("/batches/quarterly/{quarter}/{year}", batchHandler.CreateQuarterlyBatchHandler).Methods(http.MethodPost)
+	router.HandleFunc("/batches/monthly/{year}/{month}", batchHandler.CreateMonthlyBatchHandler).Methods(http.MethodPost)
+	router.HandleFunc("/batches/quarterly/{year}/{quarter}", batchHandler.CreateQuarterlyBatchHandler).Methods(http.MethodPost)
 	router.HandleFunc("/batches/annual/{year}", batchHandler.CreateAnnualBatchHandler).Methods(http.MethodPost)
 
 	router.HandleFunc("/batches/display/{year}", idHandler.HandleAnnualBatchIdsRequest).Methods(http.MethodGet)
 
-	//router.HandleFunc("/imports/survey/gb/{week}/{year}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
-	//router.HandleFunc("/imports/survey/ni/{month}/{year}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
-	//router.HandleFunc("/imports/address", addressesHandler.AddressUploadHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/gb/{week}/{year}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/ni/{month}/{year}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/address", addressesHandler.AddressUploadHandler).Methods(http.MethodPost)
 
 	router.HandleFunc("/audits", auditHandler.HandleAllAuditRequest).Methods(http.MethodGet)
 	router.HandleFunc("/audits/year/{year}", auditHandler.HandleYearAuditRequest).Methods(http.MethodGet)
