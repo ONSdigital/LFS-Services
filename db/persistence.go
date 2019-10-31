@@ -68,6 +68,9 @@ type Persistence interface {
 	FindGBBatchInfo(week, year int) (types.GBBatchItem, error)
 	FindNIBatchInfo(month, year int) (types.NIBatchItem, error)
 
+	// Batch IDs
+	GetIdsByYear(year types.Year) ([]types.YearID, error)
+
 	// Audits
 	GetAllAudits() ([]types.Audit, error)
 	GetAuditsByYear(year types.Year) ([]types.Audit, error)
