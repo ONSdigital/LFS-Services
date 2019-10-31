@@ -158,8 +158,7 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error 
 	}
 
 	type record struct {
-		RowNo int         `json:"rowNo"`
-		Value interface{} `json:"value"`
+		Value interface{} `json:"v"`
 	}
 
 	for colName, column := range d.Columns {
@@ -172,31 +171,34 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error 
 		for k, v := range column.Rows {
 			switch columnKind {
 			case reflect.String:
-				records[k] = record{RowNo: k, Value: v}
+				if v == "NULL" {
+					v = nil
+				}
+				records[k] = record{Value: v}
 
 			case reflect.Int8, reflect.Uint8:
-				records[k] = record{RowNo: k, Value: v}
+				records[k] = record{Value: v}
 
 			case reflect.Int, reflect.Int32, reflect.Uint32:
-				records[k] = record{RowNo: k, Value: v}
+				records[k] = record{Value: v}
 
 			case reflect.Int64, reflect.Uint64:
-				records[k] = record{RowNo: k, Value: v}
+				records[k] = record{Value: v}
 
 			case reflect.Float32:
 				num := v.(float64)
 				if math.IsNaN(num) {
-					records[k] = record{RowNo: k, Value: nil}
+					records[k] = record{Value: nil}
 				} else {
-					records[k] = record{RowNo: k, Value: v}
+					records[k] = record{Value: v}
 				}
 
 			case reflect.Float64:
 				num := v.(float64)
 				if math.IsNaN(num) {
-					records[k] = record{RowNo: k, Value: nil}
+					records[k] = record{Value: nil}
 				} else {
-					records[k] = record{RowNo: k, Value: v}
+					records[k] = record{Value: v}
 				}
 
 			default:
