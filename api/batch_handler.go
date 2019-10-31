@@ -150,18 +150,42 @@ func (b BatchHandler) CreateMonthlyBatchHandler(w http.ResponseWriter, r *http.R
 	}
 
 	res := b.generateMonthBatchId(mth, yr, description)
-
 	endLog(res, startTime, w, r)
 }
 
-//func (b BatchHandler) handleMonth(month int, year int, description string) error {
-//	res := b.generateMonthBatchId(month, year, description)
-//	return res
-//}
+func (b BatchHandler) CreateQuarterlyBatchHandler(w http.ResponseWriter, r *http.Request) {
+	// Variables
+	startTime := time.Now()
+	vars := mux.Vars(r)
+	year := vars["year"]
+	quarter := vars["quarter"]
+	description := r.FormValue("description")
 
-func (b BatchHandler) handleQuarter(quarter int, year int, description string) error {
-	res := b.generateQuarterBatchId(quarter, year, description)
-	return res
+	// Logging
+	startLog(r)
+
+	// Convert year to int
+	yr := intConversion(year)
+	if yr == -1 {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("invalid year: %s, expected an integer", year)}.sendResponse(w, r)
+		return
+	}
+
+	// Strip and convert period to int
+	qtr := quarter[1:]
+	p, err := strconv.Atoi(qtr)
+	if err != nil {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("invalid period: %s, expected on of Q1-Q4", quarter)}.sendResponse(w, r)
+		return
+	}
+
+	res := b.generateQuarterBatchId(p, yr, description)
+	endLog(res, startTime, w, r)
+
 }
 
 func (b BatchHandler) handleYear(year int, description string) error {

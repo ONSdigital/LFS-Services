@@ -368,7 +368,7 @@ func (s MySQL) ValidateMonthsForQuarterlyBatch(period, year int) bool {
 	}
 
 	col := s.DB.Collection(batchTable)
-	res := col.Find(db.Cond{"year": year, "status": 0, "month": months})
+	res := col.Find(db.Cond{"year": year, "status": 4, "month": months})
 
 	total, err := res.Count()
 
