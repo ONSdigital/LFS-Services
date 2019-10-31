@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "943b0d4e-6bd6-455e-855d-44e744603f00",
+		"_postman_id": "44e31589-ff8f-49bf-bac9-d0a210a102e8",
 		"name": "LFS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -160,7 +160,7 @@
 			"response": []
 		},
 		{
-			"name": "CreateBatch",
+			"name": "CreateMonthlyBatch",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -185,6 +185,70 @@
 						"batches",
 						"2014",
 						"05"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateQuarterlyBatch",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "description",
+							"value": "test batchy",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/batches/quarterly/Q1/2014",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"quarterly",
+						"Q1",
+						"2014"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateAnnualBatch",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "description",
+							"value": "test batchy",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/batches/quarterly/Q1/2014",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"quarterly",
+						"Q1",
+						"2014"
 					]
 				}
 			},
