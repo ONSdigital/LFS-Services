@@ -35,7 +35,7 @@ func (a AuditHandler) HandleAllAuditRequest(w http.ResponseWriter, r *http.Reque
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 	}
 
-	sendAuditResponse(w, r, res)
+	a.sendAuditResponse(w, r, res)
 
 	log.Debug().
 		Str("client", r.RemoteAddr).
@@ -71,7 +71,7 @@ func (a AuditHandler) HandleYearAuditRequest(w http.ResponseWriter, r *http.Requ
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 	}
 
-	sendAuditResponse(w, r, res)
+	a.sendAuditResponse(w, r, res)
 
 	log.Debug().
 		Str("client", r.RemoteAddr).
@@ -117,7 +117,7 @@ func (a AuditHandler) HandleWeekAuditRequest(w http.ResponseWriter, r *http.Requ
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 	}
 
-	sendAuditResponse(w, r, res)
+	a.sendAuditResponse(w, r, res)
 
 	log.Debug().
 		Str("client", r.RemoteAddr).
@@ -163,7 +163,7 @@ func (a AuditHandler) HandleMonthAuditRequest(w http.ResponseWriter, r *http.Req
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 	}
 
-	sendAuditResponse(w, r, res)
+	a.sendAuditResponse(w, r, res)
 
 	log.Debug().
 		Str("client", r.RemoteAddr).
@@ -172,7 +172,7 @@ func (a AuditHandler) HandleMonthAuditRequest(w http.ResponseWriter, r *http.Req
 		Msg("Retieve audit request completed")
 }
 
-func sendAuditResponse(w http.ResponseWriter, r *http.Request, response []types.Audit) {
+func (a AuditHandler) sendAuditResponse(w http.ResponseWriter, r *http.Request, response []types.Audit) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Error().
 			Str("client", r.RemoteAddr).

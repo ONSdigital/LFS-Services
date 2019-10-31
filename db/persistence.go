@@ -47,6 +47,7 @@ type Persistence interface {
 	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
 
 	// Address
+	//PersistAddressDataset(headers []string, rows [][]string, status *types.WSMessage) error
 	PersistAddressDataset(headers []string, rows [][]string) error
 
 	// User
