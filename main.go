@@ -42,18 +42,19 @@ func main() {
 
 	router := mux.NewRouter()
 
-	importsHandler := api.NewImportsHandler()
+	addressesHandler := api.NewAddressImportHandler()
 	auditHandler := api.NewAuditHandler()
 	batchHandler := api.NewBatchHandler()
 	loginHandler := api.NewLoginHandler()
+	surveyHandler := api.NewSurveyHandler()
 
 	router.HandleFunc("/batches/monthly/{month}/{year}", batchHandler.CreateMonthlyBatchHandler).Methods(http.MethodPost)
 	router.HandleFunc("/batches/quarterly/{quarter}/{year}", batchHandler.CreateQuarterlyBatchHandler).Methods(http.MethodPost)
 	router.HandleFunc("/batches/annual/{year}", batchHandler.CreateAnnualBatchHandler).Methods(http.MethodPost)
 
-	router.HandleFunc("/imports/survey/gb/{week}/{year}", importsHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
-	router.HandleFunc("/imports/survey/ni/{month}/{year}", importsHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
-	router.HandleFunc("/imports/address", importsHandler.AddressUploadHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/gb/{week}/{year}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/ni/{month}/{year}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/address", addressesHandler.AddressUploadHandler).Methods(http.MethodPost)
 
 	router.HandleFunc("/audits", auditHandler.HandleAllAuditRequest).Methods(http.MethodGet)
 	router.HandleFunc("/audits/year/{year}", auditHandler.HandleYearAuditRequest).Methods(http.MethodGet)
