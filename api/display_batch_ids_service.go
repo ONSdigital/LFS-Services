@@ -59,3 +59,24 @@ func (i IdHandler) GetIdsForMonth(year types.Year, month types.Month) ([]types.M
 	}
 	return res, nil
 }
+
+func (i IdHandler) GetIdsForNI(year types.Year, month types.Month) ([]types.NIID, error) {
+	// Error capture
+	if month < 1 || month > 12 {
+		return nil, fmt.Errorf("the month value is %d, must be between 1 and 12", month)
+	}
+
+	// Database connection
+	dbase, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		log.Error().Err(err)
+		return nil, err
+	}
+
+	// Retrieve table values
+	res, err := dbase.GetNIIds(year, month)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}

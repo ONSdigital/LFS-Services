@@ -25,11 +25,11 @@ func init() {
 	//	panic("gb batch table configuration not set")
 	//}
 	//
-	//niBatchTable = config.Config.Database.NiBatchTable
-	//if niBatchTable == "" {
-	//	panic("ni batch table configuration not set")
-	//}
-	//
+	niBatchTable = config.Config.Database.NiBatchTable
+	if niBatchTable == "" {
+		panic("ni batch table configuration not set")
+	}
+
 	quarterlyBatchTable = config.Config.Database.QuarterlyBatchTable
 	if quarterlyBatchTable == "" {
 		panic("quarterly batch table configuration not set")
@@ -123,4 +123,32 @@ func (s MySQL) GetIdsByMonth(year types.Year, month types.Month) ([]types.MonthI
 	}
 
 	return monthID, nil
+}
+
+func (s MySQL) GetNIIds(year types.Year, month types.Month) ([]types.NIID, error) {
+	// Variables
+	var niID []types.NIID
+
+	// Get table
+	dbNI := s.DB.Collection(niBatchTable)
+
+	// Error handling
+	if !dbNI.Exists() {
+		log.Error().Str("table", niBatchTable).Msg("Table does not exist")
+		return nil, fmt.Errorf("table: %s does not exist", niBatchTable)
+	}
+
+	// Get values
+	res := dbNI.Find(db.Cond{"year": year, "month": month})
+	err := res.All(&niID)
+
+	// Error handling
+	if err != nil {
+		log.Debug().
+			Int("year", int(year)).
+			Msg("Get Monthly Batch IDs failed: " + err.Error())
+		return nil, err
+	}
+
+	return niID, nil
 }

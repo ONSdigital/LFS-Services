@@ -22,3 +22,10 @@ type MonthID struct {
 	Status      int    `db:"status" json:"status"`
 	Description string `db:"description" json:"description"`
 }
+
+type NIID struct {
+	Id     int `db:"id" json:"id"`
+	Month  int `db:"month" json:"month"`
+	Year   int `db:"year" json:"year"`
+	Status int `db:"status" json:"status"`
+}
