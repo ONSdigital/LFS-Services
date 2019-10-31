@@ -28,10 +28,10 @@ func (i IdHandler) HandleAnnualBatchIdsRequest(w http.ResponseWriter, r *http.Re
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
-		Msg("Received get Annual Batch ID request")
+		Msg("Received Annual Batch ID request")
 
 	// Convert year to integer
-	yearNo, err := strconv.Atoi(year)
+	yr, err := strconv.Atoi(year)
 	if err != nil {
 		ErrorResponse{
 			Status:       Error,
@@ -43,7 +43,7 @@ func (i IdHandler) HandleAnnualBatchIdsRequest(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusOK)
 
 	// Functionality
-	res, err := i.GetIdsForYear(types.Year(yearNo))
+	res, err := i.GetIdsForYear(types.Year(yr))
 
 	// Error handling
 	if err != nil {
@@ -61,7 +61,12 @@ func (i IdHandler) HandleAnnualBatchIdsRequest(w http.ResponseWriter, r *http.Re
 	}
 
 	// Return valid json or handle
-	sendIdResponse(w, r, res)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Error().
+			Str("client", r.RemoteAddr).
+			Str("uri", r.RequestURI).
+			Msg("json.NewEncoder() failed in sendIdResponse")
+	}
 
 	// Logging
 	log.Debug().
@@ -71,11 +76,71 @@ func (i IdHandler) HandleAnnualBatchIdsRequest(w http.ResponseWriter, r *http.Re
 		Msg("Retrieve Annual Batch ID request completed")
 }
 
-func sendIdResponse(w http.ResponseWriter, r *http.Request, response []types.YearID) {
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+func (i IdHandler) HandleQuarterlyBatchIdsRequest(w http.ResponseWriter, r *http.Request) {
+	// Variables
+	startTime := time.Now()
+	vars := mux.Vars(r)
+	year := vars["year"]
+	quarter := vars["quarter"]
+
+	// Logging
+	log.Debug().
+		Str("client", r.RemoteAddr).
+		Str("uri", r.RequestURI).
+		Msg("Received Quarterly Batch ID request")
+
+	// Convert year to integer
+	yr, err := strconv.Atoi(year)
+	if err != nil {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("invalid year: %s, expected an integer", year)}.sendResponse(w, r)
+		return
+	}
+
+	// Strip and convert quarter to int
+	qtr := quarter[1:]
+	q, err := strconv.Atoi(qtr)
+	if err != nil {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("invalid period: %s, expected one of Q1-Q4", quarter)}.sendResponse(w, r)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	// Functionality
+	res, err := i.GetIdsForQuarter(types.Year(yr), types.Quarter(q))
+
+	// Error handling
+	if err != nil {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
+	}
+
+	if len(res) == 0 {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("No valid quarter batches for %s", year)}.sendResponse(w, r)
+		return
+	}
+
+	// Return valid json or handle
+	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Error().
 			Str("client", r.RemoteAddr).
 			Str("uri", r.RequestURI).
 			Msg("json.NewEncoder() failed in sendIdResponse")
 	}
+
+	// Logging
+	log.Debug().
+		Str("client", r.RemoteAddr).
+		Str("uri", r.RequestURI).
+		Str("elapsedTime", util.FmtDuration(startTime)).
+		Msg("Retrieve Quarterly Batch ID request completed")
 }

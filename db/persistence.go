@@ -70,6 +70,7 @@ type Persistence interface {
 
 	// Batch IDs
 	GetIdsByYear(year types.Year) ([]types.YearID, error)
+	GetIdsByQuarter(year types.Year, quarter types.Quarter) ([]types.QuarterID, error)
 
 	// Audits
 	GetAllAudits() ([]types.Audit, error)

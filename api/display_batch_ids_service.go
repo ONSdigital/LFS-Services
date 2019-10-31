@@ -21,3 +21,19 @@ func (i IdHandler) GetIdsForYear(year types.Year) ([]types.YearID, error) {
 	}
 	return res, nil
 }
+
+func (i IdHandler) GetIdsForQuarter(year types.Year, quarter types.Quarter) ([]types.QuarterID, error) {
+	// Database connection
+	dbase, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		log.Error().Err(err)
+		return nil, err
+	}
+
+	// Retrieve table values
+	res, err := dbase.GetIdsByQuarter(year, quarter)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}

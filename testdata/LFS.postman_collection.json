@@ -293,6 +293,28 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "QuarterIDs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/2014/Q1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"2014",
+						"Q1"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"protocolProfileBehavior": {}

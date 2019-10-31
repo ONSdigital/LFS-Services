@@ -30,10 +30,10 @@ func init() {
 	//	panic("ni batch table configuration not set")
 	//}
 	//
-	//quarterlyBatchTable = config.Config.Database.QuarterlyBatchTable
-	//if quarterlyBatchTable == "" {
-	//	panic("quarterly batch table configuration not set")
-	//}
+	quarterlyBatchTable = config.Config.Database.QuarterlyBatchTable
+	if quarterlyBatchTable == "" {
+		panic("quarterly batch table configuration not set")
+	}
 
 	annualBatchTable = config.Config.Database.AnnualBatchTable
 	if annualBatchTable == "" {
@@ -67,4 +67,32 @@ func (s MySQL) GetIdsByYear(year types.Year) ([]types.YearID, error) {
 	}
 
 	return yearIDs, nil
+}
+
+func (s MySQL) GetIdsByQuarter(year types.Year, quarter types.Quarter) ([]types.QuarterID, error) {
+	// Variables
+	var quarterID []types.QuarterID
+
+	// Get table
+	dbQuarter := s.DB.Collection(quarterlyBatchTable)
+
+	// Error handling
+	if !dbQuarter.Exists() {
+		log.Error().Str("table", quarterlyBatchTable).Msg("Table does not exist")
+		return nil, fmt.Errorf("table: %s does not exist", quarterlyBatchTable)
+	}
+
+	// Get values
+	res := dbQuarter.Find(db.Cond{"year": year, "quarter": quarter})
+	err := res.All(&quarterID)
+
+	// Error handling
+	if err != nil {
+		log.Debug().
+			Int("year", int(year)).
+			Msg("Get Quarterly Batch IDs failed: " + err.Error())
+		return nil, err
+	}
+
+	return quarterID, nil
 }

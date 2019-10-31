@@ -109,7 +109,7 @@ func (b BatchHandler) CreateQuarterlyBatchHandler(w http.ResponseWriter, r *http
 	if err != nil {
 		ErrorResponse{
 			Status:       Error,
-			ErrorMessage: fmt.Sprintf("invalid period: %s, expected on of Q1-Q4", quarter)}.sendResponse(w, r)
+			ErrorMessage: fmt.Sprintf("invalid period: %s, expected one of Q1-Q4", quarter)}.sendResponse(w, r)
 		return
 	}
 
