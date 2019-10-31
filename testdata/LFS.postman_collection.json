@@ -363,6 +363,29 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "GBIDs Copy",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/monthly/2014/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"monthly",
+						"2014",
+						"1"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"protocolProfileBehavior": {}

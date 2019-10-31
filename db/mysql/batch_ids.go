@@ -19,12 +19,12 @@ func init() {
 	if batchTable == "" {
 		panic("monthly batch table configuration not set")
 	}
-	//
-	//gbBatchTable = config.Config.Database.GbBatchTable
-	//if gbBatchTable == "" {
-	//	panic("gb batch table configuration not set")
-	//}
-	//
+
+	gbBatchTable = config.Config.Database.GbBatchTable
+	if gbBatchTable == "" {
+		panic("gb batch table configuration not set")
+	}
+
 	niBatchTable = config.Config.Database.NiBatchTable
 	if niBatchTable == "" {
 		panic("ni batch table configuration not set")
@@ -146,9 +146,37 @@ func (s MySQL) GetNIIds(year types.Year, month types.Month) ([]types.NIID, error
 	if err != nil {
 		log.Debug().
 			Int("year", int(year)).
-			Msg("Get Monthly Batch IDs failed: " + err.Error())
+			Msg("Get NI Batch IDs failed: " + err.Error())
 		return nil, err
 	}
 
 	return niID, nil
+}
+
+func (s MySQL) GetGBIds(year types.Year, month types.Month, week types.Week) ([]types.GBID, error) {
+	// Variables
+	var gbID []types.GBID
+
+	// Get table
+	dbGB := s.DB.Collection(gbBatchTable)
+
+	// Error handling
+	if !dbGB.Exists() {
+		log.Error().Str("table", gbBatchTable).Msg("Table does not exist")
+		return nil, fmt.Errorf("table: %s does not exist", gbBatchTable)
+	}
+
+	// Get values
+	res := dbGB.Find(db.Cond{"year": year, "month": month, "week": week})
+	err := res.All(&gbID)
+
+	// Error handling
+	if err != nil {
+		log.Debug().
+			Int("year", int(year)).
+			Msg("Get GB Batch IDs failed: " + err.Error())
+		return nil, err
+	}
+
+	return gbID, nil
 }

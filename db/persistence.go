@@ -52,7 +52,7 @@ type Persistence interface {
 	// User
 	GetUserID(user string) (types.UserCredentials, error)
 
-	// Batch
+	// New Batch
 	MonthlyBatchExists(month, year int) bool
 	AnnualBatchExists(year int) bool
 	QuarterBatchExists(quarter, year int) bool
@@ -73,6 +73,7 @@ type Persistence interface {
 	GetIdsByQuarter(year types.Year, quarter types.Quarter) ([]types.QuarterID, error)
 	GetIdsByMonth(year types.Year, quarter types.Month) ([]types.MonthID, error)
 	GetNIIds(year types.Year, quarter types.Month) ([]types.NIID, error)
+	GetGBIds(year types.Year, quarter types.Month, week types.Week) ([]types.GBID, error)
 
 	// Audits
 	GetAllAudits() ([]types.Audit, error)
