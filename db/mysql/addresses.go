@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"reflect"
-	"services/api/ws"
 	"services/config"
 	"services/types"
 	"services/util"
@@ -53,14 +52,14 @@ func (s MySQL) insertAddressesRow(buffer bytes.Buffer) error {
 	return nil
 }
 
-func (s MySQL) PersistAddressDataset(header []string, rows [][]string) error {
+func (s MySQL) PersistAddressDataset(header []string, rows [][]string, status *types.WSMessage) error {
+
 	startTime := time.Now()
+
 	log.Debug().
 		Str("tableName", addressesTable).
 		Msg("Starting persistence into DB")
 
-	uploadManager := ws.NewFileUploads()
-	_ = uploadManager.SetUploadStarted(addressesTable)
 	_ = s.DeleteAddressesData(addressesTable)
 
 	var buffer bytes.Buffer
@@ -132,7 +131,6 @@ func (s MySQL) PersistAddressDataset(header []string, rows [][]string) error {
 				log.Error().
 					Err(err).
 					Msg("insert addreses failed")
-				_ = uploadManager.SetUploadError(addressesTable)
 				return fmt.Errorf("cannot insert an addresses record, error: %s", err)
 			}
 			cnt = 0
@@ -149,7 +147,7 @@ func (s MySQL) PersistAddressDataset(header []string, rows [][]string) error {
 			}
 
 			var perc = (float64(batchCount*BatchSize) / float64(len(rows))) * 100
-			_ = uploadManager.SetPercentage(addressesTable, perc)
+			status.SetPercentage(perc)
 		} else {
 			if j != len(rows)-1 {
 				buffer.WriteString(",")
@@ -163,7 +161,7 @@ func (s MySQL) PersistAddressDataset(header []string, rows [][]string) error {
 			log.Error().
 				Err(err).
 				Msg("insert addreses failed")
-			_ = uploadManager.SetUploadError(addressesTable)
+			status.SetUploadError(fmt.Sprintf("cannot insert an addresses record, error: %s", err))
 			return fmt.Errorf("cannot insert an addresses record, error: %s", err)
 		}
 	}
@@ -172,8 +170,7 @@ func (s MySQL) PersistAddressDataset(header []string, rows [][]string) error {
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Addresses data persisted")
 
-	_ = uploadManager.SetUploadFinished(addressesTable)
-	_ = uploadManager.SetPercentage(addressesTable, 100.0)
+	status.SetUploadFinished()
 
 	return nil
 }

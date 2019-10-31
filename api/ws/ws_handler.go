@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
 	"net/http"
@@ -34,24 +33,24 @@ func (wsh WebSocketHandler) ServeWs(w http.ResponseWriter, r *http.Request) {
 
 	ws.EnableWriteCompression(true)
 
+	uploads := NewFileUploads()
+
 	for {
 		err := ws.ReadJSON(&message)
 		if err != nil {
-			log.Warn().
-				Err(err).
-				Msg("WebSocket read error")
+			//log.Warn().
+			//	Err(err).
+			//	Msg("WebSocket read error")
 			break
 		}
 
 		log.Debug().
 			Str("fileName", message.Filename).
-			Str("percentage", fmt.Sprintf("%02.2f", message.Percentage)).
-			Int("status", message.Status).
-			Msg("recieved message")
+			Msg("received status request")
 
-		message.Percentage = 100
+		m := uploads.Status(message.Filename)
 
-		err = ws.WriteJSON(&message)
+		err = ws.WriteJSON(&m)
 		if err != nil {
 			log.Error().
 				Err(err).
