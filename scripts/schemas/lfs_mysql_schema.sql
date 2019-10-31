@@ -207,8 +207,8 @@ create table quarterly_batch
     description mediumtext null,
     constraint id_UNIQUE
         unique (id),
-    constraint qb_to_mb
-        foreign key (id) references monthly_batch (id),
+#     constraint qb_to_mb
+#         foreign key (id) references monthly_batch (id),
     constraint quarterly_batch_status_values_id_fk
         foreign key (status) references status_values (id)
 );

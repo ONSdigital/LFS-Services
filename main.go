@@ -48,7 +48,9 @@ func main() {
 	loginHandler := api.NewLoginHandler()
 	surveyHandler := api.NewSurveyHandler()
 
-	router.HandleFunc("/batches/{year}/{period}", batchHandler.CreateBatchHandler).Methods(http.MethodPost)
+	router.HandleFunc("/batches/monthly/{month}/{year}", batchHandler.CreateMonthlyBatchHandler).Methods(http.MethodPost)
+	router.HandleFunc("/batches/quarterly/{quarter}/{year}", batchHandler.CreateQuarterlyBatchHandler).Methods(http.MethodPost)
+	router.HandleFunc("/batches/annual/{year}", batchHandler.CreateAnnualBatchHandler).Methods(http.MethodPost)
 
 	router.HandleFunc("/imports/survey/gb/{week}/{year}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/survey/ni/{month}/{year}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)

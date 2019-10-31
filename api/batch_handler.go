@@ -16,47 +16,22 @@ func NewBatchHandler() *BatchHandler {
 	return &BatchHandler{}
 }
 
-func (b BatchHandler) CreateBatchHandler(w http.ResponseWriter, r *http.Request) {
+func intConversion(year string) int {
+	yr, err := strconv.Atoi(year)
+	if err != nil {
+		return -1
+	}
+	return yr
+}
+
+func startLog(r *http.Request) {
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
 		Msg("Received create batch request")
+}
 
-	startTime := time.Now()
-
-	vars := mux.Vars(r)
-	year := vars["year"]
-	period := vars["period"]
-
-	yr, err := strconv.Atoi(year)
-	if err != nil {
-		ErrorResponse{
-			Status:       Error,
-			ErrorMessage: fmt.Sprintf("invalid year: %s, expected an integer", year)}.sendResponse(w, r)
-		return
-	}
-
-	var res error
-	description := r.FormValue("description")
-
-	switch period {
-	case "0":
-		res = b.handleYear(yr, description)
-	case "Q1", "Q2", "Q3", "Q4":
-		res = b.handleQuarter(period, yr)
-	default:
-		{
-			month, err := strconv.Atoi(period)
-			if err == nil {
-				res = b.handleMonth(month, yr, description)
-				break
-			}
-			ErrorResponse{
-				Status:       Error,
-				ErrorMessage: fmt.Sprintf("invalid period: %s, expected one of 1-12, Q1-Q4", period)}.sendResponse(w, r)
-		}
-	}
-
+func endLog(res error, startTime time.Time, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -75,17 +50,94 @@ func (b BatchHandler) CreateBatchHandler(w http.ResponseWriter, r *http.Request)
 		Msg("Create batch complete")
 }
 
-func (b BatchHandler) handleMonth(month int, year int, description string) error {
-	res := b.generateMonthBatchId(month, year, description)
-	return res
+func (b BatchHandler) CreateMonthlyBatchHandler(w http.ResponseWriter, r *http.Request) {
+	// Variables
+	startTime := time.Now()
+	vars := mux.Vars(r)
+	year := vars["year"]
+	month := vars["month"]
+	description := r.FormValue("description")
+
+	// Logging
+	startLog(r)
+
+	// Convert year to int
+	yr := intConversion(year)
+	if yr == -1 {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("invalid year: %s, expected an integer", year)}.sendResponse(w, r)
+		return
+	}
+
+	// Convert month to int
+	mth := intConversion(month)
+	if mth == -1 {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("invalid period: %s, expected one of 1-12", month)}.sendResponse(w, r)
+		return
+	}
+
+	res := b.generateMonthBatchId(mth, yr, description)
+	endLog(res, startTime, w, r)
 }
 
-func (b BatchHandler) handleQuarter(quarter string, year int) error {
-	//res := b.generateQuarterBatchId(quarter, year)
-	return nil
+func (b BatchHandler) CreateQuarterlyBatchHandler(w http.ResponseWriter, r *http.Request) {
+	// Variables
+	startTime := time.Now()
+	vars := mux.Vars(r)
+	year := vars["year"]
+	quarter := vars["quarter"]
+	description := r.FormValue("description")
+
+	// Logging
+	startLog(r)
+
+	// Convert year to int
+	yr := intConversion(year)
+	if yr == -1 {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("invalid year: %s, expected an integer", year)}.sendResponse(w, r)
+		return
+	}
+
+	// Strip and convert period to int
+	qtr := quarter[1:]
+	p, err := strconv.Atoi(qtr)
+	if err != nil {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("invalid period: %s, expected on of Q1-Q4", quarter)}.sendResponse(w, r)
+		return
+	}
+
+	res := b.generateQuarterBatchId(p, yr, description)
+	endLog(res, startTime, w, r)
+
 }
 
-func (b BatchHandler) handleYear(year int, description string) error {
-	res := b.generateYearBatchId(year, description)
-	return res
+func (b BatchHandler) CreateAnnualBatchHandler(w http.ResponseWriter, r *http.Request) {
+	// Variables
+	startTime := time.Now()
+	vars := mux.Vars(r)
+	year := vars["year"]
+	description := r.FormValue("description")
+
+	// Logging
+	startLog(r)
+
+	// Convert year to int
+	yr := intConversion(year)
+	if yr == -1 {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("invalid year: %s, expected an integer", year)}.sendResponse(w, r)
+		return
+	}
+
+	res := b.generateYearBatchId(yr, description)
+	endLog(res, startTime, w, r)
+
 }
