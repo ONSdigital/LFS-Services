@@ -49,7 +49,7 @@ func (s MySQL) GetAuditsByYear(year types.Year) ([]types.Audit, error) {
 
 	var audits []types.Audit
 	dbAudit := s.DB.Collection(surveyAuditTable)
-	if dbAudit.Exists() {
+	if !dbAudit.Exists() {
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
@@ -68,7 +68,7 @@ func (s MySQL) GetAuditsByYearMonth(month types.Month, year types.Year) ([]types
 
 	var audits []types.Audit
 	dbAudit := s.DB.Collection(surveyAuditTable)
-	if dbAudit.Exists() {
+	if !dbAudit.Exists() {
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
@@ -86,7 +86,7 @@ func (s MySQL) GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Au
 
 	var audits []types.Audit
 	dbAudit := s.DB.Collection(surveyAuditTable)
-	if dbAudit.Exists() {
+	if !dbAudit.Exists() {
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
