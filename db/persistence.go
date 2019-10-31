@@ -42,10 +42,14 @@ type Persistence interface {
 	Connect() error
 	Close()
 
-	// Import
-	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
-	PersistAddressDataset(headers []string, rows [][]string, status *types.WSMessage) error
+	// Survey
 	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
+	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
+
+	// Address
+	PersistAddressDataset(headers []string, rows [][]string, status *types.WSMessage) error
+
+	// User
 	GetUserID(user string) (types.UserCredentials, error)
 
 	// Batch
