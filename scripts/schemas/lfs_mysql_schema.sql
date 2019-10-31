@@ -227,7 +227,7 @@ create table survey
     column_name   varchar(255) not null,
     column_number int          not null,
     kind          int(255)     not null,
-    column_rows   longtext     not null,
+    column_rows   json         not null,
     primary key (id, file_name, column_name),
     constraint gb_key
         foreign key (id) references gb_batch_items (id)

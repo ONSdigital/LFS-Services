@@ -2,8 +2,10 @@ package mysql
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"math"
 	"reflect"
 	"services/config"
 	"services/dataset"
@@ -155,28 +157,48 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error 
 		return fmt.Errorf("cannot start a transaction, error: %s", err)
 	}
 
+	type record struct {
+		RowNo int         `json:"rowNo"`
+		Value interface{} `json:"value"`
+	}
+
 	for colName, column := range d.Columns {
 		kBuffer.Reset()
 
+		records := make([]record, d.RowCount)
+
 		var i = 0
 		columnKind := column.Kind
-		for _, v := range column.Rows {
+		for k, v := range column.Rows {
 			switch columnKind {
 			case reflect.String:
-				a := fmt.Sprintf("%s", v)
-				a = strings.Replace(a, "'", `''`, -1)
-				//kBuffer.WriteString("\"" + a + "\"")
-				kBuffer.WriteString(a)
+				records[k] = record{RowNo: k, Value: v}
+
 			case reflect.Int8, reflect.Uint8:
-				kBuffer.WriteString(fmt.Sprintf("%d", v))
+				records[k] = record{RowNo: k, Value: v}
+
 			case reflect.Int, reflect.Int32, reflect.Uint32:
-				kBuffer.WriteString(fmt.Sprintf("%d", v))
+				records[k] = record{RowNo: k, Value: v}
+
 			case reflect.Int64, reflect.Uint64:
-				kBuffer.WriteString(fmt.Sprintf("%d", v))
+				records[k] = record{RowNo: k, Value: v}
+
 			case reflect.Float32:
-				kBuffer.WriteString(fmt.Sprintf("%f", v))
+				num := v.(float64)
+				if math.IsNaN(num) {
+					records[k] = record{RowNo: k, Value: nil}
+				} else {
+					records[k] = record{RowNo: k, Value: v}
+				}
+
 			case reflect.Float64:
-				kBuffer.WriteString(fmt.Sprintf("%g", v))
+				num := v.(float64)
+				if math.IsNaN(num) {
+					records[k] = record{RowNo: k, Value: nil}
+				} else {
+					records[k] = record{RowNo: k, Value: v}
+				}
+
 			default:
 				log.Error().
 					Str("methodName", "PersistSurveyDataset").
@@ -185,12 +207,13 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error 
 				return fmt.Errorf("unknown type - possible corruption")
 			}
 
-			if i != len(column.Rows)-1 {
-				kBuffer.WriteString(",")
-			}
 			i++
 		}
 
+		jsonData, err := json.Marshal(records)
+		if err != nil {
+			return fmt.Errorf("cannot marshal json, error: %s", err)
+		}
 		row := types.Survey{
 			Id:           vo.Id,
 			FileName:     vo.FileName,
@@ -201,7 +224,7 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error 
 			ColumnName:   colName,
 			ColumnNumber: column.ColNo,
 			Kind:         int(columnKind),
-			Rows:         kBuffer.String(),
+			Rows:         string(jsonData),
 		}
 
 		if err := s.insertSurveyData(tx, row); err != nil {
