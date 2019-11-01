@@ -272,6 +272,120 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "YearIDs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/annual/2015",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"annual",
+						"2015"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "QuarterIDs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/quarterly/2015/Q1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"quarterly",
+						"2015",
+						"Q1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "MonthIDs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/monthly/2014/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"monthly",
+						"2014",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "NIIDs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/monthly/2014/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"monthly",
+						"2014",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GBIDs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/monthly/2014/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"monthly",
+						"2014",
+						"1"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"protocolProfileBehavior": {}

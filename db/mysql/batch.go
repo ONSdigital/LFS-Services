@@ -11,7 +11,7 @@ import (
 var batchTable string
 var gbBatchTable string
 var niBatchTable string
-var quartleryBatchTable string
+var quarterlyBatchTable string
 var annualBatchTable string
 
 func init() {
@@ -19,10 +19,26 @@ func init() {
 	if batchTable == "" {
 		panic("monthly batch table configuration not set")
 	}
+
 	gbBatchTable = config.Config.Database.GbBatchTable
+	if gbBatchTable == "" {
+		panic("gb batch table configuration not set")
+	}
+
 	niBatchTable = config.Config.Database.NiBatchTable
-	quartleryBatchTable = config.Config.Database.QuarterlyBatchTable
+	if niBatchTable == "" {
+		panic("ni batch table configuration not set")
+	}
+
+	quarterlyBatchTable = config.Config.Database.QuarterlyBatchTable
+	if quarterlyBatchTable == "" {
+		panic("quarterly batch table configuration not set")
+	}
+
 	annualBatchTable = config.Config.Database.AnnualBatchTable
+	if annualBatchTable == "" {
+		panic("annual batch table configuration not set")
+	}
 }
 
 func (s MySQL) MonthlyBatchExists(month, year int) bool {
@@ -74,7 +90,7 @@ func (s MySQL) AnnualBatchExists(year int) bool {
 }
 
 func (s MySQL) QuarterBatchExists(quarter, year int) bool {
-	col := s.DB.Collection(quartleryBatchTable)
+	col := s.DB.Collection(quarterlyBatchTable)
 	res := col.Find(db.Cond{"quarter": quarter, "year": year})
 
 	type R struct {
@@ -160,7 +176,7 @@ func (s MySQL) ValidateMonthsForAnnualBatch(year int) bool {
 }
 
 func (s MySQL) ValidateQuartersForAnnualBatch(year int) bool {
-	col := s.DB.Collection(quartleryBatchTable)
+	col := s.DB.Collection(quarterlyBatchTable)
 	res := col.Find(db.Cond{"year": year, "status": 4})
 
 	total, err := res.Count()
@@ -272,7 +288,7 @@ func (s MySQL) CreateQuarterlyBatch(batch types.QuarterlyBatch) error {
 	}
 
 	// Insert into quarterly_batch
-	b := tx.Collection(quartleryBatchTable)
+	b := tx.Collection(quarterlyBatchTable)
 	_, err = b.Insert(batch)
 	if err != nil {
 		log.Error().
@@ -373,7 +389,7 @@ func (s MySQL) UpdateNIMonthlyStatus(week, month, status int) error {
 	if err := res.Update(result); err != nil {
 		log.Debug().
 			Int("week", week).
-			Int("year", month).
+			Int("month", month).
 			Msg("NI batch update failed")
 		return err
 	}
