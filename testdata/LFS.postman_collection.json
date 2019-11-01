@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "44e31589-ff8f-49bf-bac9-d0a210a102e8",
+		"_postman_id": "82b16a81-45bb-46b1-8a52-331e51f7a04e",
 		"name": "LFS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -105,8 +105,7 @@
 						"import",
 						"Address"
 					]
-				},
-				"description": "Paul! Is this still required?"
+				}
 			},
 			"response": []
 		},
@@ -176,7 +175,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/batches/monthly/2014/2",
+					"raw": "http://localhost:8000/batches/2014/05",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -184,9 +183,8 @@
 					"port": "8000",
 					"path": [
 						"batches",
-						"monthly",
 						"2014",
-						"2"
+						"05"
 					]
 				}
 			},
@@ -322,52 +320,6 @@
 		},
 		{
 			"name": "MonthIDs",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8000/batches/display/monthly/2014/1",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8000",
-					"path": [
-						"batches",
-						"display",
-						"monthly",
-						"2014",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "NIIDs",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:8000/batches/display/monthly/2014/1",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8000",
-					"path": [
-						"batches",
-						"display",
-						"monthly",
-						"2014",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "GBIDs",
 			"request": {
 				"method": "GET",
 				"header": [],

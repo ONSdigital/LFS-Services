@@ -238,7 +238,7 @@ func (s MySQL) CreateMonthlyBatch(batch types.MonthlyBatch) error {
 	}
 
 	// get week number - if % 3 then 5 weeks else 4
-	weekNo := 0
+	weekNo := 1
 	for i := 1; i < batch.Month; i++ {
 		if i%3 == 0 {
 			weekNo = weekNo + 5
