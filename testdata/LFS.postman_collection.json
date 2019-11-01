@@ -105,7 +105,8 @@
 						"import",
 						"Address"
 					]
-				}
+				},
+				"description": "Paul! Is this still required?"
 			},
 			"response": []
 		},
@@ -175,7 +176,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/batches/2014/05",
+					"raw": "http://localhost:8000/batches/monthly/2014/2",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -183,8 +184,9 @@
 					"port": "8000",
 					"path": [
 						"batches",
+						"monthly",
 						"2014",
-						"05"
+						"2"
 					]
 				}
 			},
