@@ -3,7 +3,7 @@ package validate
 import (
 	"fmt"
 	"math"
-	"services/dataset"
+	"strconv"
 	"time"
 )
 
@@ -19,8 +19,8 @@ type SurveyValidation struct {
 	Origin SurveyType
 }
 
-func NewSurveyValidation(dataset *dataset.Dataset, origin SurveyType) SurveyValidation {
-	return SurveyValidation{Validator: Validator{dataset}, Origin: origin}
+func NewSurveyValidation(origin SurveyType, headers *[]string, data *[][]string) SurveyValidation {
+	return SurveyValidation{Validator: Validator{headers, data}, Origin: origin}
 }
 
 type Val struct {
@@ -41,7 +41,7 @@ func (sf SurveyValidation) Validate(period, year int) (ValidationResponse, error
 
 }
 
-var columnsToCheck = []string{"REFDTE", "PCODE", "QUOTA", "WEEK", "W1YR", "QRTR", "ADD", "WAVFND", "HHLD", "PERSNO"}
+var columnsToCheck = []string{"RefDte", "PCode", "Quota", "Week", "W1Yr", "Qrtr", "Addr", "WavFnd", "Hhld", "PersNo"}
 
 /*
 Check if any rows in the list of columns to check are 'missing' where missing is defined as a NaN
@@ -51,7 +51,7 @@ func (sf SurveyValidation) validateMissingValues() (ValidationResponse, error) {
 	for _, v := range columnsToCheck {
 
 		floatCheck := func() (ValidationResponse, error) {
-			rows, err := sf.dataset.GetRowsAsDouble(v)
+			rows, err := sf.GetRowsAsDouble(v)
 			if err != nil {
 				return ValidationResponse{
 					ValidationResult: ValidationFailed,
@@ -73,7 +73,7 @@ func (sf SurveyValidation) validateMissingValues() (ValidationResponse, error) {
 		}
 
 		stringCheck := func() (ValidationResponse, error) {
-			rows, err := sf.dataset.GetRowsAsString(v)
+			rows, err := sf.GetRowsAsString(v)
 			if err != nil {
 				return ValidationResponse{
 					ValidationResult: ValidationFailed,
@@ -121,7 +121,7 @@ and a given time on a given date. To get the actual date from this we need to:
 
 */
 func (sf SurveyValidation) validateREFDTE(period, year int) (ValidationResponse, error) {
-	rows, err := sf.dataset.GetRowsAsDouble("REFDTE")
+	rows, err := sf.GetRowsAsDouble("RefDte")
 	if err != nil {
 		return ValidationResponse{
 			ValidationResult: ValidationFailed,
@@ -195,4 +195,57 @@ func (sf SurveyValidation) validateREFDTE(period, year int) (ValidationResponse,
 		ValidationResult: ValidationSuccessful,
 		ErrorMessage:     "",
 	}, nil
+}
+
+func (sf SurveyValidation) GetRowsAsDouble(colName string) ([]float64, error) {
+	var res []float64
+
+	findRow := func() (int, bool) {
+		for i, col := range *sf.Headers {
+			if col == colName {
+				return i, true
+			}
+		}
+		return 0, false
+	}
+
+	a, ok := findRow()
+	if !ok {
+		return nil, fmt.Errorf("cannot find column %s", colName)
+	}
+
+	for _, b := range *sf.Rows {
+		elem := b[a]
+		val, err := strconv.ParseFloat(elem, 64)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, val)
+	}
+
+	return res, nil
+}
+
+func (sf SurveyValidation) GetRowsAsString(colName string) ([]string, error) {
+	var res []string
+
+	findRow := func() (int, bool) {
+		for i, col := range *sf.Headers {
+			if col == colName {
+				return i, true
+			}
+		}
+		return 0, false
+	}
+
+	a, ok := findRow()
+	if !ok {
+		return nil, fmt.Errorf("cannot find column %s", colName)
+	}
+
+	for _, b := range *sf.Rows {
+		res = append(res, b[a])
+	}
+
+	return res, nil
 }

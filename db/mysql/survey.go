@@ -45,7 +45,7 @@ func (s MySQL) DeleteSurveyData(name string) (bool, error) {
 	return true, nil
 }
 
-func (s MySQL) insertSurveyData(tx sqlbuilder.Tx, survey types.Survey) error {
+func (s MySQL) insertSurveyData(tx sqlbuilder.Tx, survey types.SurveyRow) error {
 
 	col := tx.Collection(surveyTable)
 	_, err := col.Insert(survey)
@@ -57,82 +57,82 @@ func (s MySQL) insertSurveyData(tx sqlbuilder.Tx, survey types.Survey) error {
 }
 
 func (s MySQL) UnpersistSurveyDataset(tableName string) (dataset.Dataset, error) {
-	d, err := dataset.NewDataset(tableName)
-
-	startTime := time.Now()
-	log.Info().Msg("starting unpersist")
-
-	if err != nil {
-		log.Error().
-			Err(err).
-			Str("methodName", "UnpersistSurveyDataset").
-			Msg("Cannot create a new DataSet")
-		return dataset.Dataset{}, fmt.Errorf("cannot create a new DataSet: %s", err)
-	}
-
-	log.Info().Msg("starting unpersist into Dataset")
-
-	req := s.DB.Collection(surveyTable).Find().
-		Where("file_name = '" + tableName + "'").
-		OrderBy("column_number")
-
-	var column types.Survey
-	for req.Next(&column) {
-		a := strings.Split(column.Rows, ",")
-		s := make([]interface{}, len(a))
-		for i, v := range a {
-			switch reflect.Kind(column.Kind) {
-			case reflect.String:
-				s[i] = v
-			case reflect.Int8, reflect.Uint8:
-				s[i], err = strconv.ParseInt(v, 10, 8)
-				if err != nil {
-					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on int8 - possible corruption")
-				}
-			case reflect.Int, reflect.Int32, reflect.Uint32:
-				s[i], err = strconv.ParseInt(v, 10, 32)
-				if err != nil {
-					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on int32 - possible corruption")
-				}
-			case reflect.Int64, reflect.Uint64:
-				s[i], err = strconv.ParseInt(v, 10, 64)
-				if err != nil {
-					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on int64 - possible corruption")
-				}
-			case reflect.Float32:
-				s[i], err = strconv.ParseFloat(v, 32)
-				if err != nil {
-					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on float32 - possible corruption")
-				}
-			case reflect.Float64:
-				s[i], err = strconv.ParseFloat(v, 64)
-				if err != nil {
-					return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on float64 - possible corruption")
-				}
-			default:
-				log.Error().
-					Err(err).
-					Str("methodName", "UnpersistSurveyDataset").
-					Str("type", string(reflect.Kind(column.Kind))).
-					Msg("Unknown type - possible corruption")
-				return dataset.Dataset{}, fmt.Errorf("unknown type - possible corruption")
-			}
-		}
-		col := dataset.Column{
-			ColNo: column.ColumnNumber,
-			Kind:  reflect.Kind(column.Kind),
-			Rows:  s,
-		}
-		d.Columns[column.ColumnName] = col
-		d.ColumnCount++
-		d.RowCount = len(s)
-	}
-
-	log.Debug().
-		Err(err).
-		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Data unpersisted")
-	return d, nil
+	//d, err := dataset.NewDataset(tableName)
+	//
+	//startTime := time.Now()
+	//log.Info().Msg("starting unpersist")
+	//
+	//if err != nil {
+	//	log.Error().
+	//		Err(err).
+	//		Str("methodName", "UnpersistSurveyDataset").
+	//		Msg("Cannot create a new DataSet")
+	//	return dataset.Dataset{}, fmt.Errorf("cannot create a new DataSet: %s", err)
+	//}
+	//
+	//log.Info().Msg("starting unpersist into Dataset")
+	//
+	//req := s.DB.Collection(surveyTable).Find().
+	//	Where("file_name = '" + tableName + "'").
+	//	OrderBy("column_number")
+	//
+	//var column types.SurveyRow
+	//for req.Next(&column) {
+	//	a := strings.Split(column.Rows, ",")
+	//	s := make([]interface{}, len(a))
+	//	for i, v := range a {
+	//		switch reflect.Kind(column.Kind) {
+	//		case reflect.String:
+	//			s[i] = v
+	//		case reflect.Int8, reflect.Uint8:
+	//			s[i], err = strconv.ParseInt(v, 10, 8)
+	//			if err != nil {
+	//				return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on int8 - possible corruption")
+	//			}
+	//		case reflect.Int, reflect.Int32, reflect.Uint32:
+	//			s[i], err = strconv.ParseInt(v, 10, 32)
+	//			if err != nil {
+	//				return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on int32 - possible corruption")
+	//			}
+	//		case reflect.Int64, reflect.Uint64:
+	//			s[i], err = strconv.ParseInt(v, 10, 64)
+	//			if err != nil {
+	//				return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on int64 - possible corruption")
+	//			}
+	//		case reflect.Float32:
+	//			s[i], err = strconv.ParseFloat(v, 32)
+	//			if err != nil {
+	//				return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on float32 - possible corruption")
+	//			}
+	//		case reflect.Float64:
+	//			s[i], err = strconv.ParseFloat(v, 64)
+	//			if err != nil {
+	//				return dataset.Dataset{}, fmt.Errorf(" -> UnpersistSurveyDataset: unpersist error on float64 - possible corruption")
+	//			}
+	//		default:
+	//			log.Error().
+	//				Err(err).
+	//				Str("methodName", "UnpersistSurveyDataset").
+	//				Str("type", string(reflect.Kind(column.Kind))).
+	//				Msg("Unknown type - possible corruption")
+	//			return dataset.Dataset{}, fmt.Errorf("unknown type - possible corruption")
+	//		}
+	//	}
+	//	col := dataset.Column{
+	//		ColNo: column.ColumnNumber,
+	//		Kind:  reflect.Kind(column.Kind),
+	//		Rows:  s,
+	//	}
+	//	d.Columns[column.ColumnName] = col
+	//	d.ColumnCount++
+	//	d.RowCount = len(s)
+	//}
+	//
+	//log.Debug().
+	//	Err(err).
+	//	Str("elapsedTime", util.FmtDuration(startTime)).
+	//	Msg("Data unpersisted")
+	return dataset.Dataset{}, nil
 }
 
 func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error {
@@ -158,13 +158,14 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error 
 	}
 
 	type record struct {
-		Value interface{} `json:"v"`
+		Name    []interface{} `json:"name"`
+		Records []interface{} `json:"value"`
 	}
 
-	for colName, column := range d.Columns {
+	for _, column := range d.Columns {
 		kBuffer.Reset()
 
-		records := make([]record, d.RowCount)
+		records := record{Records: make([]interface{}, d.RowCount)}
 
 		var i = 0
 		columnKind := column.Kind
@@ -174,31 +175,31 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error 
 				if v == "NULL" {
 					v = nil
 				}
-				records[k] = record{Value: v}
+				records.Records[k] = v
 
 			case reflect.Int8, reflect.Uint8:
-				records[k] = record{Value: v}
+				records.Records[k] = v
 
 			case reflect.Int, reflect.Int32, reflect.Uint32:
-				records[k] = record{Value: v}
+				records.Records[k] = v
 
 			case reflect.Int64, reflect.Uint64:
-				records[k] = record{Value: v}
+				records.Records[k] = v
 
 			case reflect.Float32:
 				num := v.(float64)
 				if math.IsNaN(num) {
-					records[k] = record{Value: nil}
+					records.Records[k] = nil
 				} else {
-					records[k] = record{Value: v}
+					records.Records[k] = v
 				}
 
 			case reflect.Float64:
 				num := v.(float64)
 				if math.IsNaN(num) {
-					records[k] = record{Value: nil}
+					records.Records[k] = nil
 				} else {
-					records[k] = record{Value: v}
+					records.Records[k] = v
 				}
 
 			default:
@@ -212,21 +213,17 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error 
 			i++
 		}
 
-		jsonData, err := json.Marshal(records)
+		_, err := json.Marshal(records)
 		if err != nil {
 			return fmt.Errorf("cannot marshal json, error: %s", err)
 		}
-		row := types.Survey{
-			Id:           vo.Id,
-			FileName:     vo.FileName,
-			FileSource:   vo.FileSource,
-			Week:         vo.Week,
-			Month:        vo.Month,
-			Year:         vo.Year,
-			ColumnName:   colName,
-			ColumnNumber: column.ColNo,
-			Kind:         int(columnKind),
-			Rows:         string(jsonData),
+		row := types.SurveyRow{
+			Id:         vo.Id,
+			FileName:   vo.FileName,
+			FileSource: vo.FileSource,
+			Week:       vo.Week,
+			Month:      vo.Month,
+			Year:       vo.Year,
 		}
 
 		if err := s.insertSurveyData(tx, row); err != nil {
@@ -307,5 +304,163 @@ func (s MySQL) insertAudit(vo types.SurveyVO, status int, message string) error 
 			Msg("AuditFileUpload failed")
 		return fmt.Errorf("AuditFileUpload, error: %s", err)
 	}
+	return nil
+}
+
+func (s MySQL) PersistSurvey(rows [][]string, vo types.SurveyVO, filter types.Filter) error {
+
+	log.Debug().Msg("Starting persistence into DB")
+
+	_, err := s.DeleteSurveyData(vo.FileName)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("Delete existing survey data failed")
+		return fmt.Errorf("delete existing survey data failed, error: %s", err)
+	}
+
+	tx, err := s.DB.NewTx(nil)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("Start transaction failed")
+		return fmt.Errorf("cannot start a transaction, error: %s", err)
+	}
+
+	type Column struct {
+		Name  string
+		Skip  bool
+		ColNo int
+		Kind  reflect.Kind
+	}
+
+	headers := rows[0]
+	body := rows[1:]
+
+	out := types.SurveyInput{}
+	columns := make([]Column, len(headers))
+
+	t1 := reflect.TypeOf(out)
+
+	for i := 0; i < t1.NumField(); i++ {
+		a := t1.Field(i)
+		col := Column{}
+		// skip columns that are marked as being dropped
+		if filter.DropColumn(strings.ToUpper(a.Name)) {
+			col.Skip = true
+			continue
+		}
+		col.Skip = false
+		col.Kind = a.Type.Kind()
+		col.Name = a.Name
+		col.ColNo = i
+		columns[i] = col
+
+	}
+
+	var kBuffer bytes.Buffer
+
+	for _, v := range body {
+		kBuffer.Reset()
+		kBuffer.WriteString("{")
+
+		for col_no, val := range v {
+
+			if columns[col_no].Skip {
+				continue
+			}
+
+			kBuffer.WriteString("\"" + columns[col_no].Name + "\":")
+
+			columnKind := columns[col_no].Kind
+			switch columnKind {
+			case reflect.String:
+				if val == "NULL" || val == "" {
+					val = "null"
+					kBuffer.WriteString(val)
+				} else {
+					kBuffer.WriteString("\"")
+					kBuffer.WriteString(jsonEscape(val))
+					kBuffer.WriteString("\"")
+				}
+
+			case reflect.Int8, reflect.Uint8, reflect.Int, reflect.Int32, reflect.Uint32, reflect.Int64, reflect.Uint64:
+				kBuffer.WriteString(val)
+
+			case reflect.Float32, reflect.Float64:
+				if val == "" || val == "NULL" {
+					val = "0.0"
+				}
+				f, err := strconv.ParseFloat(val, 64)
+				if err != nil {
+					log.Error().
+						Str("methodName", "PersistSurveyDataset").
+						Int("type", int(columnKind)).
+						Msg("field is not a float")
+					return fmt.Errorf("field is not a float")
+				}
+				if math.IsNaN(f) {
+					kBuffer.WriteString("null")
+				} else {
+					kBuffer.WriteString(val)
+				}
+
+			default:
+				log.Error().
+					Str("methodName", "PersistSurveyDataset").
+					Int("type", int(columnKind)).
+					Msg("Unknown type - possible corruption or structure does not map to file")
+				return fmt.Errorf("unknown type - possible corruption or structure does not map to file")
+			}
+
+			if col_no != len(v)-1 {
+				kBuffer.WriteString(",")
+			} else {
+				kBuffer.WriteString("}")
+			}
+		}
+
+		row := types.SurveyRow{
+			Id:         vo.Id,
+			FileName:   vo.FileName,
+			FileSource: vo.FileSource,
+			Week:       vo.Week,
+			Month:      vo.Month,
+			Year:       vo.Year,
+			Columns:    kBuffer.String(),
+		}
+
+		if err := s.insertSurveyDataV1(tx, row); err != nil {
+			return fmt.Errorf("cannot insert survey row, error: %s", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Error().
+			Err(err).
+			Msg("Commit transaction failed")
+		return fmt.Errorf("commit failed, error: %s", err)
+	}
+
+	return nil
+}
+
+func jsonEscape(i string) string {
+	b, err := json.Marshal(i)
+	if err != nil {
+		panic(err)
+	}
+	s := string(b)
+	return s[1 : len(s)-1]
+}
+
+func (s MySQL) insertSurveyDataV1(tx sqlbuilder.Tx, survey types.SurveyRow) error {
+
+	col := tx.Collection(surveyTable)
+	_, err := col.Insert(survey)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

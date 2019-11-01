@@ -25,17 +25,14 @@ type SurveyVO struct {
 	NumObLoaded  int
 }
 
-type Survey struct {
-	Id           int        `db:"id"`
-	FileName     string     `db:"file_name"`
-	FileSource   FileSource `db:"file_source"`
-	Week         int        `db:"week"`
-	Month        int        `db:"month"`
-	Year         int        `db:"year"`
-	ColumnName   string     `db:"column_name"`
-	ColumnNumber int        `db:"column_number"`
-	Kind         int        `db:"kind"`
-	Rows         string     `db:"column_rows"`
+type SurveyRow struct {
+	Id         int        `db:"id"`
+	FileName   string     `db:"file_name"`
+	FileSource FileSource `db:"file_source"`
+	Week       int        `db:"week"`
+	Month      int        `db:"month"`
+	Year       int        `db:"year"`
+	Columns    string     `db:"columns"`
 }
 
 type SurveyInput struct {
@@ -1814,4 +1811,5 @@ type SurveyInput struct {
 	Urindew_new   string  `spss:"urindew_new"`
 	Urindsc_new   string  `spss:"urindsc_new"`
 	Urind         string  `spss:"urind"`
+	Livwth        float64 `spss:"livwth"`
 }

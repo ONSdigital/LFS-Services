@@ -43,6 +43,7 @@ type Persistence interface {
 	Close()
 
 	// Import
+	PersistSurvey(records [][]string, vo types.SurveyVO, filter types.Filter) error
 	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
 	PersistAddressDataset(headers []string, rows [][]string, status *types.WSMessage) error
 	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)

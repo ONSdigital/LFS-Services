@@ -3,7 +3,6 @@ package filter
 import (
 	"github.com/rs/zerolog/log"
 	"math"
-	"services/dataset"
 	"services/types"
 	"services/util"
 	"time"
@@ -13,28 +12,28 @@ type NISurveyFilter struct {
 	UKFilter
 }
 
-func NewNISurveyFilter(dataset *dataset.Dataset) types.Filter {
-	return NISurveyFilter{UKFilter{BaseFilter{dataset: dataset}}}
+func NewNISurveyFilter(audit *types.Audit) types.Filter {
+	return NISurveyFilter{UKFilter{BaseFilter{audit}}}
 }
 
 func (sf NISurveyFilter) SkipRow(row map[string]interface{}) bool {
 
 	sex, ok := row["SEX"].(float64)
 	if !ok || math.IsNaN(sex) {
-		sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
+		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
 		log.Debug().Msg("Dropping row because column SEX is missing")
 		return true
 	}
 	age, ok := row["AGE"].(float64)
 	if !ok || math.IsNaN(age) {
-		sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
+		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
 		log.Debug().Msg("Dropping row because column AGE is missing")
 		return true
 	}
 
 	houtcome, ok := row["HOUTCOME"].(float64)
 	if !ok || math.IsNaN(houtcome) {
-		sf.dataset.NumObLoaded = sf.dataset.NumObLoaded - 1
+		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
 		log.Debug().Msg("Dropping row because column HOUTCOME is missing")
 		return true
 	}
@@ -47,7 +46,7 @@ func (sf NISurveyFilter) SkipRow(row map[string]interface{}) bool {
 	return false
 }
 
-func (sf NISurveyFilter) AddVariables() (int, error) {
+func (sf NISurveyFilter) AddVariables(headers *[]string, data *[][]string) (int, error) {
 
 	startTime := time.Now()
 
@@ -56,11 +55,11 @@ func (sf NISurveyFilter) AddVariables() (int, error) {
 		Timestamp().
 		Msg("Start adding variables")
 
-	if err := sf.addCASENO(); err != nil {
+	if err := sf.addCASENO(headers, data); err != nil {
 		return 0, err
 	}
 
-	if err := sf.addHSerial(); err != nil {
+	if err := sf.addHSerial(headers, data); err != nil {
 		return 0, err
 	}
 

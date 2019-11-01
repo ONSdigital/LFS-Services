@@ -3,7 +3,7 @@ package filter
 import (
 	"github.com/rs/zerolog/log"
 	conf "services/config"
-	"services/dataset"
+	"services/types"
 )
 
 var dropColumns = conf.Config.DropColumns.Survey
@@ -22,7 +22,7 @@ func init() {
 }
 
 type BaseFilter struct {
-	dataset *dataset.Dataset
+	Audit *types.Audit
 }
 
 /*
@@ -34,7 +34,7 @@ func (bf BaseFilter) DropColumn(name string) bool {
 			log.Debug().
 				Str("columnName", name).
 				Msg("Dropping column")
-			bf.dataset.NumVarLoaded = bf.dataset.NumVarLoaded - 1
+			bf.Audit.NumVarLoaded = bf.Audit.NumVarLoaded - 1
 			return true
 		}
 	}

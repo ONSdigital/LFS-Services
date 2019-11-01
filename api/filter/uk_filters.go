@@ -3,7 +3,6 @@ package filter
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"reflect"
 	"services/util"
 	"strconv"
 	"time"
@@ -19,53 +18,45 @@ func (sf UKFilter) findLocation(headers []string, column string) (int, error) {
 			return i, nil
 		}
 	}
-	return 0, fmt.Errorf("column %s not found in findLoaction()", column)
+	return 0, fmt.Errorf("column %s not found in findLocation()", column)
 }
 
-func (sf UKFilter) addHSerial() error {
-	column, err := sf.dataset.AddColumn("HSERIAL", reflect.Int64)
-	if err != nil {
-		return err
-	}
-
-	startAllrows := time.Now()
-	header, items := sf.dataset.GetAllRows()
-	log.Debug().
-		Str("elapsedTime", util.FmtDuration(startAllrows)).
-		Msg("Get all rows")
+func (sf UKFilter) addHSerial(header *[]string, data *[][]string) error {
+	*header = append(*header, "HSERIAL")
 
 	// get indexes of items we are interested in for the calculation
-	quotaInx, err := sf.findLocation(header, "QUOTA")
+	quotaInx, err := sf.findLocation(*header, "Quota")
 	if err != nil {
 		return err
 	}
-	weekInx, err := sf.findLocation(header, "WEEK")
+	weekInx, err := sf.findLocation(*header, "Week")
 	if err != nil {
 		return err
 	}
-	w1yrInx, err := sf.findLocation(header, "W1YR")
+	w1yrInx, err := sf.findLocation(*header, "W1Yr")
 	if err != nil {
 		return err
 	}
-	qrtrInx, err := sf.findLocation(header, "QRTR")
+	qrtrInx, err := sf.findLocation(*header, "Qrtr")
 	if err != nil {
 		return err
 	}
-	addrInx, err := sf.findLocation(header, "ADD")
+	addrInx, err := sf.findLocation(*header, "Addr")
 	if err != nil {
 		return err
 	}
-	wavfndInx, err := sf.findLocation(header, "WAVFND")
+	wavfndInx, err := sf.findLocation(*header, "WavFnd")
 	if err != nil {
 		return err
 	}
-	hhldInx, err := sf.findLocation(header, "HHLD")
+	hhldInx, err := sf.findLocation(*header, "Hhld")
 	if err != nil {
 		return err
 	}
 
-	for i := range column.Rows {
-		row := items[i]
+	for _, j := range *data {
+
+		var row = j
 
 		quota, err := strconv.ParseFloat(row[quotaInx], 64)
 		if err != nil {
@@ -104,61 +95,60 @@ func (sf UKFilter) addHSerial() error {
 
 		n := (quota * 1000000000) + (week * 10000000) + (w1yr * 1000000) +
 			(qrtr * 100000) + (addr * 1000) + (wavfnd * 100) + (hhld + 1)
-		column.Rows[i] = int64(n)
+
+		row = append(row, fmt.Sprintf("%f", int64(n)))
 	}
 
 	return nil
 }
 
-func (sf UKFilter) addCASENO() error {
-
-	column, err := sf.dataset.AddColumn("CASENO", reflect.Int64)
-	if err != nil {
-		return err
-	}
+func (sf UKFilter) addCASENO(header *[]string, data *[][]string) error {
 
 	startAllrows := time.Now()
-	header, items := sf.dataset.GetAllRows()
+
 	log.Debug().
 		Str("elapsedTime", util.FmtDuration(startAllrows)).
 		Msg("Get all rows")
 
+	*header = append(*header, "CaseNo")
+
 	// get indexes of items we are interested in for the calculation
-	quotaInx, err := sf.findLocation(header, "QUOTA")
+	quotaInx, err := sf.findLocation(*header, "Quota")
 	if err != nil {
 		return err
 	}
-	weekInx, err := sf.findLocation(header, "WEEK")
+	weekInx, err := sf.findLocation(*header, "Week")
 	if err != nil {
 		return err
 	}
-	w1yrInx, err := sf.findLocation(header, "W1YR")
+	w1yrInx, err := sf.findLocation(*header, "W1Yr")
 	if err != nil {
 		return err
 	}
-	qrtrInx, err := sf.findLocation(header, "QRTR")
+	qrtrInx, err := sf.findLocation(*header, "Qrtr")
 	if err != nil {
 		return err
 	}
-	addrInx, err := sf.findLocation(header, "ADD")
+	addrInx, err := sf.findLocation(*header, "Addr")
 	if err != nil {
 		return err
 	}
-	wavfndInx, err := sf.findLocation(header, "WAVFND")
+	wavfndInx, err := sf.findLocation(*header, "WavFnd")
 	if err != nil {
 		return err
 	}
-	hhldInx, err := sf.findLocation(header, "HHLD")
+	hhldInx, err := sf.findLocation(*header, "Hhld")
 	if err != nil {
 		return err
 	}
-	persnoInx, err := sf.findLocation(header, "PERSON")
+	persnoInx, err := sf.findLocation(*header, "PersNo")
 	if err != nil {
 		return err
 	}
 
-	for i := range column.Rows {
-		row := items[i]
+	for _, j := range *data {
+
+		var row = j
 
 		quota, err := strconv.ParseFloat(row[quotaInx], 64)
 		if err != nil {
@@ -202,7 +192,8 @@ func (sf UKFilter) addCASENO() error {
 
 		n := (quota * 100000000000) + (week * 1000000000) + (w1yr * 100000000) +
 			(qrtr * 10000000) + (addr * 100000) + (wavfnd * 10000) + (hhld * 100) + persno
-		column.Rows[i] = int64(n)
+
+		row = append(row, fmt.Sprintf("%f", int64(n)))
 	}
 
 	return nil
