@@ -365,7 +365,7 @@
 			"response": []
 		},
 		{
-			"name": "GBIDs Copy",
+			"name": "GBIDs",
 			"request": {
 				"method": "GET",
 				"header": [],
