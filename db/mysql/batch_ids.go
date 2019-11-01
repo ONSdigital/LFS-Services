@@ -8,12 +8,6 @@ import (
 	"upper.io/db.v3"
 )
 
-type DBId struct {
-	MySQL
-}
-
-//var surveyAuditTable string
-
 func init() {
 	batchTable = config.Config.Database.MonthlyBatchTable
 	if batchTable == "" {
