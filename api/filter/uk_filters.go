@@ -102,7 +102,7 @@ func (sf UKFilter) addHSerial(header *[]string, data *[][]string) error {
 	return nil
 }
 
-func (sf UKFilter) addCASENO(header *[]string, data *[][]string) error {
+func (sf UKFilter) addCaseno(header *[]string, data *[][]string) error {
 
 	startAllrows := time.Now()
 

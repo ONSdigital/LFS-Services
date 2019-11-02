@@ -55,7 +55,7 @@ func loadSav(in string, out interface{}) ([][]string, error) {
 func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, week, year, id int) error {
 	startTime := time.Now()
 
-	rows, err := loadSav(tmpfile, types.SurveyInput{})
+	rows, err := loadSav(tmpfile, types.GBSurveyInput{})
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 
 	var surveyFilter = filter.NewNISurveyFilter(&si.Audit)
 
-	rows, err := loadSav(tmpfile, types.SurveyInput{})
+	rows, err := loadSav(tmpfile, types.GBSurveyInput{})
 	if err != nil {
 		return err
 	}
@@ -264,7 +264,7 @@ func getSurveyStructure(rows [][]string, vo types.SurveyVO, filter types.Filter)
 	headers := rows[0]
 	body := rows[1:]
 
-	out := types.SurveyInput{}
+	out := types.GBSurveyInput{}
 	columns := make([]Column, len(headers))
 
 	t1 := reflect.TypeOf(out)

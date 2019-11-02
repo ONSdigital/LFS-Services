@@ -28,32 +28,32 @@ func (sf GBSurveyFilter) findLocation(headers []string, column string) (int, err
 
 func (sf GBSurveyFilter) SkipRow(row map[string]interface{}) bool {
 
-	sex, ok := row["SEX"].(float64)
+	sex, ok := row["Sex"].(float64)
 	if !ok || math.IsNaN(sex) {
 		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
 		//log.Debug().Msg("Dropping row because column SEX is missing")
 		return true
 	}
-	age, ok := row["AGE"].(float64)
+	age, ok := row["Age"].(float64)
 	if !ok || math.IsNaN(age) {
 		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
 		//log.Debug().Msg("Dropping row because column AGE is missing")
 		return true
 	}
-	indout, ok := row["INDOUT"].(float64)
+	indout, ok := row["IndOut"].(float64)
 	if !ok || indout == 5.0 {
 		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
 		//log.Debug().Msg("Dropping row because column INDOUT is == 5")
 		return true
 	}
 
-	HOut, ok := row["HOUT"].(float64)
+	HOut, ok := row["Hout"].(float64)
 	if !ok {
 		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
 		//log.Debug().Msg("Dropping row because column HOUT is not found")
 		return true
 	}
-	lstho, ok := row["LSTHO"].(float64)
+	lstho, ok := row["LstHO"].(float64)
 	if !ok {
 		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
 		//log.Debug().Msg("Dropping row because column ISTHO is not found")
@@ -87,7 +87,7 @@ func (sf GBSurveyFilter) AddVariables(headers *[]string, data *[][]string) (int,
 		Timestamp().
 		Msg("Start adding variable")
 
-	if err := sf.addCASENO(headers, data); err != nil {
+	if err := sf.addCaseno(headers, data); err != nil {
 		return 0, err
 	}
 

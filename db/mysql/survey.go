@@ -275,7 +275,7 @@ func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error 
 
 	log.Debug().
 		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("SurveyInput data persisted")
+		Msg("GBSurveyInput data persisted")
 
 	return nil
 }
@@ -337,7 +337,8 @@ func (s MySQL) PersistSurvey(rows [][]string, vo types.SurveyVO, filter types.Fi
 	headers := rows[0]
 	body := rows[1:]
 
-	out := types.SurveyInput{}
+	out := types.GBSurveyInput{}
+
 	columns := make([]Column, len(headers))
 
 	t1 := reflect.TypeOf(out)
@@ -355,7 +356,6 @@ func (s MySQL) PersistSurvey(rows [][]string, vo types.SurveyVO, filter types.Fi
 		col.Name = a.Name
 		col.ColNo = i
 		columns[i] = col
-
 	}
 
 	var kBuffer bytes.Buffer

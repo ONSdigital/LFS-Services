@@ -18,29 +18,28 @@ func NewNISurveyFilter(audit *types.Audit) types.Filter {
 
 func (sf NISurveyFilter) SkipRow(row map[string]interface{}) bool {
 
-	sex, ok := row["SEX"].(float64)
+	sex, ok := row["Sex"].(float64)
 	if !ok || math.IsNaN(sex) {
 		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column SEX is missing")
+		log.Debug().Msg("Dropping row because column Sex is missing")
 		return true
 	}
-	age, ok := row["AGE"].(float64)
+	age, ok := row["Age"].(float64)
 	if !ok || math.IsNaN(age) {
 		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column AGE is missing")
+		log.Debug().Msg("Dropping row because column Age is missing")
 		return true
 	}
 
-	houtcome, ok := row["HOUTCOME"].(float64)
+	houtcome, ok := row["Houtcome"].(float64)
 	if !ok || math.IsNaN(houtcome) {
 		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column HOUTCOME is missing")
+		log.Debug().Msg("Dropping row because column Houtcome is missing")
 		return true
 	}
 
 	if houtcome == 1.0 {
-		row["HOUTCOME"] = 6.0
-
+		row["Houtcome"] = 6.0
 	}
 
 	return false
@@ -51,11 +50,11 @@ func (sf NISurveyFilter) AddVariables(headers *[]string, data *[][]string) (int,
 	startTime := time.Now()
 
 	log.Debug().
-		Str("variable", "CASENO").
+		Str("variable", "CaseNo").
 		Timestamp().
 		Msg("Start adding variables")
 
-	if err := sf.addCASENO(headers, data); err != nil {
+	if err := sf.addCaseno(headers, data); err != nil {
 		return 0, err
 	}
 
@@ -64,7 +63,7 @@ func (sf NISurveyFilter) AddVariables(headers *[]string, data *[][]string) (int,
 	}
 
 	log.Debug().
-		Str("variable", "CASENO").
+		Str("variable", "CaseNo").
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Finished adding variables")
 
