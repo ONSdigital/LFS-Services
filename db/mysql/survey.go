@@ -337,6 +337,7 @@ func (s MySQL) PersistSurvey(rows [][]string, vo types.SurveyVO, filter types.Fi
 	headers := rows[0]
 	body := rows[1:]
 
+	// TODO: Pass in the type as it is different for NI
 	out := types.GBSurveyInput{}
 
 	columns := make([]Column, len(headers))
