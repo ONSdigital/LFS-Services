@@ -42,6 +42,11 @@ type Persistence interface {
 	Connect() error
 	Close()
 
+	// Dashboard
+	GetAnnualBatches() ([]types.Dashboard, error)
+	GetQuarterlyBatches() ([]types.Dashboard, error)
+	GetMonthlyBatches() ([]types.Dashboard, error)
+
 	// Survey
 	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
