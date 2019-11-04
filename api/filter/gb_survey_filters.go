@@ -38,7 +38,7 @@ func (sf GBSurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
 		return nil, err
 	}
 
-	hout, err := findPosition(header, "Hout")
+	hout, err := findPosition(header, "HOut")
 	if err != nil {
 		return nil, err
 	}
