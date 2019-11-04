@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"services/config"
 	"services/types"
+	"strconv"
 )
 
 func init() {
@@ -48,7 +49,7 @@ func (s MySQL) GetAnnualBatches() ([]types.Dashboard, error) {
 	// Error handling
 	if err != nil {
 		log.Debug().
-			Msg("Get Annual Batches: " + err.Error())
+			Msg("Get Annual Batches error: " + err.Error())
 		return nil, err
 	}
 
@@ -72,14 +73,15 @@ func (s MySQL) GetQuarterlyBatches() ([]types.Dashboard, error) {
 	res := dbQuarter.Find()
 	err := res.All(&quarterlyBatches)
 
-	for i := range quarterlyBatches {
+	for i, v := range quarterlyBatches {
 		quarterlyBatches[i].Type = "Quarterly"
+		quarterlyBatches[i].Period = "Q" + v.Period
 	}
 
 	// Error handling
 	if err != nil {
 		log.Debug().
-			Msg("Get Quarterly Batches: " + err.Error())
+			Msg("Get Quarterly Batches error: " + err.Error())
 		return nil, err
 	}
 
@@ -87,10 +89,14 @@ func (s MySQL) GetQuarterlyBatches() ([]types.Dashboard, error) {
 }
 
 func (s MySQL) GetMonthlyBatches() ([]types.Dashboard, error) {
-	// GB and NI Variables
+	// Variables
 	var monthlyBatches []types.Dashboard
+	type period struct {
+		Month int `db:"month" json:"month"`
+	}
+	var periods []period
 
-	// Get GB and NI tables
+	// Get monthly_batch table
 	db := s.DB.Collection(batchTable)
 
 	// Error handling
@@ -99,19 +105,26 @@ func (s MySQL) GetMonthlyBatches() ([]types.Dashboard, error) {
 		return nil, fmt.Errorf("table: %s does not exist", batchTable)
 	}
 
-	// Get GB and NI values
+	// Get values and assign
 	res := db.Find()
-	err := res.All(&monthlyBatches)
+	mthlyBatchesErr := res.All(&monthlyBatches)
+	periodsErr := res.All(&periods)
 
-	for i := range monthlyBatches {
+	for i, v := range periods[:] {
 		monthlyBatches[i].Type = "Monthly"
+		monthlyBatches[i].Period = strconv.Itoa(v.Month)
 	}
 
 	// Error handling
-	if err != nil {
+	if mthlyBatchesErr != nil {
 		log.Debug().
-			Msg("Get Monthly Batches : " + err.Error())
-		return nil, err
+			Msg("Get Monthly Batches error: " + mthlyBatchesErr.Error())
+		return nil, mthlyBatchesErr
+	}
+	if periodsErr != nil {
+		log.Debug().
+			Msg("Get periods error: " + periodsErr.Error())
+		return nil, periodsErr
 	}
 
 	return monthlyBatches, nil
