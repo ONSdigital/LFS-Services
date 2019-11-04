@@ -2,25 +2,22 @@ package filter
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"reflect"
 	"services/types"
-	"services/util"
 	"strconv"
-	"time"
 )
 
 type UKFilter struct {
 	BaseFilter
 }
 
-func findLocation(headers []string, column string) (int, error) {
+func findPosition(headers []string, column string) (int, error) {
 	for i, j := range headers {
 		if j == column {
 			return i, nil
 		}
 	}
-	return 0, fmt.Errorf("column %s not found in findLocation()", column)
+	return 0, fmt.Errorf("column %s not found", column)
 }
 
 func (sf UKFilter) addHSerial(data [][]string) (types.Column, error) {
@@ -30,31 +27,31 @@ func (sf UKFilter) addHSerial(data [][]string) (types.Column, error) {
 	header = append(header, "Hserial")
 
 	// get indexes of items we are interested in for the calculation
-	quotaInx, err := findLocation(header, "Quota")
+	quotaInx, err := findPosition(header, "Quota")
 	if err != nil {
 		return types.Column{}, err
 	}
-	weekInx, err := findLocation(header, "Week")
+	weekInx, err := findPosition(header, "Week")
 	if err != nil {
 		return types.Column{}, err
 	}
-	w1yrInx, err := findLocation(header, "W1Yr")
+	w1yrInx, err := findPosition(header, "W1Yr")
 	if err != nil {
 		return types.Column{}, err
 	}
-	qrtrInx, err := findLocation(header, "Qrtr")
+	qrtrInx, err := findPosition(header, "Qrtr")
 	if err != nil {
 		return types.Column{}, err
 	}
-	addrInx, err := findLocation(header, "Addr")
+	addrInx, err := findPosition(header, "Addr")
 	if err != nil {
 		return types.Column{}, err
 	}
-	wavfndInx, err := findLocation(header, "WavFnd")
+	wavfndInx, err := findPosition(header, "WavFnd")
 	if err != nil {
 		return types.Column{}, err
 	}
-	hhldInx, err := findLocation(header, "Hhld")
+	hhldInx, err := findPosition(header, "Hhld")
 	if err != nil {
 		return types.Column{}, err
 	}
@@ -119,44 +116,38 @@ func (sf UKFilter) addCaseno(data [][]string) (types.Column, error) {
 	header := data[0]
 	rows := data[1:]
 
-	startAllrows := time.Now()
-
-	log.Debug().
-		Str("elapsedTime", util.FmtDuration(startAllrows)).
-		Msg("Get all rows")
-
 	header = append(header, "CaseNo")
 
 	// get indexes of items we are interested in for the calculation
-	quotaInx, err := findLocation(header, "Quota")
+	quotaInx, err := findPosition(header, "Quota")
 	if err != nil {
 		return types.Column{}, err
 	}
-	weekInx, err := findLocation(header, "Week")
+	weekInx, err := findPosition(header, "Week")
 	if err != nil {
 		return types.Column{}, err
 	}
-	w1yrInx, err := findLocation(header, "W1Yr")
+	w1yrInx, err := findPosition(header, "W1Yr")
 	if err != nil {
 		return types.Column{}, err
 	}
-	qrtrInx, err := findLocation(header, "Qrtr")
+	qrtrInx, err := findPosition(header, "Qrtr")
 	if err != nil {
 		return types.Column{}, err
 	}
-	addrInx, err := findLocation(header, "Addr")
+	addrInx, err := findPosition(header, "Addr")
 	if err != nil {
 		return types.Column{}, err
 	}
-	wavfndInx, err := findLocation(header, "WavFnd")
+	wavfndInx, err := findPosition(header, "WavFnd")
 	if err != nil {
 		return types.Column{}, err
 	}
-	hhldInx, err := findLocation(header, "Hhld")
+	hhldInx, err := findPosition(header, "Hhld")
 	if err != nil {
 		return types.Column{}, err
 	}
-	persnoInx, err := findLocation(header, "PersNo")
+	persnoInx, err := findPosition(header, "PersNo")
 	if err != nil {
 		return types.Column{}, err
 	}

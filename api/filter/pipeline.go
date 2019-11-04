@@ -66,7 +66,12 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 		return nil, nil, fmt.Errorf(response.ErrorMessage)
 	}
 
-	// Rename!!
+	for k, v := range p.header() {
+		to, ok := p.filter.RenameColumns(v)
+		if ok {
+			p.header()[k] = to
+		}
+	}
 
 	newColumns, err := p.filter.AddVariables(p.data)
 	if err != nil {
@@ -95,17 +100,6 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 	}
 
 	columns = append(columns, newColumns...)
-
-	for k, v := range columns {
-		to, ok := p.filter.RenameColumns(k)
-		if ok {
-			m[to] = v
-		} else {
-			m[k] = v
-		}
-	}
-
-	d.Columns = m
 
 	p.data, err = p.filter.SkipRowsFilter(p.data)
 	if err != nil {

@@ -23,16 +23,16 @@ func (sf NISurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
 	rows := data[1:]
 
 	// get indexes of items we are interested in
-	sex, err := findLocation(header, "Sex")
+	sex, err := findPosition(header, "Sex")
 	if err != nil {
 		return nil, err
 	}
 
-	age, err := findLocation(header, "Age")
+	age, err := findPosition(header, "Age")
 	if err != nil {
 		return nil, err
 	}
-	houtcome, err := findLocation(header, "Houtcome")
+	houtcome, err := findPosition(header, "Houtcome")
 	if err != nil {
 		return nil, err
 	}

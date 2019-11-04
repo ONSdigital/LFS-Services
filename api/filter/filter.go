@@ -11,6 +11,7 @@ type Filter interface {
 	AddVariables(data [][]string) ([]types.Column, error)
 	GetAudit() *types.Audit
 	SkipRowsFilter(data [][]string) ([][]string, error)
+	RenameColumns(column string) (string, bool)
 }
 
 var dropColumns = conf.Config.DropColumns.Survey

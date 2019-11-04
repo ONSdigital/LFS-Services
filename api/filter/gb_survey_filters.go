@@ -23,27 +23,27 @@ func (sf GBSurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
 	rows := data[1:]
 
 	// get indexes of items we are interested in
-	sex, err := findLocation(header, "Sex")
+	sex, err := findPosition(header, "Sex")
 	if err != nil {
 		return nil, err
 	}
 
-	age, err := findLocation(header, "Age")
+	age, err := findPosition(header, "Age")
 	if err != nil {
 		return nil, err
 	}
 
-	indout, err := findLocation(header, "IndOut")
+	indout, err := findPosition(header, "IndOut")
 	if err != nil {
 		return nil, err
 	}
 
-	hout, err := findLocation(header, "Hout")
+	hout, err := findPosition(header, "Hout")
 	if err != nil {
 		return nil, err
 	}
 
-	lstho, err := findLocation(header, "LstHO")
+	lstho, err := findPosition(header, "LstHO")
 	if err != nil {
 		return nil, err
 	}
@@ -94,6 +94,7 @@ func (sf GBSurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
 			filteredRows = append(filteredRows, j)
 			continue
 		}
+
 		if (HOut == 37 && lstho == 11) ||
 			(HOut == 37 && lstho == 12) ||
 			(HOut == 37 && lstho == 20) ||
