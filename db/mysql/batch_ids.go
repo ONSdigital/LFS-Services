@@ -98,85 +98,57 @@ func (s MySQL) GetIdsByQuarter(year types.Year, quarter types.Quarter) ([]types.
 }
 
 func (s MySQL) GetIdsByMonth(year types.Year, month types.Month) ([]types.MonthID, error) {
-	// Variables
-	var monthID []types.MonthID
+	// GB and NI Variables
+	var gbMonthID []types.MonthID
+	var niMonthID []types.MonthID
 
-	// Get table
-	dbMonth := s.DB.Collection(batchTable)
-
-	// Error handling
-	if !dbMonth.Exists() {
-		log.Error().Str("table", batchTable).Msg("Table does not exist")
-		return nil, fmt.Errorf("table: %s does not exist", batchTable)
-	}
-
-	// Get values
-	res := dbMonth.Find(db.Cond{"year": year, "month": month})
-	err := res.All(&monthID)
-
-	// Error handling
-	if err != nil {
-		log.Debug().
-			Int("year", int(year)).
-			Msg("Get Monthly Batch IDs failed: " + err.Error())
-		return nil, err
-	}
-
-	return monthID, nil
-}
-
-func (s MySQL) GetNIIds(year types.Year, month types.Month) ([]types.NIID, error) {
-	// Variables
-	var niID []types.NIID
-
-	// Get table
-	dbNI := s.DB.Collection(niBatchTable)
-
-	// Error handling
-	if !dbNI.Exists() {
-		log.Error().Str("table", niBatchTable).Msg("Table does not exist")
-		return nil, fmt.Errorf("table: %s does not exist", niBatchTable)
-	}
-
-	// Get values
-	res := dbNI.Find(db.Cond{"year": year, "month": month})
-	err := res.All(&niID)
-
-	// Error handling
-	if err != nil {
-		log.Debug().
-			Int("year", int(year)).
-			Msg("Get NI Batch IDs failed: " + err.Error())
-		return nil, err
-	}
-
-	return niID, nil
-}
-
-func (s MySQL) GetGBIds(year types.Year, month types.Month, week types.Week) ([]types.GBID, error) {
-	// Variables
-	var gbID []types.GBID
-
-	// Get table
+	// Get GB and NI tables
 	dbGB := s.DB.Collection(gbBatchTable)
+	dbNI := s.DB.Collection(niBatchTable)
 
 	// Error handling
 	if !dbGB.Exists() {
 		log.Error().Str("table", gbBatchTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", gbBatchTable)
 	}
-
-	// Get values
-	res := dbGB.Find(db.Cond{"year": year, "month": month, "week": week})
-	err := res.All(&gbID)
-
-	// Error handling
-	if err != nil {
-		log.Debug().
-			Int("year", int(year)).
-			Msg("Get GB Batch IDs failed: " + err.Error())
-		return nil, err
+	if !dbNI.Exists() {
+		log.Error().Str("table", niBatchTable).Msg("Table does not exist")
+		return nil, fmt.Errorf("table: %s does not exist", niBatchTable)
 	}
 
-	return gbID, nil
+	// Get GB and NI values
+	gbRes := dbGB.Find(db.Cond{"year": year, "month": month}).OrderBy("week")
+	gbErr := gbRes.All(&gbMonthID)
+
+	niRes := dbNI.Find(db.Cond{"year": year, "month": month})
+	niErr := niRes.All(&niMonthID)
+
+	// Populate Location type
+	for i := range gbMonthID {
+		gbMonthID[i].Loc = "GB"
+	}
+	for i := range niMonthID {
+		niMonthID[i].Loc = "NI"
+	}
+
+	// Error handling
+	if gbErr != nil {
+		log.Debug().
+			Int("year", int(year)).
+			Msg("Get Monthly Batch IDs failed: " + gbErr.Error())
+		return nil, gbErr
+	}
+	if niErr != nil {
+		log.Debug().
+			Int("year", int(year)).
+			Msg("Get Monthly Batch IDs failed: " + niErr.Error())
+		return nil, niErr
+	}
+
+	// Combine and return results
+	for _, a := range niMonthID {
+		gbMonthID = append(gbMonthID, a)
+	}
+
+	return gbMonthID, nil
 }

@@ -16,24 +16,10 @@ type QuarterID struct {
 }
 
 type MonthID struct {
-	Id          int    `db:"id" json:"id"`
-	Month       int    `db:"month" json:"month"`
-	Year        int    `db:"year" json:"year"`
-	Status      int    `db:"status" json:"status"`
-	Description string `db:"description" json:"description"`
-}
-
-type NIID struct {
-	Id     int `db:"id" json:"id"`
-	Month  int `db:"month" json:"month"`
-	Year   int `db:"year" json:"year"`
-	Status int `db:"status" json:"status"`
-}
-
-type GBID struct {
-	Id     int `db:"id" json:"id"`
-	Month  int `db:"month" json:"month"`
-	Year   int `db:"year" json:"year"`
-	Week   int `db:"week" json:"week"`
-	Status int `db:"status" json:"status"`
+	Loc    string `json:"type"`
+	Id     int    `db:"id" json:"id"`
+	Year   int    `db:"year" json:"year"`
+	Month  int    `db:"month" json:"month"`
+	Week   int    `db:"week" json:"week"`
+	Status int    `db:"status" json:"status"`
 }

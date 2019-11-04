@@ -72,8 +72,6 @@ type Persistence interface {
 	GetIdsByYear(year types.Year) ([]types.YearID, error)
 	GetIdsByQuarter(year types.Year, quarter types.Quarter) ([]types.QuarterID, error)
 	GetIdsByMonth(year types.Year, quarter types.Month) ([]types.MonthID, error)
-	GetNIIds(year types.Year, quarter types.Month) ([]types.NIID, error)
-	GetGBIds(year types.Year, quarter types.Month, week types.Week) ([]types.GBID, error)
 
 	// Audits
 	GetAllAudits() ([]types.Audit, error)
