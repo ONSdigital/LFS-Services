@@ -96,6 +96,17 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 
 	columns = append(columns, newColumns...)
 
+	for k, v := range columns {
+		to, ok := p.filter.RenameColumns(k)
+		if ok {
+			m[to] = v
+		} else {
+			m[k] = v
+		}
+	}
+
+	d.Columns = m
+
 	p.data, err = p.filter.SkipRowsFilter(p.data)
 	if err != nil {
 		return nil, nil, err
