@@ -5,6 +5,7 @@ import (
 	"math"
 	"services/types"
 	"services/util"
+	"strconv"
 	"time"
 )
 
@@ -12,60 +13,112 @@ type NISurveyFilter struct {
 	UKFilter
 }
 
-func NewNISurveyFilter(audit *types.Audit) types.Filter {
+func NewNISurveyFilter(audit *types.Audit) Filter {
 	return NISurveyFilter{UKFilter{BaseFilter{audit}}}
 }
 
-func (sf NISurveyFilter) SkipRow(row map[string]interface{}) bool {
+func (sf NISurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
 
-	sex, ok := row["Sex"].(float64)
-	if !ok || math.IsNaN(sex) {
-		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column Sex is missing")
-		return true
-	}
-	age, ok := row["Age"].(float64)
-	if !ok || math.IsNaN(age) {
-		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column Age is missing")
-		return true
+	header := data[0]
+	rows := data[1:]
+
+	// get indexes of items we are interested in
+	sex, err := findLocation(header, "Sex")
+	if err != nil {
+		return nil, err
 	}
 
-	houtcome, ok := row["Houtcome"].(float64)
-	if !ok || math.IsNaN(houtcome) {
-		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because column Houtcome is missing")
-		return true
+	age, err := findLocation(header, "Age")
+	if err != nil {
+		return nil, err
+	}
+	houtcome, err := findLocation(header, "Houtcome")
+	if err != nil {
+		return nil, err
 	}
 
-	if houtcome == 1.0 {
-		row["Houtcome"] = 6.0
-	}
+	filteredRows := make([][]string, 0, 0)
+	filteredRows = append(filteredRows, header)
 
-	return false
+	for _, j := range rows {
+
+		var row = j
+
+		s, err := strconv.ParseFloat(row[sex], 64)
+		if err != nil {
+			log.Error().Msg("sex field is not a float, ignoring")
+			continue
+		}
+		if math.IsNaN(s) {
+			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
+			log.Debug().Msg("Dropping row because column Sex is missing")
+			continue
+		}
+
+		a, err := strconv.ParseFloat(row[age], 64)
+		if err != nil {
+			log.Error().Msg("age field is not a float, ignoring")
+			continue
+		}
+		if math.IsNaN(a) {
+			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
+			log.Debug().Msg("Dropping row because column Age is missing")
+			continue
+		}
+
+		h, err := strconv.ParseFloat(row[houtcome], 64)
+		if err != nil {
+			log.Error().Msg("age field is not a float, ignoring")
+			continue
+		}
+		if math.IsNaN(h) {
+			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
+			log.Debug().Msg("Dropping row because column Houtcome is missing")
+			continue
+		}
+		filteredRows = append(filteredRows, j)
+	}
+	return filteredRows, nil
 }
 
-func (sf NISurveyFilter) AddVariables(headers *[]string, data *[][]string) (int, error) {
-
+func (sf NISurveyFilter) AddVariables(data [][]string) ([]types.Column, error) {
 	startTime := time.Now()
 
 	log.Debug().
 		Str("variable", "CaseNo").
 		Timestamp().
-		Msg("Start adding variables")
+		Msg("Start adding variable")
 
-	if err := sf.addCaseno(headers, data); err != nil {
-		return 0, err
+	column, err := sf.addCaseno(data)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := sf.addHSerial(headers, data); err != nil {
-		return 0, err
-	}
+	columns := make([]types.Column, 0, 0)
 
 	log.Debug().
 		Str("variable", "CaseNo").
 		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Finished adding variables")
+		Msg("Finished adding variable")
 
-	return 2, nil
+	columns = append(columns, column)
+	startTime = time.Now()
+
+	log.Debug().
+		Str("variable", "HSerial").
+		Timestamp().
+		Msg("Start adding variable")
+
+	column, err = sf.addHSerial(data)
+	if err != nil {
+		return nil, err
+	}
+	columns = append(columns, column)
+
+	log.Debug().
+		Str("variable", "HSerial").
+		Str("elapsedTime", util.FmtDuration(startTime)).
+		Msg("Finished adding variable")
+
+	return columns, nil
 }

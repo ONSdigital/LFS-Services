@@ -6,6 +6,13 @@ import (
 	"services/types"
 )
 
+type Filter interface {
+	DropColumn(name string) bool
+	AddVariables(data [][]string) ([]types.Column, error)
+	GetAudit() *types.Audit
+	SkipRowsFilter(data [][]string) ([][]string, error)
+}
+
 var dropColumns = conf.Config.DropColumns.Survey
 var renameColumns map[string]string
 
@@ -23,6 +30,10 @@ func init() {
 
 type BaseFilter struct {
 	Audit *types.Audit
+}
+
+func (bf BaseFilter) GetAudit() *types.Audit {
+	return bf.Audit
 }
 
 /*

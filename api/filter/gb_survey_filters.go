@@ -1,11 +1,11 @@
 package filter
 
 import (
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"math"
 	"services/types"
 	"services/util"
+	"strconv"
 	"time"
 )
 
@@ -13,73 +13,105 @@ type GBSurveyFilter struct {
 	UKFilter
 }
 
-func NewGBSurveyFilter(audit *types.Audit) types.Filter {
+func NewGBSurveyFilter(audit *types.Audit) Filter {
 	return GBSurveyFilter{UKFilter{BaseFilter{audit}}}
 }
 
-func (sf GBSurveyFilter) findLocation(headers []string, column string) (int, error) {
-	for i, j := range headers {
-		if j == column {
-			return i, nil
+func (sf GBSurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
+
+	header := data[0]
+	rows := data[1:]
+
+	// get indexes of items we are interested in
+	sex, err := findLocation(header, "Sex")
+	if err != nil {
+		return nil, err
+	}
+
+	age, err := findLocation(header, "Age")
+	if err != nil {
+		return nil, err
+	}
+
+	indout, err := findLocation(header, "IndOut")
+	if err != nil {
+		return nil, err
+	}
+
+	hout, err := findLocation(header, "Hout")
+	if err != nil {
+		return nil, err
+	}
+
+	lstho, err := findLocation(header, "LstHO")
+	if err != nil {
+		return nil, err
+	}
+
+	filteredRows := make([][]string, 0, 0)
+	filteredRows = append(filteredRows, header)
+
+	for _, j := range rows {
+
+		var row = j
+
+		s, err := strconv.ParseFloat(row[sex], 64)
+		if err != nil || math.IsNaN(s) {
+			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
+			log.Debug().Msg("Dropping row because column SEX is missing")
+			continue
 		}
+
+		a, err := strconv.ParseFloat(row[age], 64)
+		if err != nil || math.IsNaN(a) {
+			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
+			log.Debug().Msg("Dropping row because column Age is missing")
+			continue
+		}
+
+		ind, err := strconv.ParseFloat(row[indout], 64)
+		if err != nil || ind == 5.0 {
+			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
+			log.Debug().Msg("Dropping row because column INDOUT is == 5 or a Nan")
+			continue
+		}
+
+		HOut, err := strconv.ParseFloat(row[hout], 64)
+		if err != nil {
+			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
+			log.Debug().Msg("Dropping row because column HOUT is not found")
+			continue
+		}
+
+		lstho, err := strconv.ParseFloat(row[lstho], 64)
+		if err != nil {
+			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
+			log.Debug().Msg("Dropping row because column ISTHO is not found")
+			continue
+		}
+
+		if HOut == 11 || HOut == 12 || HOut == 20 {
+			filteredRows = append(filteredRows, j)
+			continue
+		}
+		if (HOut == 37 && lstho == 11) ||
+			(HOut == 37 && lstho == 12) ||
+			(HOut == 37 && lstho == 20) ||
+			(HOut == 41 && lstho == 11) ||
+			(HOut == 41 && lstho == 12) ||
+			(HOut == 41 && lstho == 20) {
+			filteredRows = append(filteredRows, j)
+			continue
+		}
+
+		// skip all other rows
+		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
+		log.Debug().Msg("Dropping row because criteia not met")
 	}
-	return 0, fmt.Errorf("column %s not found in findLoaction()", column)
+	return filteredRows, nil
 }
 
-func (sf GBSurveyFilter) SkipRow(row map[string]interface{}) bool {
-
-	sex, ok := row["Sex"].(float64)
-	if !ok || math.IsNaN(sex) {
-		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		//log.Debug().Msg("Dropping row because column SEX is missing")
-		return true
-	}
-	age, ok := row["Age"].(float64)
-	if !ok || math.IsNaN(age) {
-		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		//log.Debug().Msg("Dropping row because column AGE is missing")
-		return true
-	}
-	indout, ok := row["IndOut"].(float64)
-	if !ok || indout == 5.0 {
-		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		//log.Debug().Msg("Dropping row because column INDOUT is == 5")
-		return true
-	}
-
-	HOut, ok := row["Hout"].(float64)
-	if !ok {
-		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		//log.Debug().Msg("Dropping row because column HOUT is not found")
-		return true
-	}
-	lstho, ok := row["LstHO"].(float64)
-	if !ok {
-		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		//log.Debug().Msg("Dropping row because column ISTHO is not found")
-		return true
-	}
-
-	if HOut == 11 || HOut == 12 || HOut == 20 {
-		return false
-	}
-	if (HOut == 37 && lstho == 11) ||
-		(HOut == 37 && lstho == 12) ||
-		(HOut == 37 && lstho == 20) ||
-		(HOut == 41 && lstho == 11) ||
-		(HOut == 41 && lstho == 12) ||
-		(HOut == 41 && lstho == 20) {
-		return false
-	}
-
-	// skip all other rows
-	sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-	//log.Debug().Msg("Dropping row because criteia not met")
-	return true
-}
-
-func (sf GBSurveyFilter) AddVariables(headers *[]string, data *[][]string) (int, error) {
-
+func (sf GBSurveyFilter) AddVariables(data [][]string) ([]types.Column, error) {
 	startTime := time.Now()
 
 	log.Debug().
@@ -87,15 +119,19 @@ func (sf GBSurveyFilter) AddVariables(headers *[]string, data *[][]string) (int,
 		Timestamp().
 		Msg("Start adding variable")
 
-	if err := sf.addCaseno(headers, data); err != nil {
-		return 0, err
+	column, err := sf.addCaseno(data)
+	if err != nil {
+		return nil, err
 	}
+
+	columns := make([]types.Column, 0, 0)
 
 	log.Debug().
 		Str("variable", "CaseNo").
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Finished adding variable")
 
+	columns = append(columns, column)
 	startTime = time.Now()
 
 	log.Debug().
@@ -103,14 +139,16 @@ func (sf GBSurveyFilter) AddVariables(headers *[]string, data *[][]string) (int,
 		Timestamp().
 		Msg("Start adding variable")
 
-	if err := sf.addHSerial(headers, data); err != nil {
-		return 0, err
+	column, err = sf.addHSerial(data)
+	if err != nil {
+		return nil, err
 	}
+	columns = append(columns, column)
 
 	log.Debug().
 		Str("variable", "HSerial").
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Finished adding variable")
 
-	return 2, nil
+	return columns, nil
 }

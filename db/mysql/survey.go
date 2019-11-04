@@ -10,9 +10,7 @@ import (
 	"services/config"
 	"services/dataset"
 	"services/types"
-	"services/util"
 	"strconv"
-	"strings"
 	"time"
 	"upper.io/db.v3"
 	"upper.io/db.v3/lib/sqlbuilder"
@@ -136,163 +134,23 @@ func (s MySQL) UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
 }
 
 func (s MySQL) PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error {
-	var kBuffer bytes.Buffer
-
-	startTime := time.Now()
-	log.Debug().Msg("Starting persistence into DB")
-
-	found, err := s.DeleteSurveyData(vo.FileName)
-	if err != nil {
-		log.Error().
-			Err(err).
-			Msg("Delete existing survey data failed")
-		return fmt.Errorf("delete existing survey data failed, error: %s", err)
-	}
-
-	tx, err := s.DB.NewTx(nil)
-	if err != nil {
-		log.Error().
-			Err(err).
-			Msg("Start transaction failed")
-		return fmt.Errorf("cannot start a transaction, error: %s", err)
-	}
-
-	type record struct {
-		Name    []interface{} `json:"name"`
-		Records []interface{} `json:"value"`
-	}
-
-	for _, column := range d.Columns {
-		kBuffer.Reset()
-
-		records := record{Records: make([]interface{}, d.RowCount)}
-
-		var i = 0
-		columnKind := column.Kind
-		for k, v := range column.Rows {
-			switch columnKind {
-			case reflect.String:
-				if v == "NULL" {
-					v = nil
-				}
-				records.Records[k] = v
-
-			case reflect.Int8, reflect.Uint8:
-				records.Records[k] = v
-
-			case reflect.Int, reflect.Int32, reflect.Uint32:
-				records.Records[k] = v
-
-			case reflect.Int64, reflect.Uint64:
-				records.Records[k] = v
-
-			case reflect.Float32:
-				num := v.(float64)
-				if math.IsNaN(num) {
-					records.Records[k] = nil
-				} else {
-					records.Records[k] = v
-				}
-
-			case reflect.Float64:
-				num := v.(float64)
-				if math.IsNaN(num) {
-					records.Records[k] = nil
-				} else {
-					records.Records[k] = v
-				}
-
-			default:
-				log.Error().
-					Str("methodName", "PersistSurveyDataset").
-					Int("type", int(columnKind)).
-					Msg("Unknown type - possible corruption")
-				return fmt.Errorf("unknown type - possible corruption")
-			}
-
-			i++
-		}
-
-		_, err := json.Marshal(records)
-		if err != nil {
-			return fmt.Errorf("cannot marshal json, error: %s", err)
-		}
-		row := types.SurveyRow{
-			Id:         vo.Id,
-			FileName:   vo.FileName,
-			FileSource: vo.FileSource,
-			Week:       vo.Week,
-			Month:      vo.Month,
-			Year:       vo.Year,
-		}
-
-		if err := s.insertSurveyData(tx, row); err != nil {
-			return fmt.Errorf("cannot insert survey row, error: %s", err)
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.Error().
-			Err(err).
-			Msg("Commit transaction failed")
-		return fmt.Errorf("commit failed, error: %s", err)
-	}
-
-	vo.NumObLoaded = d.NumObLoaded
-	vo.NumObFile = d.NumObFile
-	vo.NumVarLoaded = d.NumVarLoaded
-	vo.NumVarFile = d.NumVarFile
-
-	weekOrMonth := func() int {
-		if vo.FileSource == types.GBSource {
-			return vo.Week
-		}
-		return vo.Month
-	}()
-
-	var updateMonthlyStatus func(int, int, int) error
-	if vo.FileSource == types.GBSource {
-		updateMonthlyStatus = s.updateGBBatch
-	} else {
-		updateMonthlyStatus = s.updateNIBatch
-	}
-
-	if found {
-		if err := updateMonthlyStatus(weekOrMonth, vo.Year, types.FileReloaded); err != nil {
-			return err
-		}
-		if err := s.insertAudit(vo, types.FileReloaded, "File re-uploaded successfully"); err != nil {
-			return err
-		}
-	} else {
-		if err := updateMonthlyStatus(weekOrMonth, vo.Year, types.FileUploaded); err != nil {
-			return err
-		}
-		if err := s.insertAudit(vo, types.FileUploaded, "File uploaded successfully"); err != nil {
-			return err
-		}
-	}
-
-	log.Debug().
-		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("GBSurveyInput data persisted")
 
 	return nil
 }
 
 func (s MySQL) insertAudit(vo types.SurveyVO, status int, message string) error {
 	audit := types.Audit{
-		Id:            vo.Id,
+		Id:            vo.Audit.Id,
 		FileName:      surveyTable,
-		FileSource:    vo.FileSource,
-		Week:          vo.Week,
-		Month:         vo.Month,
-		Year:          vo.Year,
+		FileSource:    vo.Audit.FileSource,
+		Week:          vo.Audit.Week,
+		Month:         vo.Audit.Month,
+		Year:          vo.Audit.Year,
 		ReferenceDate: time.Now(),
-		NumVarFile:    vo.NumVarFile,
-		NumVarLoaded:  vo.NumVarLoaded,
-		NumObFile:     vo.NumObFile,
-		NumObLoaded:   vo.NumObLoaded,
+		NumVarFile:    vo.Audit.NumVarFile,
+		NumVarLoaded:  vo.Audit.NumVarLoaded,
+		NumObFile:     vo.Audit.NumObFile,
+		NumObLoaded:   vo.Audit.NumObLoaded,
 		Status:        status,
 		Message:       message,
 	}
@@ -307,11 +165,11 @@ func (s MySQL) insertAudit(vo types.SurveyVO, status int, message string) error 
 	return nil
 }
 
-func (s MySQL) PersistSurvey(rows [][]string, vo types.SurveyVO, filter types.Filter) error {
+func (s MySQL) PersistSurvey(vo types.SurveyVO) error {
 
 	log.Debug().Msg("Starting persistence into DB")
 
-	_, err := s.DeleteSurveyData(vo.FileName)
+	_, err := s.DeleteSurveyData(vo.Audit.FileName)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -327,37 +185,9 @@ func (s MySQL) PersistSurvey(rows [][]string, vo types.SurveyVO, filter types.Fi
 		return fmt.Errorf("cannot start a transaction, error: %s", err)
 	}
 
-	type Column struct {
-		Name  string
-		Skip  bool
-		ColNo int
-		Kind  reflect.Kind
-	}
+	body := vo.Records[1:]
 
-	headers := rows[0]
-	body := rows[1:]
-
-	// TODO: Pass in the type as it is different for NI
-	out := types.GBSurveyInput{}
-
-	columns := make([]Column, len(headers))
-
-	t1 := reflect.TypeOf(out)
-
-	for i := 0; i < t1.NumField(); i++ {
-		a := t1.Field(i)
-		col := Column{}
-		// skip columns that are marked as being dropped
-		if filter.DropColumn(strings.ToUpper(a.Name)) {
-			col.Skip = true
-			continue
-		}
-		col.Skip = false
-		col.Kind = a.Type.Kind()
-		col.Name = a.Name
-		col.ColNo = i
-		columns[i] = col
-	}
+	columns := vo.Columns
 
 	var kBuffer bytes.Buffer
 
@@ -422,12 +252,12 @@ func (s MySQL) PersistSurvey(rows [][]string, vo types.SurveyVO, filter types.Fi
 		}
 
 		row := types.SurveyRow{
-			Id:         vo.Id,
-			FileName:   vo.FileName,
-			FileSource: vo.FileSource,
-			Week:       vo.Week,
-			Month:      vo.Month,
-			Year:       vo.Year,
+			Id:         vo.Audit.Id,
+			FileName:   vo.Audit.FileName,
+			FileSource: vo.Audit.FileSource,
+			Week:       vo.Audit.Id,
+			Month:      vo.Audit.Month,
+			Year:       vo.Audit.Year,
 			Columns:    kBuffer.String(),
 		}
 
