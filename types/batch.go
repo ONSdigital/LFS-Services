@@ -1,7 +1,7 @@
 package types
 
 type MonthlyBatch struct {
-	Id          int    `db:"id"`
+	//Id          int    `db:"id"`
 	Year        int    `db:"year"`
 	Month       int    `db:"month"`
 	Status      int    `db:"status"`

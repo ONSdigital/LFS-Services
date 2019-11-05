@@ -66,6 +66,7 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 	si.Audit.Id = id
 	si.Audit.Year = year
 	si.Audit.Week = week
+	si.Audit.FileSource = types.GBSource
 
 	pipeline := filter.NewGBPipeLine(rows, &si.Audit)
 
@@ -85,7 +86,7 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 		Int("numVarFile", si.Audit.NumVarFile).
 		Int("numVarLoaded", si.Audit.NumVarLoaded).
 		Str("status", "Successful").
-		Msg("Filtering complete")
+		Msg("Pipeline complete")
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -143,6 +144,7 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 	si.Audit.Id = id
 	si.Audit.Year = year
 	si.Audit.Month = month
+	si.Audit.FileSource = types.NISource
 
 	pipeline := filter.NewGBPipeLine(rows, &si.Audit)
 

@@ -58,7 +58,7 @@ func (sf GBSurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
 		s, err := strconv.ParseFloat(row[sex], 64)
 		if err != nil || math.IsNaN(s) {
 			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-			log.Debug().Msg("Dropping row because column SEX is missing")
+			log.Debug().Msg("Dropping row because no SEX")
 			continue
 		}
 
@@ -107,7 +107,7 @@ func (sf GBSurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
 
 		// skip all other rows
 		sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-		log.Debug().Msg("Dropping row because criteia not met")
+		log.Debug().Msg("Dropping row because criteria not met")
 	}
 	return filteredRows, nil
 }

@@ -1,10 +1,18 @@
+drop table if exists addresses;
+drop table if exists users;
+drop table if exists export_definitions;
+drop table if exists annual_batch;
+drop table if exists quarterly_batch;
+drop table if exists survey;
+drop table if exists ni_batch_item;
+drop table if exists gb_batch_items;
+drop table if exists monthly_batch;
+drop table if exists survey_audit;
+drop table if exists status_values;
+
 create table addresses
 (
-    id                  integer generated always as identity
-        constraint addresses_pkey
-        primary key
-        constraint id_unique
-        unique,
+    id                  integer generated always as identity primary key,
     pcd7                varchar(7) not null,
     tlec99              varchar(3),
     elwa                numeric(38),
@@ -74,13 +82,12 @@ create table addresses
     combinedauthorities varchar(9) not null
 );
 
-alter table addresses owner to lfs;
+alter table addresses
+    owner to lfs;
 
 create table export_definitions
 (
-    variables       varchar(10) not null
-        constraint export_definitions_pkey
-        primary key,
+    variables       varchar(10) not null primary key,
     research        bit         not null,
     regional_client bit         not null,
     government      bit         not null,
@@ -89,121 +96,113 @@ create table export_definitions
     adhoc           bit         not null
 );
 
-alter table export_definitions owner to lfs;
+alter table export_definitions
+    owner to lfs;
 
 create table status_values
 (
-    id          integer      not null
-        constraint status_values_pkey
-        primary key
-        constraint status_values_id_uindex
-        unique,
+    id          integer primary key,
     description varchar(255) not null
 );
 
-alter table status_values owner to lfs;
+alter table status_values
+    owner to lfs;
+
+insert into status_values(id, description)
+values (0, 'Not Started');
+
+insert into status_values(id, description)
+values (1, 'File Uploaded');
+
+insert into status_values(id, description)
+values (2, 'File Reloaded');
+
+insert into status_values(id, description)
+values (3, 'Upload Failed');
 
 create table monthly_batch
 (
-    id          integer generated always as identity
-        constraint monthly_batch_pkey
-        primary key
-        constraint idf_unique
-        unique,
+    id          integer generated always as identity primary key,
     month       integer default 0 not null,
     year        integer           not null,
-    status      integer default 0 not null
-        constraint monthly_batch_status_values_id_fk
-        references status_values,
-    description text
+    status      integer default 0 not null,
+    description text,
+    foreign key (status) references status_values (id)
 );
 
-alter table monthly_batch owner to lfs;
-
-create table annual_batch
-(
-    id          integer not null
-        constraint annual_batch_pkey
-        primary key,
-    year        integer,
-    status      integer,
-    description varchar(255)
-);
-
-alter table annual_batch owner to lfs;
+alter table monthly_batch
+    owner to lfs;
 
 create table ni_batch_item
 (
-    id     integer not null
-        constraint ni_batch_item_pkey
-        primary key
-        constraint ni_id_unique
-        unique
-        constraint monthly
-        references monthly_batch,
+    id     integer primary key,
     year   integer,
     month  integer,
-    status integer
-        constraint ni_batch_item_status_values_id_fk
-        references status_values
+    status integer,
+
+    foreign key (id) references monthly_batch (id),
+    foreign key (status) references status_values (id)
 );
 
-alter table ni_batch_item owner to lfs;
+alter table ni_batch_item
+    owner to lfs;
+
+create table annual_batch
+(
+    id          integer generated always as identity primary key,
+    year        integer null,
+    status      integer null,
+    description text    null,
+
+    foreign key (status) references status_values (id)
+);
 
 create table quarterly_batch
 (
-    id          integer generated always as identity
-        constraint quarterly_batch_pkey
-        primary key
-        constraint qb_to_mb
-        references monthly_batch,
+    id          integer generated always as identity primary key,
     quarter     integer,
     year        integer,
-    status      integer
-        constraint quarterly_batch_status_values_id_fk
-        references status_values,
-    description varchar(255)
+    status      integer,
+    description text,
+
+    foreign key (status) references status_values (id)
 );
 
-alter table quarterly_batch owner to lfs;
+alter table quarterly_batch
+    owner to lfs;
 
 create table gb_batch_items
 (
-    id     integer not null
-        constraint gb_batch_items_id_key
-        unique
-        constraint batch
-        references monthly_batch,
-    year   integer,
+    id     integer not null,
+    year   integer not null,
     month  integer,
     week   integer not null,
-    status integer
-        constraint gb_batch_items_status_values_id_fk
-        references status_values,
-    constraint gb_batch_items_pkey
-        primary key (week, id)
+    status integer,
+
+    primary key (week, id),
+    foreign key (id) references monthly_batch (id),
+    foreign key (status) references status_values (id)
 );
 
-alter table gb_batch_items owner to lfs;
+alter table gb_batch_items
+    owner to lfs;
 
 create table survey
 (
-    id          integer      not null
-        constraint gb_key
-        references gb_batch_items (id)
-        on delete cascade
-        constraint ni_key
-        references ni_batch_item
-        on delete cascade,
+    id          integer      not null,
     file_name   varchar(255) not null,
     file_source char(2),
     week        integer      not null,
     month       integer      not null,
     year        integer      not null,
-    columns     json         not null
+    columns     jsonb        not null,
+
+    foreign key (week, id) references gb_batch_items (week, id) on delete cascade,
+    foreign key (id) references ni_batch_item (id) on delete cascade
 );
 
-alter table survey owner to lfs;
+alter table survey
+    owner to lfs;
 
 create index survey_id_name_index
     on survey (id);
@@ -211,15 +210,34 @@ create index survey_id_name_index
 create index survey_period_index
     on survey (year, month, week);
 
-create table users
+create table survey_audit
 (
-    username varchar(255) not null
-        constraint users_pkey
-        primary key
-        constraint users_username_uindex
-        unique,
-    password varchar(255) not null
+    id             integer       not null,
+    file_name      varchar(1024) not null,
+    file_source    char(2)       not null,
+    week           integer       null,
+    month          integer       null,
+    year           integer       null,
+    reference_date timestamp     not null,
+    num_var_file   integer       not null default 0,
+    num_var_loaded integer       not null default 0,
+    num_ob_file    integer       not null default 0,
+    num_ob_loaded  integer       not null default 0,
+    status         integer       not null,
+    message        text          null,
+
+    foreign key (status) references status_values (id)
 );
 
-alter table users owner to lfs;
+create index survey_audit_file_name_index
+    on survey_audit (file_name);
+
+create table users
+(
+    username text primary key,
+    password text not null
+);
+
+alter table users
+    owner to lfs;
 

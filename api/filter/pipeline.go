@@ -83,19 +83,22 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 	t1 := reflect.TypeOf(p.StructType)
 	columns := make([]types.Column, len(p.header()))
 
+	colNo := 1
 	for i := 0; i < t1.NumField(); i++ {
 		a := t1.Field(i)
 		col := types.Column{}
 		// skip columns that are marked as being dropped
 		if p.filter.DropColumn(strings.ToUpper(a.Name)) {
 			col.Skip = true
+			columns[i] = col
 			continue
 		}
 
 		col.Skip = false
 		col.Kind = a.Type.Kind()
 		col.Name = a.Name
-		col.ColNo = i
+		col.ColNo = colNo
+		colNo++
 		columns[i] = col
 	}
 

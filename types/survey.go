@@ -5,13 +5,6 @@ type FileSource string
 const GBSource FileSource = "GB"
 const NISource FileSource = "NI"
 
-const (
-	NotStarted = iota
-	FileUploaded
-	FileReloaded
-	UploadFailed
-)
-
 type FileOrigin int
 
 const GB FileOrigin = 1

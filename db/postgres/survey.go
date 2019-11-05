@@ -1,4 +1,4 @@
-package mysql
+package postgres
 
 import (
 	"bytes"
@@ -23,7 +23,7 @@ func init() {
 	}
 }
 
-func (s MySQL) DeleteSurveyData(name string) (bool, error) {
+func (s Postgres) DeleteSurveyData(name string) (bool, error) {
 	cnt, err := s.DB.Collection(surveyTable).Find(db.Cond{"file_name": name}).Count()
 
 	if err != nil {
@@ -40,7 +40,7 @@ func (s MySQL) DeleteSurveyData(name string) (bool, error) {
 	return true, nil
 }
 
-func (s MySQL) PersistSurvey(vo types.SurveyVO) error {
+func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 
 	log.Debug().Msg("Starting persistence into DB")
 
@@ -178,7 +178,7 @@ func jsonEscape(i string) string {
 	return s[1 : len(s)-1]
 }
 
-func (s MySQL) insertSurveyData(tx sqlbuilder.Tx, survey types.SurveyRow) error {
+func (s Postgres) insertSurveyData(tx sqlbuilder.Tx, survey types.SurveyRow) error {
 
 	col := tx.Collection(surveyTable)
 	_, err := col.Insert(survey)
