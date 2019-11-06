@@ -14,8 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	typ "services/io/spss"
-	"strings"
+	"services/types"
 	"unsafe"
 )
 
@@ -41,32 +40,64 @@ func ImportSav(fileName string) ([][]string, error) {
 		if res == nil {
 			return
 		}
-		if res.buffer != nil {
-			C.free(unsafe.Pointer(res.buffer))
-		}
-		if res.header != nil {
-			C.free(unsafe.Pointer(res.header))
-		}
-		if res.data != nil {
-			C.free(unsafe.Pointer(res.data))
-		}
+		C.cleanup(res)
 		C.free(unsafe.Pointer(res))
 	}()
 
 	v := C.struct_Data(*res)
 
-	header := []string{C.GoString(v.header)}
-	for _, l := range header {
-		s := strings.Split(l, typ.TagSeparator)
-		str = append(str, s)
+	j := int(v.header_count)
+
+	var header = make([]types.Definitions, j)
+	for i := 0; i < j; i++ {
+		var head **C.struct_Header = v.header
+		z := (*[1 << 30]*C.struct_Header)((unsafe.Pointer(head)))[i]
+		type_string := types.TYPE_STRING
+
+		switch int(z.var_type) {
+		case 0:
+			type_string = types.TYPE_STRING
+		case 1:
+			type_string = types.TYPE_INT8
+		case 2:
+			type_string = types.TYPE_INT16
+		case 3:
+			type_string = types.TYPE_INT32
+		case 4:
+			type_string = types.TYPE_FLOAT
+		case 5:
+			type_string = types.TYPE_DOUBLE
+		}
+		header[i] = types.Definitions{
+			Variable:       C.GoString(z.var_name),
+			Description:    C.GoString(z.var_description),
+			VariableType:   type_string,
+			VariableLength: int(z.length),
+			Precision:      int(z.precision),
+			Alias:          "",
+			Editable:       false,
+			Imputation:     false,
+			DV:             false,
+		}
 	}
 
-	data := strings.Split(C.GoString(v.data), EOL)
-
-	for _, l := range data {
-		s := strings.Split(l, typ.TagSeparator)
-		str = append(str, s)
+	for _, j := range header {
+		fmt.Printf("Var: %s, \tDesc: %s, \tType: %s, \tLength: %d, \tPrecision: %d, \tAlias: %s\n", j.Variable, j.Description, j.VariableType,
+			j.VariableLength, j.Precision, j.Alias)
 	}
+	//header := []string{C.GoString(v.header)}
+
+	//for _, l := range header {
+	//	s := strings.Split(l, typ.TagSeparator)
+	//	str = append(str, s)
+	//}
+
+	//data := strings.Split(C.GoString(v.data), EOL)
+	//
+	//for _, l := range data {
+	//	s := strings.Split(l, typ.TagSeparator)
+	//	str = append(str, s)
+	//}
 
 	return str, nil
 }

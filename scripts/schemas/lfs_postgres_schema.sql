@@ -9,6 +9,7 @@ drop table if exists gb_batch_items;
 drop table if exists monthly_batch;
 drop table if exists survey_audit;
 drop table if exists status_values;
+drop table if exists definitions;
 
 create table addresses
 (
@@ -241,3 +242,21 @@ create table users
 alter table users
     owner to lfs;
 
+CREATE TYPE spss_types AS ENUM ('string', 'int8', 'uint8', 'int', 'int32', 'uint32',
+    'int64', 'uint64', 'float32', 'float64');
+
+create table definitions
+(
+    variable    text       not null,
+    description text,
+    type        spss_types not null default 'string',
+    length      integer,
+    precision   integer,
+    alias       text,
+    editable    bool                default false,
+    imputation  bool                default false,
+    dv          bool                default false
+);
+
+create index definitions_name_index
+    on definitions (variable);
