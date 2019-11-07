@@ -1,3 +1,4 @@
+
 drop table if exists addresses;
 drop table if exists users;
 drop table if exists export_definitions;

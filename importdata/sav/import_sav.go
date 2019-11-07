@@ -18,12 +18,10 @@ import (
 	"unsafe"
 )
 
-const EOL = "\n"
-
-func ImportSav(fileName string) ([][]string, error) {
+func ImportSav(fileName string) (types.SavImportData, error) {
 
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
-		return nil, fmt.Errorf(" -> Import: file %s not found", fileName)
+		return types.SavImportData{}, fmt.Errorf(" -> Import: file %s not found", fileName)
 	}
 
 	name := C.CString(fileName)
@@ -31,10 +29,8 @@ func ImportSav(fileName string) ([][]string, error) {
 
 	var res = C.parse_sav(name)
 	if res == nil {
-		return nil, errors.New("read from SPSS file failed")
+		return types.SavImportData{}, errors.New("read from SPSS file failed")
 	}
-
-	var str [][]string
 
 	defer func() {
 		if res == nil {
@@ -46,60 +42,67 @@ func ImportSav(fileName string) ([][]string, error) {
 
 	v := C.struct_Data(*res)
 
-	j := int(v.header_count)
+	headerCount := int(v.header_count)
+	rowCount := int(v.row_count)
 
-	var header = make([]types.Definitions, j)
-	for i := 0; i < j; i++ {
+	var header = make([]types.Header, headerCount)
+
+	for i := 0; i < headerCount; i++ {
 		var head **C.struct_Header = v.header
 		z := (*[1 << 30]*C.struct_Header)((unsafe.Pointer(head)))[i]
-		type_string := types.TYPE_STRING
+		typeString := types.TypeString
 
 		switch int(z.var_type) {
 		case 0:
-			type_string = types.TYPE_STRING
+			typeString = types.TypeString
 		case 1:
-			type_string = types.TYPE_INT8
+			typeString = types.TypeInt8
 		case 2:
-			type_string = types.TYPE_INT16
+			typeString = types.TypeInt16
 		case 3:
-			type_string = types.TYPE_INT32
+			typeString = types.TypeInt32
 		case 4:
-			type_string = types.TYPE_FLOAT
+			typeString = types.TypeFloat
 		case 5:
-			type_string = types.TYPE_DOUBLE
+			typeString = types.TypeDouble
 		}
-		header[i] = types.Definitions{
-			Variable:       C.GoString(z.var_name),
-			Description:    C.GoString(z.var_description),
-			VariableType:   type_string,
-			VariableLength: int(z.length),
-			Precision:      int(z.precision),
-			Alias:          "",
-			Editable:       false,
-			Imputation:     false,
-			DV:             false,
+
+		header[i] = types.Header{
+			VariableName:        C.GoString(z.var_name),
+			VariableDescription: C.GoString(z.var_description),
+			VariableType:        typeString,
+			VariableLength:      int(z.length),
+			VariablePrecision:   int(z.precision),
 		}
 	}
 
-	for _, j := range header {
-		fmt.Printf("Var: %s, \tDesc: %s, \tType: %s, \tLength: %d, \tPrecision: %d, \tAlias: %s\n", j.Variable, j.Description, j.VariableType,
-			j.VariableLength, j.Precision, j.Alias)
+	var savRows = make([]types.Rows, rowCount)
+
+	for i := 0; i < rowCount; i++ {
+		var rows **C.struct_Rows = v.rows
+		r := (*[1 << 30]*C.struct_Rows)((unsafe.Pointer(rows)))[i]
+
+		length := int(r.row_length)
+
+		var rowValues = make([]string, length)
+
+		rowData := r.row_data
+		for j := 0; j < length; j++ {
+			s := (*[1 << 30]*C.char)((unsafe.Pointer(rowData)))[j]
+			rowValues[j] = C.GoString(s)
+		}
+
+		savRows[i] = types.Rows{RowData: rowValues}
 	}
-	//header := []string{C.GoString(v.header)}
 
-	//for _, l := range header {
-	//	s := strings.Split(l, typ.TagSeparator)
-	//	str = append(str, s)
-	//}
+	savImportData := types.SavImportData{
+		Header:      header,
+		HeaderCount: headerCount,
+		Rows:        savRows,
+		RowCount:    rowCount,
+	}
 
-	//data := strings.Split(C.GoString(v.data), EOL)
-	//
-	//for _, l := range data {
-	//	s := strings.Split(l, typ.TagSeparator)
-	//	str = append(str, s)
-	//}
-
-	return str, nil
+	return savImportData, nil
 }
 
 var spssReader = DefaultSPSSReader

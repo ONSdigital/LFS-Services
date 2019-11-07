@@ -13,33 +13,33 @@ import (
 	"time"
 )
 
-func loadSav(in string, out interface{}) ([][]string, error) {
+func loadSav(in string, out interface{}) (types.SavImportData, error) {
 
 	// ensure out is a struct
 	if reflect.ValueOf(out).Kind() != reflect.Struct {
 		log.Error().
 			Str("method", "readSav").
 			Msg("The output interface is not a struct")
-		return nil, fmt.Errorf("%T is not a struct type", out)
+		return types.SavImportData{}, fmt.Errorf("%T is not a struct type", out)
 	}
 
 	start := time.Now()
 
 	records, err := sav.ImportSav(in)
 	if err != nil {
-		return nil, err
+		return types.SavImportData{}, err
 	}
 
-	if len(records) == 0 {
+	if records.RowCount == 0 {
 		log.Warn().
 			Str("method", "readSav").
-			Msg("The CSV file is empty")
-		return nil, fmt.Errorf("the spss file: %s is empty", in)
+			Msg("The SAV file is empty")
+		return types.SavImportData{}, fmt.Errorf("the spss file: %s is empty", in)
 	}
 
 	log.Debug().
 		Str("file", in).
-		Int("records", len(records)-1).
+		Int("records", records.RowCount-1).
 		Str("elapsedTime", util.FmtDuration(start)).
 		Msg("Read Sav file")
 

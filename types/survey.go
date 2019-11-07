@@ -10,6 +10,37 @@ type FileOrigin int
 const GB FileOrigin = 1
 const NI FileOrigin = 2
 
+type SavType string
+
+const (
+	TypeString SavType = "string"
+	TypeInt8   SavType = "int8"
+	TypeInt16  SavType = "int16"
+	TypeInt32  SavType = "int32"
+	TypeFloat  SavType = "float"
+	TypeDouble SavType = "double"
+)
+
+type Header struct {
+	VariableName        string
+	VariableDescription string
+	VariableType        SavType
+	VariableLength      int
+	VariablePrecision   int
+}
+
+type Rows struct {
+	RowData []string
+}
+
+type SavImportData struct {
+	Header      []Header
+	HeaderCount int
+
+	Rows     []Rows
+	RowCount int
+}
+
 type SurveyVO struct {
 	Audit   *Audit
 	Records [][]string

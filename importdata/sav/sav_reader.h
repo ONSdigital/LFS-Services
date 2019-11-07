@@ -1,6 +1,7 @@
 #ifndef _SAV_READER_H
 #define _SAV_READER_H
 
+#include <stdbool.h>
 #include "readstat.h"
 
 struct Data* parse_sav(const char *input_file);
@@ -18,19 +19,23 @@ struct Header {
 
 struct Rows {
     char **row_data;
+    int row_position;
     int row_length;
 };
 
 struct Data {
     struct Header **header;
     unsigned long header_count;
+    int header_position;
 
     struct Rows **rows;
     unsigned long row_count;
-    unsigned long row_position;
+    unsigned long rows_position;
 
     char *buffer;
     unsigned long buffer_size;
+
+    int variable_count;
 };
 
 

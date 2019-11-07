@@ -10,32 +10,42 @@ const int ACCOC_SIZE = 256 * 1024 * 1024;
 const int STRUCT_ACCOC_SIZE = 1024;
 const int SAV_BUFFER_SIZE = 128;  // initial buffer size for a value, will grow if necessary
 
-struct Rows * add_row(struct Data *data)  {
-    printf("ADDING ROW\n");
-    data->rows[data->row_count] = malloc(sizeof(struct Rows));
-    data->rows[data->row_count]->row_length = 0;
-    data->row_count++;
-    data->row_position = 0;
+void add_new_row(struct Data *data)  {
 
-    return data->rows[data->row_count - 1];
+    int row_size = sizeof(struct Rows);
+    data->rows = realloc(data->rows, (data->row_count * row_size)  + row_size);
+
+    struct Rows *row = malloc(sizeof(struct Rows));
+    data->rows[data->row_count] = row;
+
+    data->rows[data->row_count]->row_position = 0;
+    data->rows[data->row_count]->row_length = 0;
+    data->rows[data->row_count]->row_data = malloc(sizeof(char *) * data->header_count);
+    data->row_count++;
 }
 
 void add_to_row(struct Data *data, const char *value) {
-    printf("ADDING TO ROW\n");
-    struct Rows *current_row = data->rows[data->row_count - 1];
-    int position = data->row_position;
 
-    current_row->row_data[position] = malloc(sizeof(value + 1));
-    strcpy(current_row->row_data[position], value);
-    data->row_position++;
+    struct Rows *current_row = data->rows[data->row_count - 1];
+    int position = current_row->row_position;
+    int row_length = current_row->row_length;
+
+    char *var = malloc(strlen(value) + 1);
+    strcpy(var, value);
+
+    current_row->row_data[position] = var;
+
+    current_row->row_position++;
     current_row->row_length++;
+
+    return;
 }
 
-//int handle_metadata(readstat_metadata_t *metadata, void *ctx) {
-//    struct Data *data = (struct Data *) ctx;
-//    data->var_count = readstat_get_var_count(metadata);
-//    return READSTAT_HANDLER_OK;
-//}
+int handle_metadata(readstat_metadata_t *metadata, void *ctx) {
+    struct Data *data = (struct Data *) ctx;
+    data->variable_count = readstat_get_var_count(metadata);
+    return READSTAT_HANDLER_OK;
+}
 
 int handle_variable(int index, readstat_variable_t *variable, const char *val_labels, void *ctx) {
     struct Data *data = (struct Data *) ctx;
@@ -57,30 +67,27 @@ int handle_variable(int index, readstat_variable_t *variable, const char *val_la
         unsigned long desc_len = strlen(var_description) + 1;
         header->var_description = malloc(desc_len);
         strcpy(header->var_description, var_description);
+    } else {
+        header->var_description = NULL;
     }
 
     header->var_type = readstat_variable_get_type(variable);
     header->length = readstat_variable_get_storage_width(variable);
-    header->length = variable->decimals;
+    header->precision = variable->decimals;
 
     data->header_count++;
 
     return READSTAT_HANDLER_OK;
 }
 
-int handle_value(int obs_index, readstat_variable_t *variable, readstat_value_t value, void *ctx) {
 
-    return READSTAT_HANDLER_OK;
+int handle_value(int obs_index, readstat_variable_t *variable, readstat_value_t value, void *ctx) {
 
     struct Data *data = (struct Data *) ctx;
     int var_index = readstat_variable_get_index(variable);
 
-    struct Rows *current_row;
-
     if (var_index == 0) {
-        current_row = add_row(data);
-    } else {
-        current_row = data->rows[data->row_count - 1];
+        add_new_row(data);
     }
 
     readstat_type_t type = readstat_value_type(value);
@@ -161,6 +168,7 @@ int handle_value(int obs_index, readstat_variable_t *variable, readstat_value_t 
 }
 
 void cleanup(struct Data *data) {
+
    for (int i = 0; i < data->header_count; i++) {
         struct Header *header = data->header[i];
         if (header->var_name != NULL) free(header->var_name);
@@ -175,6 +183,7 @@ void cleanup(struct Data *data) {
        }
        free(rows);
    }
+
 }
 
 struct Data * parse_sav(const char *input_file) {
@@ -185,14 +194,13 @@ struct Data * parse_sav(const char *input_file) {
 
     readstat_error_t error;
     readstat_parser_t *parser = readstat_parser_init();
-//    readstat_set_metadata_handler(parser, &handle_metadata);
+    readstat_set_metadata_handler(parser, &handle_metadata);
     readstat_set_variable_handler(parser, &handle_variable);
     readstat_set_value_handler(parser, &handle_value);
 
     struct Data *sav_data = (struct Data *) malloc(sizeof(struct Data));
     sav_data->rows = NULL;
     sav_data->row_count = 0;
-    sav_data->row_position = 0;
 
     sav_data->buffer = malloc(SAV_BUFFER_SIZE);
     sav_data->buffer_size = SAV_BUFFER_SIZE;
