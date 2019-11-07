@@ -83,4 +83,7 @@ type Persistence interface {
 	GetAuditsByYear(year types.Year) ([]types.Audit, error)
 	GetAuditsByYearMonth(month types.Month, year types.Year) ([]types.Audit, error)
 	GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Audit, error)
+
+	// Common SQL statements
+	DeleteFrom(table string) error
 }
