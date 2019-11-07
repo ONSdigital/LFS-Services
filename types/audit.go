@@ -22,3 +22,7 @@ type ErrorResponse struct {
 	Status       string `json:"status"`
 	ErrorMessage string `json:"errorMessage"`
 }
+
+type OkayResponse struct {
+	Status string `json:"status"`
+}
