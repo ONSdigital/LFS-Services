@@ -89,6 +89,14 @@ func (s MySQL) GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Au
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
 	res := dbAudit.Find(db.Cond{"year": year, "week": week})
+	err := res.All(&audits)
+
+	// Error handling
+	if err != nil {
+		log.Debug().
+			Msg("Get Week Audits error: " + err.Error())
+		return nil, err
+	}
 
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {
