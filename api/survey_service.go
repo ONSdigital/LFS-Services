@@ -5,7 +5,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"reflect"
 	"services/api/filter"
-	"services/dataset"
 	"services/db"
 	"services/importdata/sav"
 	"services/types"
@@ -49,13 +48,12 @@ func loadSav(in string, out interface{}) (types.SavImportData, error) {
 func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, week, year, id int) error {
 	startTime := time.Now()
 
-	rows, err := loadSav(tmpfile, types.GBSurveyInput{})
+	spssData, err := loadSav(tmpfile, types.GBSurveyInput{})
 	if err != nil {
 		return err
 	}
 
-	headers := rows[0]
-	body := rows[1:]
+	headers, body := sav.SPSSDatatoArray(spssData)
 
 	si.Audit.ReferenceDate = time.Now()
 	si.Audit.NumObFile = len(body)
@@ -68,7 +66,7 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 	si.Audit.Week = week
 	si.Audit.FileSource = types.GBSource
 
-	pipeline := filter.NewGBPipeLine(rows, &si.Audit)
+	pipeline := filter.NewGBPipeLine(headers, body, &si.Audit)
 
 	columns, data, err := pipeline.RunPipeline()
 	if err != nil {
@@ -122,18 +120,12 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, month, year, id int) error {
 	startTime := time.Now()
 
-	d, err := dataset.NewDataset(datasetName)
+	spssData, err := loadSav(tmpfile, types.GBSurveyInput{})
 	if err != nil {
 		return err
 	}
 
-	rows, err := loadSav(tmpfile, types.GBSurveyInput{})
-	if err != nil {
-		return err
-	}
-
-	headers := rows[0]
-	body := rows[1:]
+	headers, body := sav.SPSSDatatoArray(spssData)
 
 	si.Audit.ReferenceDate = time.Now()
 	si.Audit.NumObFile = len(body)
@@ -146,7 +138,7 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 	si.Audit.Month = month
 	si.Audit.FileSource = types.NISource
 
-	pipeline := filter.NewGBPipeLine(rows, &si.Audit)
+	pipeline := filter.NewNIPipeLine(headers, body, &si.Audit)
 
 	columns, data, err := pipeline.RunPipeline()
 	if err != nil {
@@ -159,12 +151,12 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 
 	log.Debug().
 		Str("datasetName", datasetName).
-		Int("numObservationsFile", d.NumObFile).
-		Int("numObservationsLoaded", d.NumObLoaded).
-		Int("numVarFile", d.NumVarFile).
-		Int("numVarLoaded", d.NumVarLoaded).
+		Int("numObservationsFile", si.Audit.NumObFile).
+		Int("numObservationsLoaded", si.Audit.NumObLoaded).
+		Int("numVarFile", si.Audit.NumVarFile).
+		Int("numVarLoaded", si.Audit.NumVarLoaded).
 		Str("status", "Successful").
-		Msg("Filtering complete")
+		Msg("Pipeline complete")
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -191,8 +183,6 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 
 	log.Debug().
 		Str("datasetName", datasetName).
-		Int("rowCount", d.NumRows()).
-		Int("columnCount", d.NumColumns()).
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Imported and persisted dataset")
 

@@ -31,21 +31,14 @@ type Validation interface {
 Base validation. To use this, use composition in concrete structs
 */
 type Validator struct {
-	data [][]string
+	headers []string
+	rows    [][]string
 }
 
-func (v Validator) rows() [][]string {
-	return v.data[1:]
-}
-
-func (v Validator) header() []string {
-	return v.data[0]
-}
-
-func (sf Validator) GetRowsAsDouble(colName string) ([]float64, error) {
+func (v Validator) GetRowsAsDouble(colName string) ([]float64, error) {
 	var res []float64
-	headers := sf.header()
-	rows := sf.rows()
+	headers := v.headers
+	rows := v.rows
 
 	findRow := func() (int, bool) {
 		for i, col := range headers {
@@ -73,11 +66,11 @@ func (sf Validator) GetRowsAsDouble(colName string) ([]float64, error) {
 	return res, nil
 }
 
-func (sf Validator) GetRowsAsString(colName string) ([]string, error) {
+func (v Validator) GetRowsAsString(colName string) ([]string, error) {
 	var res []string
 
 	findRow := func() (int, bool) {
-		for i, col := range sf.header() {
+		for i, col := range v.headers {
 			if col == colName {
 				return i, true
 			}
@@ -90,7 +83,7 @@ func (sf Validator) GetRowsAsString(colName string) ([]string, error) {
 		return nil, fmt.Errorf("cannot find column %s", colName)
 	}
 
-	for _, b := range sf.rows() {
+	for _, b := range v.rows {
 		res = append(res, b[a])
 	}
 
@@ -101,11 +94,11 @@ func (sf Validator) GetRowsAsString(colName string) ([]string, error) {
 Check if any rows in the list of columns to check are 'missing' where missing is defined as a NaN
 for int and float types respectively.
 */
-func (sf Validator) validateMissingValues(columnsToCheck []string) (ValidationResponse, error) {
-	for _, v := range columnsToCheck {
+func (v Validator) validateMissingValues(columnsToCheck []string) (ValidationResponse, error) {
+	for _, col := range columnsToCheck {
 
 		floatCheck := func() (ValidationResponse, error) {
-			rows, err := sf.GetRowsAsDouble(v)
+			rows, err := v.GetRowsAsDouble(col)
 			if err != nil {
 				return ValidationResponse{
 					ValidationResult: ValidationFailed,
@@ -127,7 +120,7 @@ func (sf Validator) validateMissingValues(columnsToCheck []string) (ValidationRe
 		}
 
 		stringCheck := func() (ValidationResponse, error) {
-			rows, err := sf.GetRowsAsString(v)
+			rows, err := v.GetRowsAsString(col)
 			if err != nil {
 				return ValidationResponse{
 					ValidationResult: ValidationFailed,
@@ -148,7 +141,7 @@ func (sf Validator) validateMissingValues(columnsToCheck []string) (ValidationRe
 			}, nil
 		}
 
-		if v == "PCODE" {
+		if col == "PCODE" {
 			return stringCheck()
 		} else {
 			return floatCheck()
@@ -174,8 +167,8 @@ and a given time on a given date. To get the actual date from this we need to:
 4. Get the date from the Unix time using standard Go functions.
 
 */
-func (sf Validator) validateREFDTE(period, year int, origin types.FileOrigin) (ValidationResponse, error) {
-	rows, err := sf.GetRowsAsDouble("RefDte")
+func (v Validator) validateREFDTE(period, year int, origin types.FileOrigin) (ValidationResponse, error) {
+	rows, err := v.GetRowsAsDouble("RefDte")
 	if err != nil {
 		return ValidationResponse{
 			ValidationResult: ValidationFailed,

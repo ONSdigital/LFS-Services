@@ -10,8 +10,8 @@ type GBSurveyValidation struct {
 	Validator
 }
 
-func NewGBSurveyValidation(data [][]string) GBSurveyValidation {
-	return GBSurveyValidation{Validator: Validator{data}}
+func NewGBSurveyValidation(headers []string, rows [][]string) GBSurveyValidation {
+	return GBSurveyValidation{Validator: Validator{headers, rows}}
 }
 
 func (sf GBSurveyValidation) Validate(period, year int) (ValidationResponse, error) {

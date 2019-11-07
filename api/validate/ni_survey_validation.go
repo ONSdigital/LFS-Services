@@ -8,8 +8,8 @@ type NISurveyValidation struct {
 	Validator
 }
 
-func NewNISurveyValidation(data [][]string) NISurveyValidation {
-	return NISurveyValidation{Validator: Validator{data}}
+func NewNISurveyValidation(headers []string, rows [][]string) NISurveyValidation {
+	return NISurveyValidation{Validator: Validator{headers, rows}}
 }
 
 func (sf NISurveyValidation) Validate(period, year int) (ValidationResponse, error) {

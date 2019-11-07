@@ -8,9 +8,9 @@ import (
 
 type Filter interface {
 	DropColumn(name string) bool
-	AddVariables(data [][]string) ([]types.Column, error)
+	AddVariables(columns []string, data [][]string) ([]types.Column, error)
 	GetAudit() *types.Audit
-	SkipRowsFilter(data [][]string) ([][]string, error)
+	SkipRowsFilter(header []string, data [][]string) ([][]string, error)
 	RenameColumns(column string) (string, bool)
 }
 

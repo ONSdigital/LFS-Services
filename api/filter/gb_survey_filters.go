@@ -17,10 +17,7 @@ func NewGBSurveyFilter(audit *types.Audit) Filter {
 	return GBSurveyFilter{UKFilter{BaseFilter{audit}}}
 }
 
-func (sf GBSurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
-
-	header := data[0]
-	rows := data[1:]
+func (sf GBSurveyFilter) SkipRowsFilter(header []string, rows [][]string) ([][]string, error) {
 
 	// get indexes of items we are interested in
 	sex, err := findPosition(header, "Sex")
@@ -112,7 +109,7 @@ func (sf GBSurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
 	return filteredRows, nil
 }
 
-func (sf GBSurveyFilter) AddVariables(data [][]string) ([]types.Column, error) {
+func (sf GBSurveyFilter) AddVariables(headers []string, data [][]string) ([]types.Column, error) {
 	startTime := time.Now()
 
 	log.Debug().
@@ -120,7 +117,7 @@ func (sf GBSurveyFilter) AddVariables(data [][]string) ([]types.Column, error) {
 		Timestamp().
 		Msg("Start adding variable")
 
-	column, err := sf.addCaseno(data)
+	column, err := sf.addCaseno(headers, data)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +137,7 @@ func (sf GBSurveyFilter) AddVariables(data [][]string) ([]types.Column, error) {
 		Timestamp().
 		Msg("Start adding variable")
 
-	column, err = sf.addHSerial(data)
+	column, err = sf.addHSerial(headers, data)
 	if err != nil {
 		return nil, err
 	}

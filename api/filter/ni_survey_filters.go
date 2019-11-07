@@ -17,10 +17,7 @@ func NewNISurveyFilter(audit *types.Audit) Filter {
 	return NISurveyFilter{UKFilter{BaseFilter{audit}}}
 }
 
-func (sf NISurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
-
-	header := data[0]
-	rows := data[1:]
+func (sf NISurveyFilter) SkipRowsFilter(header []string, data [][]string) ([][]string, error) {
 
 	// get indexes of items we are interested in
 	sex, err := findPosition(header, "Sex")
@@ -40,7 +37,7 @@ func (sf NISurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
 	filteredRows := make([][]string, 0, 0)
 	filteredRows = append(filteredRows, header)
 
-	for _, j := range rows {
+	for _, j := range data {
 
 		var row = j
 
@@ -81,7 +78,7 @@ func (sf NISurveyFilter) SkipRowsFilter(data [][]string) ([][]string, error) {
 	return filteredRows, nil
 }
 
-func (sf NISurveyFilter) AddVariables(data [][]string) ([]types.Column, error) {
+func (sf NISurveyFilter) AddVariables(headers []string, data [][]string) ([]types.Column, error) {
 	startTime := time.Now()
 
 	log.Debug().
@@ -89,7 +86,7 @@ func (sf NISurveyFilter) AddVariables(data [][]string) ([]types.Column, error) {
 		Timestamp().
 		Msg("Start adding variable")
 
-	column, err := sf.addCaseno(data)
+	column, err := sf.addCaseno(headers, data)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +106,7 @@ func (sf NISurveyFilter) AddVariables(data [][]string) ([]types.Column, error) {
 		Timestamp().
 		Msg("Start adding variable")
 
-	column, err = sf.addHSerial(data)
+	column, err = sf.addHSerial(headers, data)
 	if err != nil {
 		return nil, err
 	}

@@ -20,9 +20,7 @@ func findPosition(headers []string, column string) (int, error) {
 	return 0, fmt.Errorf("column %s not found", column)
 }
 
-func (sf UKFilter) addHSerial(data [][]string) (types.Column, error) {
-	header := data[0]
-	rows := data[1:]
+func (sf UKFilter) addHSerial(header []string, rows [][]string) (types.Column, error) {
 
 	header = append(header, "Hserial")
 
@@ -111,10 +109,7 @@ func (sf UKFilter) addHSerial(data [][]string) (types.Column, error) {
 	return column, nil
 }
 
-func (sf UKFilter) addCaseno(data [][]string) (types.Column, error) {
-
-	header := data[0]
-	rows := data[1:]
+func (sf UKFilter) addCaseno(header []string, rows [][]string) (types.Column, error) {
 
 	header = append(header, "CaseNo")
 

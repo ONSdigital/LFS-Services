@@ -10,6 +10,7 @@ import (
 )
 
 type Pipeline struct {
+	headers    []string
 	data       [][]string
 	validation validate.Validation
 	filter     Filter
@@ -18,18 +19,11 @@ type Pipeline struct {
 	surveyType types.FileOrigin
 }
 
-func (p Pipeline) rows() [][]string {
-	return p.data[1:]
-}
-
-func (p Pipeline) header() []string {
-	return p.data[0]
-}
-
-func NewNIPipeLine(data [][]string, audit *types.Audit) Pipeline {
+func NewNIPipeLine(headers []string, rows [][]string, audit *types.Audit) Pipeline {
 	return Pipeline{
-		data:       data,
-		validation: validate.NewNISurveyValidation(data),
+		headers:    headers,
+		data:       rows,
+		validation: validate.NewNISurveyValidation(headers, rows),
 		filter:     NewNISurveyFilter(audit),
 		StructType: types.NISurveyInput{},
 		audit:      audit,
@@ -37,10 +31,11 @@ func NewNIPipeLine(data [][]string, audit *types.Audit) Pipeline {
 	}
 }
 
-func NewGBPipeLine(data [][]string, audit *types.Audit) Pipeline {
+func NewGBPipeLine(headers []string, rows [][]string, audit *types.Audit) Pipeline {
 	return Pipeline{
-		data:       data,
-		validation: validate.NewGBSurveyValidation(data),
+		headers:    headers,
+		data:       rows,
+		validation: validate.NewGBSurveyValidation(headers, rows),
 		filter:     NewGBSurveyFilter(audit),
 		StructType: types.GBSurveyInput{},
 		audit:      audit,
@@ -66,14 +61,14 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 		return nil, nil, fmt.Errorf(response.ErrorMessage)
 	}
 
-	for k, v := range p.header() {
+	for k, v := range p.headers {
 		to, ok := p.filter.RenameColumns(v)
 		if ok {
-			p.header()[k] = to
+			p.headers[k] = to
 		}
 	}
 
-	newColumns, err := p.filter.AddVariables(p.data)
+	newColumns, err := p.filter.AddVariables(p.headers, p.data)
 	if err != nil {
 		log.Error().
 			Err(err)
@@ -81,7 +76,7 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 	}
 
 	t1 := reflect.TypeOf(p.StructType)
-	columns := make([]types.Column, len(p.header()))
+	columns := make([]types.Column, len(p.headers))
 
 	colNo := 1
 	for i := 0; i < t1.NumField(); i++ {
@@ -104,7 +99,7 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 
 	columns = append(columns, newColumns...)
 
-	p.data, err = p.filter.SkipRowsFilter(p.data)
+	p.data, err = p.filter.SkipRowsFilter(p.headers, p.data)
 	if err != nil {
 		return nil, nil, err
 	}
