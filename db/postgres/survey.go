@@ -64,21 +64,23 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 
 	columns := vo.Columns
 
+	defer vo.Status.SetUploadFinished()
+
 	var kBuffer bytes.Buffer
 
-	for _, v := range body {
+	for cnt, v := range body {
 		kBuffer.Reset()
 		kBuffer.WriteString("{")
 
-		for col_no, val := range v {
+		for colNo, val := range v {
 
-			if columns[col_no].Skip {
+			if columns[colNo].Skip {
 				continue
 			}
 
-			kBuffer.WriteString("\"" + columns[col_no].Name + "\":")
+			kBuffer.WriteString("\"" + columns[colNo].Name + "\":")
 
-			columnKind := columns[col_no].Kind
+			columnKind := columns[colNo].Kind
 			switch columnKind {
 			case reflect.String:
 				if val == "NULL" || val == "" {
@@ -119,10 +121,12 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 				return fmt.Errorf("unknown type - possible corruption or structure does not map to file")
 			}
 
-			if col_no != len(v)-1 {
+			if colNo != len(v)-1 {
 				kBuffer.WriteString(",")
 			} else {
 				kBuffer.WriteString("}")
+				var perc = (float64(cnt) / float64(len(body))) * 100
+				vo.Status.SetPercentage(perc)
 			}
 		}
 

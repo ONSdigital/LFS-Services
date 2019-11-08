@@ -5,21 +5,43 @@ import (
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
+	"services/api/ws"
 	"services/types"
 	"strconv"
+	"sync"
 )
 
 type SurveyImportHandler struct {
-	Audit types.Audit
+	Audit            types.Audit
+	fileUploads      *types.WSMessage
+	uploadInProgress bool // we can only handle a single survey upload at a time
+	mutux            *sync.Mutex
 }
 
 func NewSurveyHandler() *SurveyImportHandler {
-	return &SurveyImportHandler{}
+	return &SurveyImportHandler{
+		Audit:            types.Audit{},
+		fileUploads:      nil,
+		uploadInProgress: false,
+		mutux:            &sync.Mutex{},
+	}
 }
 
-func (si SurveyImportHandler) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Request) {
+func (si *SurveyImportHandler) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Request) {
+
+	si.mutux.Lock()
 
 	w.Header().Set("Content-Type", "application/json")
+
+	if si.uploadInProgress {
+		log.Error().Msg("survey file is currently being uploaded")
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse{Status: Error, ErrorMessage: "survey file is currently being uploaded"}.sendResponse(w, r)
+		si.mutux.Unlock()
+		return
+	}
+	si.uploadInProgress = true
+	si.mutux.Unlock()
 
 	vars := mux.Vars(r)
 	week := vars["week"]
@@ -67,29 +89,47 @@ func (si SurveyImportHandler) SurveyUploadGBHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	defer func() { _ = os.Remove(tmpfile) }()
+	a := ws.NewFileUploads()
+	si.fileUploads = a.Add(fileName)
 
-	if err := si.parseGBSurveyFile(tmpfile, fileName, weekNo, yearNo, gbInfo.Id); err != nil {
-		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
-		return
-	}
+	go func() {
+		defer func() {
+			si.mutux.Lock()
+			si.uploadInProgress = false
+			si.mutux.Unlock()
+			_ = os.Remove(tmpfile)
+		}()
+		si.parseGBSurveyFile(tmpfile, fileName, weekNo, yearNo, gbInfo.Id)
+	}()
 
+	w.WriteHeader(http.StatusAccepted)
 	OkayResponse{OK}.sendResponse(w, r)
-
 }
 
-func (si SurveyImportHandler) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Request) {
+func (si *SurveyImportHandler) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Request) {
+
+	si.mutux.Lock()
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if si.uploadInProgress {
+		log.Error().Msg("survey file is currently being uploaded")
+		w.WriteHeader(http.StatusBadRequest)
+		ErrorResponse{Status: Error, ErrorMessage: "survey file is currently being uploaded"}.sendResponse(w, r)
+		si.mutux.Unlock()
+		return
+	}
+	si.uploadInProgress = true
+	si.mutux.Unlock()
+
+	vars := mux.Vars(r)
+	month := vars["month"]
+	year := vars["year"]
 
 	log.Debug().
 		Str("client", r.RemoteAddr).
 		Str("uri", r.RequestURI).
 		Msg("Received NI survey file upload request")
-
-	w.Header().Set("Content-Type", "application/json")
-
-	vars := mux.Vars(r)
-	month := vars["month"]
-	year := vars["year"]
 
 	fileName := r.FormValue("fileName")
 	if fileName == "" {
@@ -126,12 +166,19 @@ func (si SurveyImportHandler) SurveyUploadNIHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	defer func() { _ = os.Remove(tmpfile) }()
+	a := ws.NewFileUploads()
+	si.fileUploads = a.Add(fileName)
 
-	if err := si.parseNISurveyFile(tmpfile, fileName, monthNo, yearNo, niInfo.Id); err != nil {
-		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
-		return
-	}
+	go func() {
+		defer func() {
+			si.mutux.Lock()
+			si.uploadInProgress = true
+			si.mutux.Unlock()
+			_ = os.Remove(tmpfile)
+		}()
+		si.parseNISurveyFile(tmpfile, fileName, monthNo, yearNo, niInfo.Id)
+	}()
 
+	w.WriteHeader(http.StatusAccepted)
 	OkayResponse{OK}.sendResponse(w, r)
 }
