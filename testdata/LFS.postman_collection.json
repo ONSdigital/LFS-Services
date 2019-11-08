@@ -95,15 +95,15 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/import/Address",
+					"raw": "http://localhost:8000/imports/address",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
-						"import",
-						"Address"
+						"imports",
+						"address"
 					]
 				}
 			},
@@ -175,7 +175,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/batches/2014/05",
+					"raw": "http://localhost:8000/batches/monthly/2014/05",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -183,6 +183,7 @@
 					"port": "8000",
 					"path": [
 						"batches",
+						"monthly",
 						"2014",
 						"05"
 					]
@@ -206,7 +207,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/batches/quarterly/Q1/2014",
+					"raw": "http://localhost:8000/batches/quarterly/2014/Q4",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -215,8 +216,8 @@
 					"path": [
 						"batches",
 						"quarterly",
-						"Q1",
-						"2014"
+						"2014",
+						"Q4"
 					]
 				}
 			},
@@ -238,7 +239,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/batches/quarterly/Q1/2014",
+					"raw": "http://localhost:8000/batches/annual/2014",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -246,8 +247,7 @@
 					"port": "8000",
 					"path": [
 						"batches",
-						"quarterly",
-						"Q1",
+						"annual",
 						"2014"
 					]
 				}
