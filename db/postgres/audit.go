@@ -36,7 +36,6 @@ func (s Postgres) GetAllAudits() ([]types.Audit, error) {
 
 	var audits []types.Audit
 	res := s.DB.Collection(surveyAuditTable).Find()
-	defer func() { _ = res.Close() }()
 	err := res.All(&audits)
 	if err != nil {
 		return nil, res.Err()

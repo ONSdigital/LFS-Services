@@ -24,6 +24,7 @@ gbBatchTable="gb_batch_items"
 niBatchTable="ni_batch_item"
 
 userTable="users"
+definitionsTable="definitions"
 
 # connections configuration
 server = "localhost" # set by environment variables

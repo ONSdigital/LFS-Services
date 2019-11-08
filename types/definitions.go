@@ -1,13 +1,13 @@
 package types
 
 type Definitions struct {
-	Variable       string  `json:"variable"`
-	Description    string  `json:"description"`
-	VariableType   SavType `json:"type"`
-	VariableLength int     `json:"length"`
-	Precision      int     `json:"precision"`
-	Alias          string  `json:"alias"`
-	Editable       bool    `json:"editable"`
-	Imputation     bool    `json:"imputation"`
-	DV             bool    `json:"dv"`
+	Variable       string  `db:"variable" json:"variable"`
+	Description    string  `db:"description" json:"description"`
+	VariableType   SavType `db:"type" json:"type"`
+	VariableLength int     `db:"length "json:"length"`
+	Precision      int     `db:"precision" json:"precision"`
+	Alias          string  `db:"alias" json:"alias"`
+	Editable       bool    `db:"editable" json:"editable"`
+	Imputation     bool    `db:"imputation" json:"imputation"`
+	DV             bool    `db:"dv" json:"dv"`
 }

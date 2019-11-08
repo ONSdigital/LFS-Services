@@ -1,4 +1,3 @@
-
 drop table if exists addresses;
 drop table if exists users;
 drop table if exists export_definitions;
@@ -11,6 +10,7 @@ drop table if exists monthly_batch;
 drop table if exists survey_audit;
 drop table if exists status_values;
 drop table if exists definitions;
+drop type if exists spss_types;
 
 create table addresses
 (
@@ -212,6 +212,8 @@ create index survey_id_name_index
 create index survey_period_index
     on survey (year, month, week);
 
+create index survey_columns on survey using gin(columns);
+
 create table survey_audit
 (
     id             integer       not null,
@@ -251,6 +253,7 @@ create table definitions
     variable    text       not null,
     description text,
     type        spss_types not null default 'string',
+    valid_from  timestamp           default NOW(),
     length      integer,
     precision   integer,
     alias       text,
