@@ -47,8 +47,8 @@ type Persistence interface {
 	GetMonthlyBatches() ([]types.Dashboard, error)
 
 	// Survey
-	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
-	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
+	//UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
+	//PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
 
 	// Address
 	// Import
