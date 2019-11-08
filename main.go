@@ -48,7 +48,6 @@ func main() {
 	surveyHandler := api.NewSurveyHandler()
 	addressesHandler := api.NewAddressImportHandler()
 	auditHandler := api.NewAuditHandler()
-	//importsHandler := api.NewImportsHandler()
 	loginHandler := api.NewLoginHandler()
 
 	// Dashboard

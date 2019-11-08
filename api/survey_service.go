@@ -45,21 +45,29 @@ func loadSav(in string, out interface{}) (types.SavImportData, error) {
 	return records, nil
 }
 
-func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, week, year, id int) error {
+func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, week, year, id int) {
 	startTime := time.Now()
+
+	si.fileUploads.SetUploadStarted()
 
 	spssData, err := loadSav(tmpfile, types.GBSurveyInput{})
 	if err != nil {
-		return err
+		log.Error().
+			Err(err).
+			Str("method", "parseGBSurveyFile").
+			Str("file", datasetName).
+			Msg("Cannot import GB SAV file")
+		si.fileUploads.SetUploadError(fmt.Sprintf("cannot import GB SAV file %s", err))
+		return
 	}
 
 	headers, body := sav.SPSSDatatoArray(spssData)
 
 	si.Audit.ReferenceDate = time.Now()
-	si.Audit.NumObFile = len(body)
-	si.Audit.NumObLoaded = len(body)
-	si.Audit.NumVarFile = len(headers)
-	si.Audit.NumVarLoaded = len(headers)
+	si.Audit.NumObFile = spssData.RowCount
+	si.Audit.NumObLoaded = spssData.RowCount
+	si.Audit.NumVarFile = spssData.HeaderCount
+	si.Audit.NumVarLoaded = spssData.HeaderCount
 	si.Audit.FileName = datasetName
 	si.Audit.Id = id
 	si.Audit.Year = year
@@ -73,8 +81,9 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
-			Msg("pipeline failed")
-		return err
+			Msg("preProcessing failed")
+		si.fileUploads.SetUploadError(fmt.Sprintf("pre-processing failed %s", err))
+		return
 	}
 
 	log.Debug().
@@ -84,7 +93,7 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 		Int("numVarFile", si.Audit.NumVarFile).
 		Int("numVarLoaded", si.Audit.NumVarLoaded).
 		Str("status", "Successful").
-		Msg("Pipeline complete")
+		Msg("preProcessing complete")
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -92,13 +101,15 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 			Err(err).
 			Str("datasetName", datasetName).
 			Msg("Cannot connect to database")
-		return fmt.Errorf("cannot connect to database: %s", err)
+		si.fileUploads.SetUploadError(fmt.Sprintf("cannot connect to database %s", err))
+		return
 	}
 
 	surveyVo := types.SurveyVO{
 		Audit:   &si.Audit,
 		Records: data,
 		Columns: columns,
+		Status:  si.fileUploads,
 	}
 
 	if err := database.PersistSurvey(surveyVo); err != nil {
@@ -106,32 +117,41 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 			Err(err).
 			Str("datasetName", datasetName).
 			Msg("Cannot persist dataset")
-		return fmt.Errorf("cannot persist dataset to database: %s", err)
+		si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist GB survey data: %s", err))
+		return
 	}
 
 	log.Debug().
 		Str("datasetName", datasetName).
 		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Imported and persisted dataset")
+		Msg("Imported and persisted GB survey data")
 
-	return nil
+	return
 }
 
-func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, month, year, id int) error {
+func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, month, year, id int) {
 	startTime := time.Now()
+
+	si.fileUploads.SetUploadStarted()
 
 	spssData, err := loadSav(tmpfile, types.GBSurveyInput{})
 	if err != nil {
-		return err
+		log.Error().
+			Err(err).
+			Str("method", "parseNISurveyFile").
+			Str("file", datasetName).
+			Msg("Cannot import NI SAV file")
+		si.fileUploads.SetUploadError(fmt.Sprintf("cannot import NI SAV file %s", err))
+		return
 	}
 
 	headers, body := sav.SPSSDatatoArray(spssData)
 
 	si.Audit.ReferenceDate = time.Now()
-	si.Audit.NumObFile = len(body)
-	si.Audit.NumObLoaded = len(body)
-	si.Audit.NumVarFile = len(headers)
-	si.Audit.NumVarLoaded = len(headers)
+	si.Audit.NumObFile = spssData.RowCount
+	si.Audit.NumObLoaded = spssData.RowCount
+	si.Audit.NumVarFile = spssData.HeaderCount
+	si.Audit.NumVarLoaded = spssData.HeaderCount
 	si.Audit.FileName = datasetName
 	si.Audit.Id = id
 	si.Audit.Year = year
@@ -145,8 +165,9 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
-			Msg("pipeline failed")
-		return err
+			Msg("preProcessing failed")
+		si.fileUploads.SetUploadError(fmt.Sprintf("pre-processing failed: %s", err))
+		return
 	}
 
 	log.Debug().
@@ -156,7 +177,7 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 		Int("numVarFile", si.Audit.NumVarFile).
 		Int("numVarLoaded", si.Audit.NumVarLoaded).
 		Str("status", "Successful").
-		Msg("Pipeline complete")
+		Msg("preProcessing complete")
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -164,13 +185,15 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 			Err(err).
 			Str("datasetName", datasetName).
 			Msg("Cannot connect to database")
-		return fmt.Errorf("cannot connect to database: %s", err)
+		si.fileUploads.SetUploadError(fmt.Sprintf("cannot connect to database: %s", err))
+		return
 	}
 
 	surveyVo := types.SurveyVO{
 		Audit:   &si.Audit,
 		Records: data,
 		Columns: columns,
+		Status:  si.fileUploads,
 	}
 
 	if err := database.PersistSurvey(surveyVo); err != nil {
@@ -178,13 +201,15 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 			Err(err).
 			Str("datasetName", datasetName).
 			Msg("Cannot persist dataset")
-		return fmt.Errorf("cannot persist dataset to database: %s", err)
+		si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist NI survey data: %s", err))
+
+		return
 	}
 
 	log.Debug().
 		Str("datasetName", datasetName).
 		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Imported and persisted dataset")
+		Msg("Imported and persisted NI survey data")
 
-	return nil
+	return
 }
