@@ -36,9 +36,7 @@ var header = make([]HeaderInfo, 0)
 
 //export goAddHeaderItem
 func goAddHeaderItem(pos C.int, name *C.char, varType C.int, end C.int) {
-	if int(end) != 1 { // we are done
-		header = append(header, HeaderInfo{C.GoString(name), int(varType)})
-	}
+	header = append(header, HeaderInfo{C.GoString(name), int(varType)})
 }
 
 func Generate(fileName string) int {
@@ -87,6 +85,8 @@ func main() {
 		fmt.Println("No items found in SPSS file. Is it Empty?")
 		os.Exit(1)
 	}
+
+	fmt.Println("length: ", +len(header))
 
 	_, _ = fmt.Fprintf(w, "package %s\n\n", *packageName)
 	_, _ = fmt.Fprintf(w, "type %s struct {\n", *structName)

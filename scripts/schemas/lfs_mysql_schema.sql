@@ -218,17 +218,13 @@ alter table quarterly_batch
 
 create table survey
 (
-    id            int          not null,
-    file_name     varchar(255) not null,
-    file_source   char(2)      null,
-    week          int          null,
-    month         int          null,
-    year          int          null,
-    column_name   varchar(255) not null,
-    column_number int          not null,
-    kind          int(255)     not null,
-    column_rows   longtext     not null,
-    primary key (id, file_name, column_name),
+    id          int          not null,
+    file_name   varchar(255) not null,
+    file_source char(2)      null,
+    week        int          not null,
+    month       int          not null,
+    year        int          not null,
+    columns     json         not null,
     constraint gb_key
         foreign key (id) references gb_batch_items (id)
             on delete cascade,
@@ -236,6 +232,12 @@ create table survey
         foreign key (id) references ni_batch_item (id)
             on delete cascade
 );
+
+create index survey_id_name_index
+    on survey (id);
+
+create index survey_period_index
+    on survey (year, month, week);
 
 create table survey_audit
 (

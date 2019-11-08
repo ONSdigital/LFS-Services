@@ -3,8 +3,16 @@ package filter
 import (
 	"github.com/rs/zerolog/log"
 	conf "services/config"
-	"services/dataset"
+	"services/types"
 )
+
+type Filter interface {
+	DropColumn(name string) bool
+	AddVariables(columns []string, data [][]string) ([]types.Column, error)
+	GetAudit() *types.Audit
+	SkipRowsFilter(header []string, data [][]string) ([][]string, error)
+	RenameColumns(column string) (string, bool)
+}
 
 var dropColumns = conf.Config.DropColumns.Survey
 var renameColumns map[string]string
@@ -22,7 +30,11 @@ func init() {
 }
 
 type BaseFilter struct {
-	dataset *dataset.Dataset
+	Audit *types.Audit
+}
+
+func (bf BaseFilter) GetAudit() *types.Audit {
+	return bf.Audit
 }
 
 /*
@@ -34,7 +46,7 @@ func (bf BaseFilter) DropColumn(name string) bool {
 			log.Debug().
 				Str("columnName", name).
 				Msg("Dropping column")
-			bf.dataset.NumVarLoaded = bf.dataset.NumVarLoaded - 1
+			bf.Audit.NumVarLoaded = bf.Audit.NumVarLoaded - 1
 			return true
 		}
 	}

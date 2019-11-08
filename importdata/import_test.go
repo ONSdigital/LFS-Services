@@ -3,6 +3,7 @@ package importdata_test
 import (
 	conf "services/config"
 	im "services/importdata"
+	"services/types"
 	"testing"
 )
 
@@ -45,21 +46,9 @@ func TestImportCSV(t *testing.T) {
 
 func TestImportSav(t *testing.T) {
 
-	type TestDataset struct {
-		Shiftno      float64 `spss:"Shiftno"`
-		Serial       float64 `spss:"Serial"`
-		Version      string  `spss:"Version"`
-		PortRoute2   float64 `spss:"PortRoute2"`
-		Baseport     string  `spss:"Baseport"`
-		PRouteLatDeg float64 `spss:"PRouteLatDeg"`
-		PRouteLonEW  string  `spss:"PRouteLonEW"`
-		DVLineName   string  `spss:"DVLineName"`
-		DVPortName   string  `spss:"DVPortName"`
-	}
+	var spssFile []types.GBSurveyInput
 
-	var spssFile []TestDataset
-
-	if err := im.ImportSavFile(testDirectory()+"ips1710bv2.sav", &spssFile); err != nil {
+	if err := im.ImportSavFile(testDirectory()+"LFSwk18PERS_non_confidential.sav", &spssFile); err != nil {
 		panic(err)
 	}
 

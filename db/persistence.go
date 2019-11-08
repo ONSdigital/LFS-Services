@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"services/config"
-	"services/dataset"
-	"services/db/mysql"
+	"services/db/postgres"
 	"services/types"
 	"sync"
 )
@@ -24,7 +23,7 @@ func GetDefaultPersistenceImpl() (Persistence, error) {
 		return cachedConnection, nil
 	}
 
-	cachedConnection = &mysql.MySQL{nil}
+	cachedConnection = &postgres.Postgres{nil}
 
 	if err := cachedConnection.Connect(); err != nil {
 		log.Info().
@@ -48,10 +47,12 @@ type Persistence interface {
 	GetMonthlyBatches() ([]types.Dashboard, error)
 
 	// Survey
-	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
-	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
+	//UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
+	//PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
 
 	// Address
+	// Import
+	PersistSurvey(vo types.SurveyVO) error
 	PersistAddressDataset(headers []string, rows [][]string, status *types.WSMessage) error
 
 	// User

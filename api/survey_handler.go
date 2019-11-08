@@ -5,10 +5,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
+	"services/types"
 	"strconv"
 )
 
-type SurveyImportHandler struct{}
+type SurveyImportHandler struct {
+	Audit types.Audit
+}
 
 func NewSurveyHandler() *SurveyImportHandler {
 	return &SurveyImportHandler{}

@@ -2,208 +2,207 @@ package filter
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"reflect"
-	"services/util"
+	"services/types"
 	"strconv"
-	"time"
 )
 
 type UKFilter struct {
 	BaseFilter
 }
 
-func (sf UKFilter) findLocation(headers []string, column string) (int, error) {
+func findPosition(headers []string, column string) (int, error) {
 	for i, j := range headers {
 		if j == column {
 			return i, nil
 		}
 	}
-	return 0, fmt.Errorf("column %s not found in findLoaction()", column)
+	return 0, fmt.Errorf("column %s not found", column)
 }
 
-func (sf UKFilter) addHSerial() error {
-	column, err := sf.dataset.AddColumn("HSERIAL", reflect.Int64)
-	if err != nil {
-		return err
-	}
+func (sf UKFilter) addHSerial(header []string, rows [][]string) (types.Column, error) {
 
-	startAllrows := time.Now()
-	header, items := sf.dataset.GetAllRows()
-	log.Debug().
-		Str("elapsedTime", util.FmtDuration(startAllrows)).
-		Msg("Get all rows")
+	header = append(header, "Hserial")
 
 	// get indexes of items we are interested in for the calculation
-	quotaInx, err := sf.findLocation(header, "QUOTA")
+	quotaInx, err := findPosition(header, "Quota")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	weekInx, err := sf.findLocation(header, "WEEK")
+	weekInx, err := findPosition(header, "Week")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	w1yrInx, err := sf.findLocation(header, "W1YR")
+	w1yrInx, err := findPosition(header, "W1Yr")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	qrtrInx, err := sf.findLocation(header, "QRTR")
+	qrtrInx, err := findPosition(header, "Qrtr")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	addrInx, err := sf.findLocation(header, "ADD")
+	addrInx, err := findPosition(header, "Addr")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	wavfndInx, err := sf.findLocation(header, "WAVFND")
+	wavfndInx, err := findPosition(header, "WavFnd")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	hhldInx, err := sf.findLocation(header, "HHLD")
+	hhldInx, err := findPosition(header, "Hhld")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
 
-	for i := range column.Rows {
-		row := items[i]
+	for _, j := range rows {
+
+		var row = j
 
 		quota, err := strconv.ParseFloat(row[quotaInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		week, err := strconv.ParseFloat(row[weekInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		w1yr, err := strconv.ParseFloat(row[w1yrInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		qrtr, err := strconv.ParseFloat(row[qrtrInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		addr, err := strconv.ParseFloat(row[addrInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		wavfnd, err := strconv.ParseFloat(row[wavfndInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		hhld, err := strconv.ParseFloat(row[hhldInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		n := (quota * 1000000000) + (week * 10000000) + (w1yr * 1000000) +
 			(qrtr * 100000) + (addr * 1000) + (wavfnd * 100) + (hhld + 1)
-		column.Rows[i] = int64(n)
+
+		row = append(row, fmt.Sprintf("%f", int64(n)))
 	}
 
-	return nil
+	column := types.Column{
+		Name:  "Hserial",
+		Skip:  false,
+		ColNo: len(header),
+		Kind:  reflect.Int64,
+	}
+
+	return column, nil
 }
 
-func (sf UKFilter) addCASENO() error {
+func (sf UKFilter) addCaseno(header []string, rows [][]string) (types.Column, error) {
 
-	column, err := sf.dataset.AddColumn("CASENO", reflect.Int64)
-	if err != nil {
-		return err
-	}
-
-	startAllrows := time.Now()
-	header, items := sf.dataset.GetAllRows()
-	log.Debug().
-		Str("elapsedTime", util.FmtDuration(startAllrows)).
-		Msg("Get all rows")
+	header = append(header, "CaseNo")
 
 	// get indexes of items we are interested in for the calculation
-	quotaInx, err := sf.findLocation(header, "QUOTA")
+	quotaInx, err := findPosition(header, "Quota")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	weekInx, err := sf.findLocation(header, "WEEK")
+	weekInx, err := findPosition(header, "Week")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	w1yrInx, err := sf.findLocation(header, "W1YR")
+	w1yrInx, err := findPosition(header, "W1Yr")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	qrtrInx, err := sf.findLocation(header, "QRTR")
+	qrtrInx, err := findPosition(header, "Qrtr")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	addrInx, err := sf.findLocation(header, "ADD")
+	addrInx, err := findPosition(header, "Addr")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	wavfndInx, err := sf.findLocation(header, "WAVFND")
+	wavfndInx, err := findPosition(header, "WavFnd")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	hhldInx, err := sf.findLocation(header, "HHLD")
+	hhldInx, err := findPosition(header, "Hhld")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
-	persnoInx, err := sf.findLocation(header, "PERSON")
+	persnoInx, err := findPosition(header, "PersNo")
 	if err != nil {
-		return err
+		return types.Column{}, err
 	}
 
-	for i := range column.Rows {
-		row := items[i]
+	for _, j := range rows {
+
+		var row = j
 
 		quota, err := strconv.ParseFloat(row[quotaInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		week, err := strconv.ParseFloat(row[weekInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		w1yr, err := strconv.ParseFloat(row[w1yrInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		qrtr, err := strconv.ParseFloat(row[qrtrInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		addr, err := strconv.ParseFloat(row[addrInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		wavfnd, err := strconv.ParseFloat(row[wavfndInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		hhld, err := strconv.ParseFloat(row[hhldInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		persno, err := strconv.ParseFloat(row[persnoInx], 64)
 		if err != nil {
-			return err
+			return types.Column{}, err
 		}
 
 		n := (quota * 100000000000) + (week * 1000000000) + (w1yr * 100000000) +
 			(qrtr * 10000000) + (addr * 100000) + (wavfnd * 10000) + (hhld * 100) + persno
-		column.Rows[i] = int64(n)
+
+		row = append(row, fmt.Sprintf("%f", int64(n)))
 	}
 
-	return nil
+	column := types.Column{
+		Name:  "CaseNo",
+		Skip:  false,
+		ColNo: len(header),
+		Kind:  reflect.Int64,
+	}
+
+	return column, nil
 }
