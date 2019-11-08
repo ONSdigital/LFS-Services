@@ -60,6 +60,9 @@ func main() {
 	router.HandleFunc("/batches/annual/{year}", batchHandler.CreateAnnualBatchHandler).Methods(http.MethodPost)
 
 	// Batch/File info
+	router.HandleFunc("/imports/survey/gb/{year}/{week}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/ni/{year}/{month}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
+	// Batch info
 	router.HandleFunc("/batches/display/annual/{year}", idHandler.HandleAnnualBatchIdsRequest).Methods(http.MethodGet)
 	router.HandleFunc("/batches/display/quarterly/{year}/{quarter}", idHandler.HandleQuarterlyBatchIdsRequest).Methods(http.MethodGet)
 	router.HandleFunc("/batches/display/monthly/{year}/{month}", idHandler.HandleMonthlyBatchIdsRequest).Methods(http.MethodGet)

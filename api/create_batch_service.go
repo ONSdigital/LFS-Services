@@ -24,7 +24,7 @@ func (b BatchHandler) generateMonthBatchId(month int, year int, description stri
 	}
 
 	batch := types.MonthlyBatch{
-		Id:          0,
+		//Id:          0,
 		Year:        year,
 		Month:       month,
 		Status:      0,
@@ -80,7 +80,7 @@ func (b BatchHandler) generateQuarterBatchId(quarter int, year int, description 
 func (b BatchHandler) generateYearBatchId(year int, description string) error {
 	// Set batch variables
 	batch := types.AnnualBatch{
-		Id:          1,
+		Id:          0,
 		Year:        year,
 		Status:      0,
 		Description: description,

@@ -1,4 +1,4 @@
-package mysql
+package postgres
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 )
 
 type DBAudit struct {
-	MySQL
+	Postgres
 }
 
 var surveyAuditTable string
@@ -21,7 +21,7 @@ func init() {
 	}
 }
 
-func (s MySQL) AuditFileUploadEvent(event types.Audit) error {
+func (s Postgres) AuditFileUploadEvent(event types.Audit) error {
 
 	dbAudit := s.DB.Collection(surveyAuditTable)
 	_, err := dbAudit.Insert(event)
@@ -32,7 +32,7 @@ func (s MySQL) AuditFileUploadEvent(event types.Audit) error {
 	return nil
 }
 
-func (s MySQL) GetAllAudits() ([]types.Audit, error) {
+func (s Postgres) GetAllAudits() ([]types.Audit, error) {
 
 	var audits []types.Audit
 	res := s.DB.Collection(surveyAuditTable).Find()
@@ -45,7 +45,7 @@ func (s MySQL) GetAllAudits() ([]types.Audit, error) {
 	return audits, nil
 }
 
-func (s MySQL) GetAuditsByYear(year types.Year) ([]types.Audit, error) {
+func (s Postgres) GetAuditsByYear(year types.Year) ([]types.Audit, error) {
 
 	var audits []types.Audit
 	dbAudit := s.DB.Collection(surveyAuditTable)
@@ -53,6 +53,7 @@ func (s MySQL) GetAuditsByYear(year types.Year) ([]types.Audit, error) {
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
+	//res := dbAudit.Find("year", year)
 	res := dbAudit.Find(db.Cond{"year": year})
 
 	defer func() { _ = res.Close() }()
@@ -63,7 +64,7 @@ func (s MySQL) GetAuditsByYear(year types.Year) ([]types.Audit, error) {
 	return audits, nil
 }
 
-func (s MySQL) GetAuditsByYearMonth(month types.Month, year types.Year) ([]types.Audit, error) {
+func (s Postgres) GetAuditsByYearMonth(month types.Month, year types.Year) ([]types.Audit, error) {
 
 	var audits []types.Audit
 	dbAudit := s.DB.Collection(surveyAuditTable)
@@ -71,6 +72,7 @@ func (s MySQL) GetAuditsByYearMonth(month types.Month, year types.Year) ([]types
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
+	//res := dbAudit.Find("year", year, "month", month)
 	res := dbAudit.Find(db.Cond{"year": year, "month": month})
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {
@@ -80,7 +82,7 @@ func (s MySQL) GetAuditsByYearMonth(month types.Month, year types.Year) ([]types
 	return audits, nil
 }
 
-func (s MySQL) GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Audit, error) {
+func (s Postgres) GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Audit, error) {
 
 	var audits []types.Audit
 	dbAudit := s.DB.Collection(surveyAuditTable)
@@ -88,15 +90,8 @@ func (s MySQL) GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Au
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
+	//res := dbAudit.Find("year", year, "week", week)
 	res := dbAudit.Find(db.Cond{"year": year, "week": week})
-	err := res.All(&audits)
-
-	// Error handling
-	if err != nil {
-		log.Debug().
-			Msg("Get Week Audits error: " + err.Error())
-		return nil, err
-	}
 
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {

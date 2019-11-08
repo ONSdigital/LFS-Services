@@ -3,76 +3,88 @@ package api
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"reflect"
 	"services/api/filter"
-	"services/api/validate"
-	"services/dataset"
 	"services/db"
+	"services/importdata/sav"
 	"services/types"
 	"services/util"
 	"time"
 )
 
-func (im SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, week, year, id int) error {
-	startTime := time.Now()
+func loadSav(in string, out interface{}) (types.SavImportData, error) {
 
-	d, err := dataset.NewDataset(datasetName)
-	if err != nil {
-		return err
+	// ensure out is a struct
+	if reflect.ValueOf(out).Kind() != reflect.Struct {
+		log.Error().
+			Str("method", "readSav").
+			Msg("The output interface is not a struct")
+		return types.SavImportData{}, fmt.Errorf("%T is not a struct type", out)
 	}
 
-	var surveyFilter = filter.NewGBSurveyFilter(&d)
+	start := time.Now()
 
-	err = d.LoadSav(tmpfile, datasetName, types.SurveyInput{}, surveyFilter)
+	records, err := sav.ImportSav(in)
 	if err != nil {
-		return err
+		return types.SavImportData{}, err
 	}
 
-	startValidation := time.Now()
-
-	val := validate.NewSurveyValidation(&d, validate.GB)
-	validationResponse, err := val.Validate(week, year)
-	if err != nil {
+	if records.RowCount == 0 {
 		log.Warn().
-			Err(err).
-			Str("status", "Failed").
-			Str("elapsedTime", util.FmtDuration(startValidation)).
-			Msg("Validator failed")
-		return err
-	}
-
-	if validationResponse.ValidationResult == validate.ValidationFailed {
-		log.Warn().
-			Str("status", "Failed").
-			Str("errorMessage", validationResponse.ErrorMessage).
-			Str("elapsedTime", util.FmtDuration(startTime)).
-			Msg("Validator failed")
-		return fmt.Errorf(validationResponse.ErrorMessage)
+			Str("method", "readSav").
+			Msg("The SAV file is empty")
+		return types.SavImportData{}, fmt.Errorf("the spss file: %s is empty", in)
 	}
 
 	log.Debug().
-		Str("status", "Successful").
-		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Validator complete")
+		Str("file", in).
+		Int("records", records.RowCount-1).
+		Str("elapsedTime", util.FmtDuration(start)).
+		Msg("Read Sav file")
 
-	cnt, err := surveyFilter.AddVariables()
+	return records, nil
+}
+
+func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, week, year, id int) error {
+	startTime := time.Now()
+
+	spssData, err := loadSav(tmpfile, types.GBSurveyInput{})
+	if err != nil {
+		return err
+	}
+
+	headers, body := sav.SPSSDatatoArray(spssData)
+
+	si.Audit.ReferenceDate = time.Now()
+	si.Audit.NumObFile = len(body)
+	si.Audit.NumObLoaded = len(body)
+	si.Audit.NumVarFile = len(headers)
+	si.Audit.NumVarLoaded = len(headers)
+	si.Audit.FileName = datasetName
+	si.Audit.Id = id
+	si.Audit.Year = year
+	si.Audit.Week = week
+	si.Audit.FileSource = types.GBSource
+
+	pipeline := filter.NewGBPipeLine(headers, body, &si.Audit)
+
+	columns, data, err := pipeline.RunPipeline()
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("datasetName", datasetName)
+			Str("datasetName", datasetName).
+			Msg("pipeline failed")
 		return err
 	}
 
-	// add the number of variables added
-	d.NumVarLoaded = d.NumVarLoaded + cnt
-
 	log.Debug().
 		Str("datasetName", datasetName).
-		Int("numObservationsFile", d.NumObFile).
-		Int("numObservationsLoaded", d.NumObLoaded).
-		Int("numVarFile", d.NumVarFile).
-		Int("numVarLoaded", d.NumVarLoaded).
+		Int("numObservationsFile", si.Audit.NumObFile).
+		Int("numObservationsLoaded", si.Audit.NumObLoaded).
+		Int("numVarFile", si.Audit.NumVarFile).
+		Int("numVarLoaded", si.Audit.NumVarLoaded).
 		Str("status", "Successful").
-		Msg("Filtering complete")
+		Msg("Pipeline complete")
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -84,14 +96,12 @@ func (im SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 	}
 
 	surveyVo := types.SurveyVO{
-		Id:         id,
-		FileName:   d.DatasetName,
-		FileSource: "GB",
-		Week:       week,
-		Month:      0,
-		Year:       year,
+		Audit:   &si.Audit,
+		Records: data,
+		Columns: columns,
 	}
-	if err := database.PersistSurveyDataset(d, surveyVo); err != nil {
+
+	if err := database.PersistSurvey(surveyVo); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
@@ -101,75 +111,52 @@ func (im SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 
 	log.Debug().
 		Str("datasetName", datasetName).
-		Int("rowCount", d.NumRows()).
-		Int("columnCount", d.NumColumns()).
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Imported and persisted dataset")
 
 	return nil
 }
 
-func (im SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, month, year, id int) error {
+func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, month, year, id int) error {
 	startTime := time.Now()
 
-	d, err := dataset.NewDataset(datasetName)
+	spssData, err := loadSav(tmpfile, types.GBSurveyInput{})
 	if err != nil {
 		return err
 	}
 
-	var surveyFilter = filter.NewNISurveyFilter(&d)
+	headers, body := sav.SPSSDatatoArray(spssData)
 
-	err = d.LoadSav(tmpfile, datasetName, types.SurveyInput{}, surveyFilter)
-	if err != nil {
-		return err
-	}
+	si.Audit.ReferenceDate = time.Now()
+	si.Audit.NumObFile = len(body)
+	si.Audit.NumObLoaded = len(body)
+	si.Audit.NumVarFile = len(headers)
+	si.Audit.NumVarLoaded = len(headers)
+	si.Audit.FileName = datasetName
+	si.Audit.Id = id
+	si.Audit.Year = year
+	si.Audit.Month = month
+	si.Audit.FileSource = types.NISource
 
-	startValidation := time.Now()
+	pipeline := filter.NewNIPipeLine(headers, body, &si.Audit)
 
-	val := validate.NewSurveyValidation(&d, validate.GB)
-	validationResponse, err := val.Validate(month, year)
-	if err != nil {
-		log.Warn().
-			Err(err).
-			Str("status", "Failed").
-			Str("elapsedTime", util.FmtDuration(startValidation)).
-			Msg("Validator failed")
-		return err
-	}
-
-	if validationResponse.ValidationResult == validate.ValidationFailed {
-		log.Warn().
-			Str("status", "Failed").
-			Str("errorMessage", validationResponse.ErrorMessage).
-			Str("elapsedTime", util.FmtDuration(startTime)).
-			Msg("Validator failed")
-		return fmt.Errorf(validationResponse.ErrorMessage)
-	}
-
-	log.Debug().
-		Str("status", "Successful").
-		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Validator complete")
-
-	cnt, err := surveyFilter.AddVariables()
+	columns, data, err := pipeline.RunPipeline()
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("datasetName", datasetName)
+			Str("datasetName", datasetName).
+			Msg("pipeline failed")
 		return err
 	}
 
-	// add the number of variables added
-	d.NumVarLoaded = d.NumVarLoaded + cnt
-
 	log.Debug().
 		Str("datasetName", datasetName).
-		Int("numObservationsFile", d.NumObFile).
-		Int("numObservationsLoaded", d.NumObLoaded).
-		Int("numVarFile", d.NumVarFile).
-		Int("numVarLoaded", d.NumVarLoaded).
+		Int("numObservationsFile", si.Audit.NumObFile).
+		Int("numObservationsLoaded", si.Audit.NumObLoaded).
+		Int("numVarFile", si.Audit.NumVarFile).
+		Int("numVarLoaded", si.Audit.NumVarLoaded).
 		Str("status", "Successful").
-		Msg("Filtering complete")
+		Msg("Pipeline complete")
 
 	database, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -181,15 +168,12 @@ func (im SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 	}
 
 	surveyVo := types.SurveyVO{
-		Id:         id,
-		FileName:   d.DatasetName,
-		FileSource: "NI",
-		Week:       0,
-		Month:      month,
-		Year:       year,
+		Audit:   &si.Audit,
+		Records: data,
+		Columns: columns,
 	}
 
-	if err := database.PersistSurveyDataset(d, surveyVo); err != nil {
+	if err := database.PersistSurvey(surveyVo); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
@@ -199,8 +183,6 @@ func (im SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 
 	log.Debug().
 		Str("datasetName", datasetName).
-		Int("rowCount", d.NumRows()).
-		Int("columnCount", d.NumColumns()).
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Imported and persisted dataset")
 

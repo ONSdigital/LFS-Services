@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"services/io/spss"
+	"services/types"
 )
 
 type Reader interface {
@@ -27,16 +28,16 @@ func (f FileInput) Read(out interface{}) error {
 		return err
 	}
 
-	spssRows, err := ImportSav(f.inputType)
+	spssData, err := ImportSav(f.inputType)
 	if err != nil {
 		return err
 	}
 
-	if len(spssRows) == 0 {
+	if spssData.RowCount == 0 {
 		return fmt.Errorf("spss file: %s is empty", f.inputType)
 	}
 
-	if err := ensureOutCapacity(&outValue, len(spssRows)); err != nil { // Ensure the container is big enough to hold the SPSS content
+	if err := ensureOutCapacity(&outValue, spssData.RowCount+1); err != nil { // Ensure the container is big enough to hold the SPSS content
 		return err
 	}
 
@@ -45,8 +46,7 @@ func (f FileInput) Read(out interface{}) error {
 		return errors.New("no spss struct tags found")
 	}
 
-	headers := spssRows[0]
-	body := spssRows[1:]
+	headers, body := SPSSDatatoArray(spssData)
 
 	spssHeadersLabels := make(map[int]*spss.FieldInfo, len(outInnerStructInfo.Fields)) // Used to store the corresponding header <-> position in CSV
 
@@ -55,7 +55,6 @@ func (f FileInput) Read(out interface{}) error {
 		curHeaderCount := headerCount[csvColumnHeader]
 		if fieldInfo := getCSVFieldPosition(csvColumnHeader, outInnerStructInfo, curHeaderCount); fieldInfo != nil {
 			spssHeadersLabels[i] = fieldInfo
-
 		}
 	}
 
@@ -86,6 +85,23 @@ func (f FileInput) Read(out interface{}) error {
 		outValue.Index(i).Set(outInner)
 	}
 	return nil
+}
+
+func SPSSDatatoArray(spssData types.SavImportData) ([]string, [][]string) {
+	headers := make([]string, spssData.HeaderCount)
+	for i, val := range spssData.Header {
+		headers[i] = val.VariableName
+	}
+
+	body := make([][]string, spssData.RowCount)
+	for i, _ := range spssData.Rows {
+		z := make([]string, spssData.HeaderCount)
+		for j, y := range spssData.Rows[i].RowData {
+			z[j] = y
+		}
+		body[i] = z
+	}
+	return headers, body
 }
 
 func mismatchStructFields(structInfo []spss.FieldInfo, headers []string) []string {
