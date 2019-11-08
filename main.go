@@ -42,25 +42,43 @@ func main() {
 
 	router := mux.NewRouter()
 
+	dashboardHandler := api.NewDashboardHandler()
 	addressesHandler := api.NewAddressImportHandler()
-	auditHandler := api.NewAuditHandler()
 	batchHandler := api.NewBatchHandler()
+	idHandler := api.NewIdHandler()
+	//importsHandler := api.NewImportsHandler()
+	auditHandler := api.NewAuditHandler()
 	loginHandler := api.NewLoginHandler()
 	surveyHandler := api.NewSurveyHandler()
 
-	router.HandleFunc("/batches/{year}/{period}", batchHandler.CreateBatchHandler).Methods(http.MethodPost)
+	// Dashboard
+	router.HandleFunc("/dashboard", dashboardHandler.HandleDashboardRequest).Methods(http.MethodGet)
+
+	// Create New Batches Handlers
+	router.HandleFunc("/batches/monthly/{year}/{month}", batchHandler.CreateMonthlyBatchHandler).Methods(http.MethodPost)
+	router.HandleFunc("/batches/quarterly/{year}/{quarter}", batchHandler.CreateQuarterlyBatchHandler).Methods(http.MethodPost)
+	router.HandleFunc("/batches/annual/{year}", batchHandler.CreateAnnualBatchHandler).Methods(http.MethodPost)
 
 	router.HandleFunc("/imports/survey/gb/{year}/{week}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/survey/ni/{year}/{month}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
+	// Batch info
+	router.HandleFunc("/batches/display/annual/{year}", idHandler.HandleAnnualBatchIdsRequest).Methods(http.MethodGet)
+	router.HandleFunc("/batches/display/quarterly/{year}/{quarter}", idHandler.HandleQuarterlyBatchIdsRequest).Methods(http.MethodGet)
+	router.HandleFunc("/batches/display/monthly/{year}/{month}", idHandler.HandleMonthlyBatchIdsRequest).Methods(http.MethodGet)
+
+	// Imports
+	router.HandleFunc("/imports/survey/gb/{week}/{year}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/ni/{month}/{year}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/address", addressesHandler.AddressUploadHandler).Methods(http.MethodPost)
 
+	// Audits
 	router.HandleFunc("/audits", auditHandler.HandleAllAuditRequest).Methods(http.MethodGet)
 	router.HandleFunc("/audits/year/{year}", auditHandler.HandleYearAuditRequest).Methods(http.MethodGet)
 	router.HandleFunc("/audits/month/{year}/{month}", auditHandler.HandleMonthAuditRequest).Methods(http.MethodGet)
 	router.HandleFunc("/audits/week/{year}/{week}", auditHandler.HandleWeekAuditRequest).Methods(http.MethodGet)
 
+	// Other
 	router.HandleFunc("/login/{user}", loginHandler.LoginHandler).Methods(http.MethodGet)
-
 	router.HandleFunc("/ws", ws.WebSocketHandler{}.ServeWs).Methods(http.MethodGet)
 
 	listenAddress := config.Config.Service.ListenAddress

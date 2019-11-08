@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "943b0d4e-6bd6-455e-855d-44e744603f00",
+		"_postman_id": "82b16a81-45bb-46b1-8a52-331e51f7a04e",
 		"name": "LFS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -160,7 +160,7 @@
 			"response": []
 		},
 		{
-			"name": "CreateBatch",
+			"name": "CreateMonthlyBatch",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -191,6 +191,70 @@
 			"response": []
 		},
 		{
+			"name": "CreateQuarterlyBatch",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "description",
+							"value": "test batchy",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/batches/quarterly/Q1/2014",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"quarterly",
+						"Q1",
+						"2014"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateAnnualBatch",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "description",
+							"value": "test batchy",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/batches/quarterly/Q1/2014",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"quarterly",
+						"Q1",
+						"2014"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Audit - All",
 			"request": {
 				"method": "GET",
@@ -204,6 +268,93 @@
 					"port": "8000",
 					"path": [
 						"audits"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "YearIDs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/annual/2015",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"annual",
+						"2015"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "QuarterIDs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/quarterly/2015/Q1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"quarterly",
+						"2015",
+						"Q1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "MonthIDs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/batches/display/monthly/2014/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"batches",
+						"display",
+						"monthly",
+						"2014",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Dashboard",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/dashboard",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"dashboard"
 					]
 				}
 			},

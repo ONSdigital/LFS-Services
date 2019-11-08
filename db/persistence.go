@@ -41,22 +41,43 @@ type Persistence interface {
 	Connect() error
 	Close()
 
+	// Dashboard
+	GetAnnualBatches() ([]types.Dashboard, error)
+	GetQuarterlyBatches() ([]types.Dashboard, error)
+	GetMonthlyBatches() ([]types.Dashboard, error)
+
+	// Survey
+	UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
+	PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
+
+	// Address
 	// Import
 	PersistSurvey(vo types.SurveyVO) error
 	PersistAddressDataset(headers []string, rows [][]string, status *types.WSMessage) error
+
+	// User
 	GetUserID(user string) (types.UserCredentials, error)
 
-	// Batch
+	// New Batch
 	MonthlyBatchExists(month, year int) bool
-	SuccessfulMonthlyBatchesExist(year int) bool
-	SuccessfulQuarterlyBatchesExist(year int) bool
 	AnnualBatchExists(year int) bool
+	QuarterBatchExists(quarter, year int) bool
+
+	ValidateMonthsForQuarterlyBatch(period, year int) bool
+	ValidateMonthsForAnnualBatch(year int) bool
+	ValidateQuartersForAnnualBatch(year int) bool
 
 	CreateMonthlyBatch(batch types.MonthlyBatch) error
+	CreateQuarterlyBatch(batch types.QuarterlyBatch) error
 	CreateAnnualBatch(batch types.AnnualBatch) error
 
 	FindGBBatchInfo(week, year int) (types.GBBatchItem, error)
 	FindNIBatchInfo(month, year int) (types.NIBatchItem, error)
+
+	// Batch IDs
+	GetIdsByYear(year types.Year) ([]types.YearID, error)
+	GetIdsByQuarter(year types.Year, quarter types.Quarter) ([]types.QuarterID, error)
+	GetIdsByMonth(year types.Year, quarter types.Month) ([]types.MonthID, error)
 
 	// Audits
 	GetAllAudits() ([]types.Audit, error)

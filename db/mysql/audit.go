@@ -53,7 +53,6 @@ func (s MySQL) GetAuditsByYear(year types.Year) ([]types.Audit, error) {
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
-	//res := dbAudit.Find("year", year)
 	res := dbAudit.Find(db.Cond{"year": year})
 
 	defer func() { _ = res.Close() }()
@@ -72,7 +71,6 @@ func (s MySQL) GetAuditsByYearMonth(month types.Month, year types.Year) ([]types
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
-	//res := dbAudit.Find("year", year, "month", month)
 	res := dbAudit.Find(db.Cond{"year": year, "month": month})
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {
@@ -90,8 +88,15 @@ func (s MySQL) GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Au
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
-	//res := dbAudit.Find("year", year, "week", week)
 	res := dbAudit.Find(db.Cond{"year": year, "week": week})
+	err := res.All(&audits)
+
+	// Error handling
+	if err != nil {
+		log.Debug().
+			Msg("Get Week Audits error: " + err.Error())
+		return nil, err
+	}
 
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {

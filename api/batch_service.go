@@ -38,16 +38,49 @@ func (b BatchHandler) generateMonthBatchId(month int, year int, description stri
 	return nil
 }
 
-func (b BatchHandler) generateQuarterBatchId(quarter string, year int) error {
-	// Call batch service to validate
+func (b BatchHandler) generateQuarterBatchId(quarter int, year int, description string) error {
+	batch := types.QuarterlyBatch{
+		Id:          0,
+		Quarter:     quarter,
+		Year:        year,
+		Status:      0,
+		Description: description,
+	}
+
+	// Validate quarter
+	if quarter < 1 || quarter > 4 {
+		return fmt.Errorf("the quarter value is %d, must be between 1 and 4", quarter)
+	}
+
+	// Establish DB connection
+	dbase, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		log.Error().Err(err)
+		return err
+	}
+
+	// Check if quarter batch already exists
+	if found := dbase.QuarterBatchExists(quarter, year); found {
+		return fmt.Errorf("q%d batch for year %d already exists", quarter, year)
+	}
+
+	// Ensure successful monthly exist
+	if found := dbase.ValidateMonthsForQuarterlyBatch(quarter, year); !found {
+		return fmt.Errorf("3 valid months for year %d required", year)
+	}
+
+	// Create shizznizz
+	if err = dbase.CreateQuarterlyBatch(batch); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (b BatchHandler) generateYearBatchId(year int, description string) error {
-	// Set batch variable
+	// Set batch variables
 	batch := types.AnnualBatch{
-		Id:          0,
+		Id:          1,
 		Year:        year,
 		Status:      0,
 		Description: description,
@@ -66,12 +99,12 @@ func (b BatchHandler) generateYearBatchId(year int, description string) error {
 	}
 
 	// Ensure successful monthly exist
-	if found := dbase.SuccessfulMonthlyBatchesExist(year); !found {
+	if found := dbase.ValidateMonthsForAnnualBatch(year); !found {
 		return fmt.Errorf("12 valid months for year %d required", year)
 	}
 
 	// Ensure successful quarterly exist
-	if found := dbase.SuccessfulQuarterlyBatchesExist(year); !found {
+	if found := dbase.ValidateQuartersForAnnualBatch(year); !found {
 		return fmt.Errorf("4 valid quarters for year %d required", year)
 	}
 
