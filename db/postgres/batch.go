@@ -293,8 +293,8 @@ func (s Postgres) CreateQuarterlyBatch(batch types.QuarterlyBatch) error {
 	if err != nil {
 		log.Error().
 			Err(err).
-			Msg("Cannot insert into " + batchTable)
-		return fmt.Errorf("insert into %s failed, error: %s", batchTable, err)
+			Msg("Cannot insert into " + quarterlyBatchTable)
+		return fmt.Errorf("insert into %s failed, error: %s", quarterlyBatchTable, err)
 	}
 
 	// Commit
@@ -324,8 +324,8 @@ func (s Postgres) CreateAnnualBatch(batch types.AnnualBatch) error {
 	if err != nil {
 		log.Error().
 			Err(err).
-			Msg("Cannot insert into " + batchTable)
-		return fmt.Errorf("insert into %s failed, error: %s", batchTable, err)
+			Msg("Cannot insert into " + annualBatchTable)
+		return fmt.Errorf("insert into %s failed, error: %s", annualBatchTable, err)
 	}
 
 	// Commit
