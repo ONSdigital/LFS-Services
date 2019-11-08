@@ -43,13 +43,13 @@ func main() {
 	router := mux.NewRouter()
 
 	dashboardHandler := api.NewDashboardHandler()
-	addressesHandler := api.NewAddressImportHandler()
 	batchHandler := api.NewBatchHandler()
 	idHandler := api.NewIdHandler()
-	//importsHandler := api.NewImportsHandler()
-	auditHandler := api.NewAuditHandler()
-	loginHandler := api.NewLoginHandler()
 	surveyHandler := api.NewSurveyHandler()
+	addressesHandler := api.NewAddressImportHandler()
+	auditHandler := api.NewAuditHandler()
+	//importsHandler := api.NewImportsHandler()
+	loginHandler := api.NewLoginHandler()
 
 	// Dashboard
 	router.HandleFunc("/dashboard", dashboardHandler.HandleDashboardRequest).Methods(http.MethodGet)
@@ -59,6 +59,7 @@ func main() {
 	router.HandleFunc("/batches/quarterly/{year}/{quarter}", batchHandler.CreateQuarterlyBatchHandler).Methods(http.MethodPost)
 	router.HandleFunc("/batches/annual/{year}", batchHandler.CreateAnnualBatchHandler).Methods(http.MethodPost)
 
+	// Batch/File info
 	router.HandleFunc("/imports/survey/gb/{year}/{week}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/survey/ni/{year}/{month}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
 	// Batch info
