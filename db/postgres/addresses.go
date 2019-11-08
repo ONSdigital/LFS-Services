@@ -84,6 +84,8 @@ func (s Postgres) PersistAddressDataset(header []string, rows [][]string, status
 	cnt := 0
 	batchCount := 0
 
+	defer status.SetUploadFinished()
+
 	for j, row := range rows {
 		buffer.WriteString("(")
 
@@ -169,8 +171,6 @@ func (s Postgres) PersistAddressDataset(header []string, rows [][]string, status
 	log.Debug().
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Addresses data persisted")
-
-	status.SetUploadFinished()
 
 	return nil
 }
