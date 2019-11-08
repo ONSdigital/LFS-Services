@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -14,225 +13,140 @@ import (
 	"testing"
 )
 
-func cleanseMonthlyBatchTable() error {
-	gbBatchTable := config.Config.Database.GbBatchTable
-	if gbBatchTable == "" {
-		panic("gb batch table configuration not set")
-	}
+// TODO: Ask Paul how to condense these types
+type successfulTestCase struct {
+	description      string
+	year             string
+	month            string
+	expectedResponse types.OkayResponse
+}
 
-	niBatchTable := config.Config.Database.NiBatchTable
-	if niBatchTable == "" {
-		panic("gb batch table configuration not set")
-	}
+type xFailTestCase struct {
+	description      string
+	year             string
+	month            string
+	expectedResponse types.ErrorResponse
+}
 
-	batchTable := config.Config.Database.MonthlyBatchTable
-	if batchTable == "" {
-		panic("monthly batch table configuration not set")
-	}
-
+func cleanseMonthlyBatchTable(t *testing.T) {
 	// Establish DB connection
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
-		return err
+		t.Fatalf(err.Error())
 	}
 
-	// First cleanse gb_batch_items due to constraints on foreign key
-	if err = dbase.DeleteFrom(gbBatchTable); err != nil {
-		return err
-	}
+	gbBatchTable := config.Config.Database.GbBatchTable
+	niBatchTable := config.Config.Database.NiBatchTable
+	batchTable := config.Config.Database.MonthlyBatchTable
 
-	// Then cleanse ni_batch_items due to constraints on foreign key
-	if err = dbase.DeleteFrom(niBatchTable); err != nil {
-		return err
-	}
+	tables := []string{gbBatchTable, niBatchTable, batchTable}
 
-	// Finally cleanse monthly_batch table
-	if err = dbase.DeleteFrom(batchTable); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func createMonthlyBatchSetup(cleanse bool, vars map[string]string) (bool, *httptest.ResponseRecorder) {
-	if cleanse {
-		// Cleanse monthly tables
-		err := cleanseMonthlyBatchTable()
-
-		if err != nil {
-			log.Error().Msg(err.Error())
-			return false, nil
+	// For each table: verify configuration set and then cleanse
+	for _, table := range tables {
+		if table == "" {
+			t.Fatalf("%s table configuration not set", table)
+		}
+		if err := dbase.DeleteFrom(table); err != nil {
+			t.Fatalf(err.Error())
 		}
 	}
-
-	year := vars["year"]
-	month := vars["month"]
-
-	url := fmt.Sprintf("/batches/monthly/%s/%s", year, month)
-
-	r, _ := http.NewRequest("POST", url, nil)
-	w := httptest.NewRecorder()
-
-	r = mux.SetURLVars(r, vars)
-
-	BatchHandler{}.CreateMonthlyBatchHandler(w, r)
-
-	return true, w
-
 }
 
-// Test to assert successful creation of monthly batch for May 2014
-func TestCreateMonthlyBatchMay2014(t *testing.T) {
-	vars := map[string]string{
-		"year":  "2014",
-		"month": "06",
-	}
-	expectedResponse := types.OkayResponse{Status: OK}
-	expected, err := json.Marshal(expectedResponse)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		t.FailNow()
+func TestMonth(t *testing.T) {
+	// Cleansing and any setup
+	cleanseMonthlyBatchTable(t)
+
+	// TODO: Ask Paul how to prettify this!
+	testCases := []successfulTestCase{
+		{
+			description:      "Create successful Monthly batch for May 2014",
+			year:             "2014",
+			month:            "05",
+			expectedResponse: types.OkayResponse{Status: OK},
+		},
+		{
+			description:      "Create successful Monthly batch for Jan 2016",
+			year:             "2016",
+			month:            "1",
+			expectedResponse: types.OkayResponse{Status: OK},
+		},
+		{
+			description:      "Create successful Monthly batch for Dec 2018",
+			year:             "2018",
+			month:            "12",
+			expectedResponse: types.OkayResponse{Status: OK},
+		},
 	}
 
-	res, w := createMonthlyBatchSetup(true, vars)
+	for _, tc := range testCases {
+		r := httptest.NewRequest("POST", "/batches/monthly/", nil)
+		r = mux.SetURLVars(r, map[string]string{"year": tc.year, "month": tc.month})
+		w := httptest.NewRecorder()
 
-	if res == false {
-		log.Error().Msg("createMonthlyBatchSetup() didn't return anything :(")
-		t.FailNow()
+		BatchHandler{}.CreateMonthlyBatchHandler(w, r)
+
+		expectedResponse := tc.expectedResponse
+		x, _ := json.Marshal(expectedResponse)
+		expected := fmt.Sprintf("%s\n", string(x))
+
+		if assert.Equal(t, http.StatusOK, w.Code) {
+			if expected != w.Body.String() {
+				t.Errorf("\n%s failed: \nExpected: %s\nActual: %s", tc.description, expected, w.Body.String())
+			}
+
+			t.Logf("\nPASS: %s", tc.description)
+		}
 	}
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, fmt.Sprintf("%s\n", string(expected)), w.Body.String())
 }
 
-// Test to assert successful creation of monthly batch for Jan 2016
-func TestCreateMonthlyBatchJan2016(t *testing.T) {
-	vars := map[string]string{
-		"year":  "2016",
-		"month": "1",
-	}
-	expectedResponse := types.OkayResponse{Status: OK}
-	expected, err := json.Marshal(expectedResponse)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		t.FailNow()
-	}
-
-	res, w := createMonthlyBatchSetup(true, vars)
-
-	if res == false {
-		log.Error().Msg("createMonthlyBatchSetup() didn't return anything :(")
-		t.FailNow()
-	}
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, fmt.Sprintf("%s\n", string(expected)), w.Body.String())
-}
-
-// Test to assert successful creation of monthly batch for Dec 2018
-func TestCreateMonthlyBatchDec2018(t *testing.T) {
-	vars := map[string]string{
-		"year":  "2018",
-		"month": "12",
-	}
-	expectedResponse := types.OkayResponse{Status: OK}
-	expected, err := json.Marshal(expectedResponse)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		t.FailNow()
+func TestMonthXFail(t *testing.T) {
+	testCases := []xFailTestCase{
+		{
+			description: "Assert monthly batch already exists for Dec 2018",
+			year:        "2018",
+			month:       "12",
+			expectedResponse: types.ErrorResponse{
+				Status:       Error,
+				ErrorMessage: "monthly batch for month 12, year 2018 already exists",
+			},
+		},
+		{
+			description: "Assert error for month 44",
+			year:        "2014",
+			month:       "44",
+			expectedResponse: types.ErrorResponse{
+				Status:       Error,
+				ErrorMessage: "the month value is 44, must be between 1 and 12"},
+		},
+		{
+			description: "Assert error for month Q",
+			year:        "2018",
+			month:       "Q",
+			expectedResponse: types.ErrorResponse{
+				Status:       Error,
+				ErrorMessage: "invalid period: Q, expected one of 1-12",
+			},
+		},
 	}
 
-	res, w := createMonthlyBatchSetup(true, vars)
+	for _, tc := range testCases {
+		r := httptest.NewRequest("POST", "/batches/monthly/", nil)
+		r = mux.SetURLVars(r, map[string]string{"year": tc.year, "month": tc.month})
+		w := httptest.NewRecorder()
 
-	if res == false {
-		log.Error().Msg("createMonthlyBatchSetup() didn't return anything :(")
-		t.FailNow()
+		BatchHandler{}.CreateMonthlyBatchHandler(w, r)
+
+		expectedResponse := tc.expectedResponse
+		x, _ := json.Marshal(expectedResponse)
+		expected := fmt.Sprintf("%s\n", string(x))
+
+		if assert.Equal(t, http.StatusOK, w.Code) {
+			if expected != w.Body.String() {
+				t.Errorf("\n%s failed: \nExpected: %s\nActual: %s", tc.description, expected, w.Body.String())
+			}
+			// TODO: Improve output :)
+			t.Log(w.Body.String())
+			t.Logf("\nPASS: %s", tc.description)
+		}
 	}
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, fmt.Sprintf("%s\n", string(expected)), w.Body.String())
-}
-
-// Test to assert monthly batch already exists for Dec 2018
-func TestCreateMonthlyBatchMay2014Fail(t *testing.T) {
-	vars := map[string]string{
-		"year":  "2018",
-		"month": "12",
-	}
-	//expectedResponse := types.OkayResponse{Status:OK}
-	expectedResponse := types.ErrorResponse{
-		Status:       Error,
-		ErrorMessage: "monthly batch for month 12, year 2018 already exists",
-	}
-	expected, err := json.Marshal(expectedResponse)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		t.FailNow()
-	}
-
-	res, w := createMonthlyBatchSetup(false, vars)
-
-	if res == false {
-		log.Error().Msg("createMonthlyBatchSetup() didn't return anything :(")
-		t.FailNow()
-	}
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, fmt.Sprintf("%s\n", string(expected)), w.Body.String())
-}
-
-// Test to assert error for month 44
-func TestCreateMonthlyBatchBadMonthFail(t *testing.T) {
-	vars := map[string]string{
-		"year":  "2018",
-		"month": "44",
-	}
-	//expectedResponse := types.OkayResponse{Status:OK}
-	expectedResponse := types.ErrorResponse{
-		Status:       Error,
-		ErrorMessage: "the month value is 44, must be between 1 and 12",
-	}
-	expected, err := json.Marshal(expectedResponse)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		t.FailNow()
-	}
-
-	res, w := createMonthlyBatchSetup(false, vars)
-
-	if res == false {
-		log.Error().Msg("createMonthlyBatchSetup() didn't return anything :(")
-		t.FailNow()
-	}
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, fmt.Sprintf("%s\n", string(expected)), w.Body.String())
-}
-
-// Test to assert error for month Q
-func TestCreateMonthlyBatchStringMonthFail(t *testing.T) {
-	vars := map[string]string{
-		"year":  "2018",
-		"month": "Q",
-	}
-	//expectedResponse := types.OkayResponse{Status:OK}
-	expectedResponse := types.ErrorResponse{
-		Status:       Error,
-		ErrorMessage: "invalid period: Q, expected one of 1-12",
-	}
-	expected, err := json.Marshal(expectedResponse)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		t.FailNow()
-	}
-
-	res, w := createMonthlyBatchSetup(false, vars)
-
-	if res == false {
-		log.Error().Msg("createMonthlyBatchSetup() didn't return anything :(")
-		t.FailNow()
-	}
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, fmt.Sprintf("%s\n", string(expected)), w.Body.String())
 }
