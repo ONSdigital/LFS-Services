@@ -1,11 +1,12 @@
+// TODO: How to display w.Body as JSON? This will help improve the error messages
+// TODO: Add more quarterly test cases
+// TODO: Yearly testing
+
 package api
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"net/http"
 	"net/http/httptest"
 	"services/config"
 	"services/db"
@@ -13,19 +14,53 @@ import (
 	"testing"
 )
 
-// TODO: Ask Paul how to condense these types
-type successfulTestCase struct {
-	description      string
-	year             string
-	month            string
-	expectedResponse types.OkayResponse
+type testCase struct {
+	description  string
+	year         string
+	period       string
+	expectedCode int
 }
 
-type xFailTestCase struct {
-	description      string
-	year             string
-	month            string
-	expectedResponse types.ErrorResponse
+func TestMonthlyBatchHandler(t *testing.T) {
+	// Cleansing and any setup
+	cleanseMonthlyBatchTable(t)
+
+	r := httptest.NewRequest("POST", "/batches/monthly/", nil)
+
+	for _, mtc := range monthlyTestCases() {
+		w := httptest.NewRecorder()
+		r = mux.SetURLVars(r, map[string]string{"year": mtc.year, "month": mtc.period})
+
+		BatchHandler{}.CreateMonthlyBatchHandler(w, r)
+
+		if !assert.Equal(t, mtc.expectedCode, w.Code) {
+			t.Fatalf("\nFAILED TEST CASE: %s\nERROR MESSAGE: %s",
+				mtc.description, w.Body.String())
+		}
+		t.Logf("\nPASSED: %s\nPERIOD: %s, %s\nBODY: %s",
+			mtc.description, mtc.year, mtc.period, w.Body.String())
+	}
+}
+
+func TestQuarterlyBatchHandler(t *testing.T) {
+	cleanseQuarterlyBatchTable(t)
+	setupMonthlyTables(t)
+
+	r := httptest.NewRequest("POST", "/batches/quarterly/", nil)
+
+	for _, qtc := range quarterlyTestCases() {
+		r = mux.SetURLVars(r, map[string]string{"year": qtc.year, "quarter": qtc.period})
+		w := httptest.NewRecorder()
+
+		BatchHandler{}.CreateQuarterlyBatchHandler(w, r)
+
+		if !assert.Equal(t, qtc.expectedCode, w.Code) {
+			t.Fatalf("\n\nFAILED TEST CASE: %s\nERROR MESSAGE: %s",
+				qtc.description, w.Body.String())
+		}
+		t.Logf("\nPASSED: %s\nPERIOD: %s, %s\nBODY: %s",
+			qtc.description, qtc.year, qtc.period, w.Body.String())
+	}
 }
 
 func cleanseMonthlyBatchTable(t *testing.T) {
@@ -41,7 +76,7 @@ func cleanseMonthlyBatchTable(t *testing.T) {
 
 	tables := []string{gbBatchTable, niBatchTable, batchTable}
 
-	// For each table: verify configuration set and then cleanse
+	// For each table: confirm configuration is set and then cleanse
 	for _, table := range tables {
 		if table == "" {
 			t.Fatalf("%s table configuration not set", table)
@@ -52,101 +87,120 @@ func cleanseMonthlyBatchTable(t *testing.T) {
 	}
 }
 
-func TestMonth(t *testing.T) {
-	// Cleansing and any setup
-	cleanseMonthlyBatchTable(t)
-
-	// TODO: Ask Paul how to prettify this!
-	testCases := []successfulTestCase{
-		{
-			description:      "Create successful Monthly batch for May 2014",
-			year:             "2014",
-			month:            "05",
-			expectedResponse: types.OkayResponse{Status: OK},
-		},
-		{
-			description:      "Create successful Monthly batch for Jan 2016",
-			year:             "2016",
-			month:            "1",
-			expectedResponse: types.OkayResponse{Status: OK},
-		},
-		{
-			description:      "Create successful Monthly batch for Dec 2018",
-			year:             "2018",
-			month:            "12",
-			expectedResponse: types.OkayResponse{Status: OK},
-		},
+func cleanseQuarterlyBatchTable(t *testing.T) {
+	// Establish DB connection
+	dbase, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		t.Fatalf(err.Error())
 	}
 
-	for _, tc := range testCases {
-		r := httptest.NewRequest("POST", "/batches/monthly/", nil)
-		r = mux.SetURLVars(r, map[string]string{"year": tc.year, "month": tc.month})
-		w := httptest.NewRecorder()
-
-		BatchHandler{}.CreateMonthlyBatchHandler(w, r)
-
-		expectedResponse := tc.expectedResponse
-		x, _ := json.Marshal(expectedResponse)
-		expected := fmt.Sprintf("%s\n", string(x))
-
-		if assert.Equal(t, http.StatusOK, w.Code) {
-			if expected != w.Body.String() {
-				t.Errorf("\n%s failed: \nExpected: %s\nActual: %s", tc.description, expected, w.Body.String())
-			}
-
-			t.Logf("\nPASS: %s", tc.description)
-		}
+	quarterlyBatchTable := config.Config.Database.QuarterlyBatchTable
+	if quarterlyBatchTable == "" {
+		t.Fatal("quarterly_batch table configuration not set")
+	}
+	if err := dbase.DeleteFrom(quarterlyBatchTable); err != nil {
+		t.Fatalf(err.Error())
 	}
 }
 
-func TestMonthXFail(t *testing.T) {
-	testCases := []xFailTestCase{
-		{
-			description: "Assert monthly batch already exists for Dec 2018",
-			year:        "2018",
-			month:       "12",
-			expectedResponse: types.ErrorResponse{
-				Status:       Error,
-				ErrorMessage: "monthly batch for month 12, year 2018 already exists",
-			},
-		},
-		{
-			description: "Assert error for month 44",
-			year:        "2014",
-			month:       "44",
-			expectedResponse: types.ErrorResponse{
-				Status:       Error,
-				ErrorMessage: "the month value is 44, must be between 1 and 12"},
-		},
-		{
-			description: "Assert error for month Q",
-			year:        "2018",
-			month:       "Q",
-			expectedResponse: types.ErrorResponse{
-				Status:       Error,
-				ErrorMessage: "invalid period: Q, expected one of 1-12",
-			},
-		},
+func setupMonthlyTables(t *testing.T) {
+	// Establish DB connection
+	dbase, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		t.Fatalf(err.Error())
 	}
 
-	for _, tc := range testCases {
-		r := httptest.NewRequest("POST", "/batches/monthly/", nil)
-		r = mux.SetURLVars(r, map[string]string{"year": tc.year, "month": tc.month})
-		w := httptest.NewRecorder()
+	batchTable := config.Config.Database.MonthlyBatchTable
+	if batchTable == "" {
+		t.Fatal("monthly_batch table configuration not set")
+	}
 
-		BatchHandler{}.CreateMonthlyBatchHandler(w, r)
-
-		expectedResponse := tc.expectedResponse
-		x, _ := json.Marshal(expectedResponse)
-		expected := fmt.Sprintf("%s\n", string(x))
-
-		if assert.Equal(t, http.StatusOK, w.Code) {
-			if expected != w.Body.String() {
-				t.Errorf("\n%s failed: \nExpected: %s\nActual: %s", tc.description, expected, w.Body.String())
-			}
-			// TODO: Improve output :)
-			t.Log(w.Body.String())
-			t.Logf("\nPASS: %s", tc.description)
+	// Insert a load of mock data and set status to 4
+	cleanseMonthlyBatchTable(t)
+	for i := 1; i <= 12; i++ {
+		batch := types.MonthlyBatch{
+			Year:        2014,
+			Month:       i,
+			Status:      4,
+			Description: "Mock data for Quarterly Testing",
+		}
+		if err := dbase.CreateMonthlyBatch(batch); err != nil {
+			t.Fatalf(err.Error())
 		}
 	}
+
+}
+
+func monthlyTestCases() []testCase {
+	testCases := []testCase{
+		{
+			description:  "Monthly",
+			year:         "2014",
+			period:       "05",
+			expectedCode: 200,
+		},
+		{
+			description:  "Monthly",
+			year:         "2016",
+			period:       "1",
+			expectedCode: 200,
+		},
+		{
+			description:  "Monthly",
+			year:         "2018",
+			period:       "12",
+			expectedCode: 200,
+		},
+		{
+			description:  "Monthly (Assert Error: Already exists)",
+			year:         "2018",
+			period:       "12",
+			expectedCode: 418,
+		},
+		{
+			description:  "Monthly (Assert Error: Invalid month, expected month one of 1-12)",
+			year:         "2014",
+			period:       "44",
+			expectedCode: 418,
+		},
+		{
+			description:  "Monthly (Assert Error: Invalid month, expected month one of 1-12)",
+			year:         "2018",
+			period:       "Q",
+			expectedCode: 418,
+		},
+		{
+			description:  "Monthly (Assert Error: Expected year as integer)",
+			year:         "Q",
+			period:       "4",
+			expectedCode: 418,
+		},
+	}
+
+	return testCases
+}
+
+func quarterlyTestCases() []testCase {
+	testCases := []testCase{
+		{
+			description:  "Quarterly",
+			year:         "2014",
+			period:       "Q4",
+			expectedCode: 200,
+		},
+		{
+			description:  "Quarterly (Assert Error: No valid months for Q4 2019)",
+			year:         "2019",
+			period:       "Q4",
+			expectedCode: 418,
+		},
+		{
+			description:  "Quarterly (Assert Error: Invalid period, exected one of Q1-Q4)",
+			year:         "2019",
+			period:       "4",
+			expectedCode: 418,
+		},
+	}
+
+	return testCases
 }
