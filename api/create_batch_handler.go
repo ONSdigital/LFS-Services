@@ -33,11 +33,11 @@ func startLog(r *http.Request) {
 
 func endLog(res error, startTime time.Time, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
 	if res != nil {
+		w.WriteHeader(http.StatusTeapot)
 		ErrorResponse{Status: Error, ErrorMessage: res.Error()}.sendResponse(w, r)
 	} else {
+		w.WriteHeader(http.StatusOK)
 		log.Debug().
 			Msg("Batch successfully created")
 		OkayResponse{OK}.sendResponse(w, r)
@@ -64,6 +64,7 @@ func (b BatchHandler) CreateMonthlyBatchHandler(w http.ResponseWriter, r *http.R
 	// Convert year to int
 	yr := intConversion(year)
 	if yr == -1 {
+		w.WriteHeader(http.StatusTeapot)
 		ErrorResponse{
 			Status:       Error,
 			ErrorMessage: fmt.Sprintf("invalid year: %s, expected an integer", year)}.sendResponse(w, r)
@@ -73,6 +74,7 @@ func (b BatchHandler) CreateMonthlyBatchHandler(w http.ResponseWriter, r *http.R
 	// Convert month to int
 	mth := intConversion(month)
 	if mth == -1 {
+		w.WriteHeader(http.StatusTeapot)
 		ErrorResponse{
 			Status:       Error,
 			ErrorMessage: fmt.Sprintf("invalid period: %s, expected one of 1-12", month)}.sendResponse(w, r)
@@ -97,6 +99,7 @@ func (b BatchHandler) CreateQuarterlyBatchHandler(w http.ResponseWriter, r *http
 	// Convert year to int
 	yr := intConversion(year)
 	if yr == -1 {
+		w.WriteHeader(http.StatusTeapot)
 		ErrorResponse{
 			Status:       Error,
 			ErrorMessage: fmt.Sprintf("invalid year: %s, expected an integer", year)}.sendResponse(w, r)
@@ -104,18 +107,17 @@ func (b BatchHandler) CreateQuarterlyBatchHandler(w http.ResponseWriter, r *http
 	}
 
 	// Strip and convert period to int
-	qtr := quarter[1:]
-	p, err := strconv.Atoi(qtr)
-	if err != nil {
+	q, err := strconv.Atoi(quarter[1:])
+	if err != nil || len(quarter) != 2 {
+		w.WriteHeader(http.StatusTeapot)
 		ErrorResponse{
 			Status:       Error,
 			ErrorMessage: fmt.Sprintf("invalid period: %s, expected one of Q1-Q4", quarter)}.sendResponse(w, r)
 		return
 	}
 
-	res := b.generateQuarterBatchId(p, yr, description)
+	res := b.generateQuarterBatchId(q, yr, description)
 	endLog(res, startTime, w, r)
-
 }
 
 func (b BatchHandler) CreateAnnualBatchHandler(w http.ResponseWriter, r *http.Request) {
