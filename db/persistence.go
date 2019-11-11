@@ -46,13 +46,10 @@ type Persistence interface {
 	GetQuarterlyBatches() ([]types.Dashboard, error)
 	GetMonthlyBatches() ([]types.Dashboard, error)
 
-	// Survey
-	//UnpersistSurveyDataset(tableName string) (dataset.Dataset, error)
-	//PersistSurveyDataset(d dataset.Dataset, vo types.SurveyVO) error
-
 	// Address
 	// Import
 	PersistSurvey(vo types.SurveyVO) error
+	PersistVariableDefinitions([]types.Header) error
 	PersistAddressDataset(headers []string, rows [][]string, status *types.WSMessage) error
 
 	// User
@@ -84,4 +81,8 @@ type Persistence interface {
 	GetAuditsByYear(year types.Year) ([]types.Audit, error)
 	GetAuditsByYearMonth(month types.Month, year types.Year) ([]types.Audit, error)
 	GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Audit, error)
+
+	// Variable Definitions
+	GetAllDefinitions() ([]types.VariableDefinitions, error)
+	GetDefinitionsForVariable(variable string) ([]types.VariableDefinitions, error)
 }

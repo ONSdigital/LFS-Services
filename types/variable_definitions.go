@@ -1,6 +1,7 @@
 package types
 
-type Definitions struct {
+type VariableDefinitions struct {
+	Id             int     `db:"id,omitempty"`
 	Variable       string  `db:"variable" json:"variable"`
 	Description    string  `db:"description" json:"description"`
 	VariableType   SavType `db:"type" json:"type"`

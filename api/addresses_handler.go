@@ -26,12 +26,10 @@ func (ah *AddressImportHandler) AddressUploadHandler(w http.ResponseWriter, r *h
 
 	ah.mutux.Lock()
 
-	w.Header().Set("Content-Type", "application/json")
-
 	if ah.uploadInProgress {
 		log.Error().Msg("file is currently being uploaded")
 		w.WriteHeader(http.StatusBadRequest)
-		ErrorResponse{Status: Error, ErrorMessage: "address file is currently being uploaded"}.sendResponse(w, r)
+		ErrorResponse{ErrorMessage: "address file is currently being uploaded"}.sendResponse(w, r)
 		ah.mutux.Unlock()
 		return
 	}
@@ -46,15 +44,15 @@ func (ah *AddressImportHandler) AddressUploadHandler(w http.ResponseWriter, r *h
 
 	fileName := r.FormValue("fileName")
 	if fileName == "" {
-		log.Error().Msg("address upload - fileName not set")
-		ErrorResponse{Status: Error, ErrorMessage: "address upload - fileName not set"}.sendResponse(w, r)
+		log.Error().Msg("Address upload - fileName not set")
+		ErrorResponse{ErrorMessage: "address upload - fileName not set"}.sendResponse(w, r)
 		return
 	}
 
 	tmpfile, err := SaveStreamToTempFile(w, r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		log.Error().Msg("Address upload - cannot save stream to temporary file")
+		ErrorResponse{ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
 
@@ -71,6 +69,5 @@ func (ah *AddressImportHandler) AddressUploadHandler(w http.ResponseWriter, r *h
 		ah.ParseAddressFile(tmpfile, fileName)
 	}()
 
-	w.WriteHeader(http.StatusAccepted)
-	OkayResponse{OK}.sendResponse(w, r)
+	InProgressResponse{}.sendResponse(w, r)
 }

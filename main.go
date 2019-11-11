@@ -11,6 +11,7 @@ import (
 	"services/api"
 	"services/api/ws"
 	"services/config"
+	"services/util"
 	"time"
 )
 
@@ -41,19 +42,22 @@ func main() {
 		Msg("LFS Services: Starting up")
 
 	router := mux.NewRouter()
+	router.Use(loggingMiddleware)
 
-	dashboardHandler := api.NewDashboardHandler()
 	batchHandler := api.NewBatchHandler()
+	dashboardHandler := api.NewDashboardHandler()
 	idHandler := api.NewIdHandler()
 	surveyHandler := api.NewSurveyHandler()
 	addressesHandler := api.NewAddressImportHandler()
 	auditHandler := api.NewAuditHandler()
 	loginHandler := api.NewLoginHandler()
+	vdHandler := api.NewVariableDefinitionsHandler()
 
 	// Dashboard
 	router.HandleFunc("/dashboard", dashboardHandler.HandleDashboardRequest).Methods(http.MethodGet)
 
 	// Create New Batches Handlers
+
 	router.HandleFunc("/batches/monthly/{year}/{month}", batchHandler.CreateMonthlyBatchHandler).Methods(http.MethodPost)
 	router.HandleFunc("/batches/quarterly/{year}/{quarter}", batchHandler.CreateQuarterlyBatchHandler).Methods(http.MethodPost)
 	router.HandleFunc("/batches/annual/{year}", batchHandler.CreateAnnualBatchHandler).Methods(http.MethodPost)
@@ -76,6 +80,10 @@ func main() {
 	router.HandleFunc("/audits/year/{year}", auditHandler.HandleYearAuditRequest).Methods(http.MethodGet)
 	router.HandleFunc("/audits/month/{year}/{month}", auditHandler.HandleMonthAuditRequest).Methods(http.MethodGet)
 	router.HandleFunc("/audits/week/{year}/{week}", auditHandler.HandleWeekAuditRequest).Methods(http.MethodGet)
+
+	// Variable Definitions
+	router.HandleFunc("/variable/definitions/{variable}", vdHandler.HandleRequestVariable).Methods(http.MethodGet)
+	router.HandleFunc("/variable/definitions", vdHandler.HandleRequestAll).Methods(http.MethodGet)
 
 	// Other
 	router.HandleFunc("/login/{user}", loginHandler.LoginHandler).Methods(http.MethodGet)
@@ -101,9 +109,9 @@ func main() {
 
 	// we'll allow anything for now. May need or want to restrict this to just the UI when we know its endpoint
 	origins := []string{"*"}
-	var c = handlers.AllowedOrigins(origins)
+	var cors = handlers.AllowedOrigins(origins)
 
-	handlers.CORS(c)(router)
+	handlers.CORS(cors)(router)
 
 	srv := &http.Server{
 		Handler:      router,
@@ -123,4 +131,22 @@ func main() {
 		Err(err).
 		Str("service", "LFS").
 		Msgf("ListenAndServe failed")
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+
+	log.Info().Msg("logging middleware registered")
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Debug().
+			Str("URI:", r.RequestURI).
+			Str("client", r.RemoteAddr).
+			Msg("Received request")
+		startTime := time.Now()
+		next.ServeHTTP(w, r)
+
+		log.Debug().
+			Str("URI:", r.RequestURI).
+			Str("elapsedTime", util.FmtDuration(startTime)).Msg("Request Completed")
+	})
 }

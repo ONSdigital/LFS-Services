@@ -9,7 +9,7 @@ drop table if exists gb_batch_items;
 drop table if exists monthly_batch;
 drop table if exists survey_audit;
 drop table if exists status_values;
-drop table if exists definitions;
+drop table if exists variable_definitions;
 drop type if exists spss_types;
 
 create table addresses
@@ -212,7 +212,7 @@ create index survey_id_name_index
 create index survey_period_index
     on survey (year, month, week);
 
-create index survey_columns on survey using gin(columns);
+create index survey_columns on survey using gin (columns);
 
 create table survey_audit
 (
@@ -245,11 +245,11 @@ create table users
 alter table users
     owner to lfs;
 
-CREATE TYPE spss_types AS ENUM ('string', 'int8', 'uint8', 'int', 'int32', 'uint32',
-    'int64', 'uint64', 'float32', 'float64');
+CREATE TYPE spss_types AS ENUM ('string', 'int8', 'int16', 'int32', 'float', 'double');
 
-create table definitions
+create table variable_definitions
 (
+    id          integer generated always as identity primary key,
     variable    text       not null,
     description text,
     type        spss_types not null default 'string',
@@ -263,4 +263,4 @@ create table definitions
 );
 
 create index definitions_name_index
-    on definitions (variable);
+    on variable_definitions (variable);

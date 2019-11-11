@@ -80,7 +80,6 @@ int handle_variable(int index, readstat_variable_t *variable, const char *val_la
     return READSTAT_HANDLER_OK;
 }
 
-
 int handle_value(int obs_index, readstat_variable_t *variable, readstat_value_t value, void *ctx) {
 
     struct Data *data = (struct Data *) ctx;
