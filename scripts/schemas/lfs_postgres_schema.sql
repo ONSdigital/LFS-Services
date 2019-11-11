@@ -9,6 +9,7 @@ drop table if exists gb_batch_items;
 drop table if exists monthly_batch;
 drop table if exists survey_audit;
 drop table if exists status_values;
+drop table if exists definitions;
 drop table if exists variable_definitions;
 drop type if exists spss_types;
 
