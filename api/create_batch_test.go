@@ -1,6 +1,6 @@
 // TODO: How to display w.Body as JSON? This will help improve the error messages
-// TODO: Add more quarterly test cases
-// TODO: Yearly testing
+// TODO: Add more quarterly test cases?
+// TODO: Annual batch testing
 
 package api
 
@@ -23,7 +23,7 @@ type testCase struct {
 
 func TestMonthlyBatchHandler(t *testing.T) {
 	// Cleansing and any setup
-	cleanseMonthlyBatchTable(t)
+	tearDown(t)
 
 	r := httptest.NewRequest("POST", "/batches/monthly/", nil)
 
@@ -43,8 +43,9 @@ func TestMonthlyBatchHandler(t *testing.T) {
 }
 
 func TestQuarterlyBatchHandler(t *testing.T) {
-	cleanseQuarterlyBatchTable(t)
-	setupMonthlyTables(t)
+	// Cleansing and any setup
+	tearDown(t)
+	setupMonthlyTables(t, 2014)
 
 	r := httptest.NewRequest("POST", "/batches/quarterly/", nil)
 
@@ -63,7 +64,32 @@ func TestQuarterlyBatchHandler(t *testing.T) {
 	}
 }
 
-func cleanseMonthlyBatchTable(t *testing.T) {
+func TestAnnualBatchHandler(t *testing.T) {
+	// Cleansing and any setup
+	tearDown(t)
+
+	setupMonthlyTables(t, 2014)
+	setupMonthlyTables(t, 2015)
+	setupQuarterlyTables(t, 2015)
+
+	r := httptest.NewRequest("POST", "/batches/annual/", nil)
+
+	for _, atc := range annualTestCases() {
+		r = mux.SetURLVars(r, map[string]string{"year": atc.year})
+		w := httptest.NewRecorder()
+
+		BatchHandler{}.CreateAnnualBatchHandler(w, r)
+
+		if !assert.Equal(t, atc.expectedCode, w.Code) {
+			t.Fatalf("\n\nFAILED TEST CASE: %s\nERROR MESSAGE: %s",
+				atc.description, w.Body.String())
+		}
+		t.Logf("\nPASSED: %s\nYEAR %s\nBODY: %s",
+			atc.description, atc.year, w.Body.String())
+	}
+}
+
+func tearDown(t *testing.T) {
 	// Establish DB connection
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -73,13 +99,15 @@ func cleanseMonthlyBatchTable(t *testing.T) {
 	gbBatchTable := config.Config.Database.GbBatchTable
 	niBatchTable := config.Config.Database.NiBatchTable
 	batchTable := config.Config.Database.MonthlyBatchTable
+	quarterlyBatchTable := config.Config.Database.QuarterlyBatchTable
+	annualBatchTable := config.Config.Database.AnnualBatchTable
 
-	tables := []string{gbBatchTable, niBatchTable, batchTable}
+	tables := []string{gbBatchTable, niBatchTable, batchTable, quarterlyBatchTable, annualBatchTable}
 
 	// For each table: confirm configuration is set and then cleanse
 	for _, table := range tables {
 		if table == "" {
-			t.Fatalf("%s table configuration not set", table)
+			t.Fatal("table configuration not set")
 		}
 		if err := dbase.DeleteFrom(table); err != nil {
 			t.Fatalf(err.Error())
@@ -87,23 +115,7 @@ func cleanseMonthlyBatchTable(t *testing.T) {
 	}
 }
 
-func cleanseQuarterlyBatchTable(t *testing.T) {
-	// Establish DB connection
-	dbase, err := db.GetDefaultPersistenceImpl()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	quarterlyBatchTable := config.Config.Database.QuarterlyBatchTable
-	if quarterlyBatchTable == "" {
-		t.Fatal("quarterly_batch table configuration not set")
-	}
-	if err := dbase.DeleteFrom(quarterlyBatchTable); err != nil {
-		t.Fatalf(err.Error())
-	}
-}
-
-func setupMonthlyTables(t *testing.T) {
+func setupMonthlyTables(t *testing.T, year int) {
 	// Establish DB connection
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -116,15 +128,41 @@ func setupMonthlyTables(t *testing.T) {
 	}
 
 	// Insert a load of mock data and set status to 4
-	cleanseMonthlyBatchTable(t)
 	for i := 1; i <= 12; i++ {
 		batch := types.MonthlyBatch{
-			Year:        2014,
+			Year:        year,
 			Month:       i,
 			Status:      4,
-			Description: "Mock data for Quarterly Testing",
+			Description: "Mock data for Testing",
 		}
 		if err := dbase.CreateMonthlyBatch(batch); err != nil {
+			t.Fatalf(err.Error())
+		}
+	}
+
+}
+
+func setupQuarterlyTables(t *testing.T, year int) {
+	// Establish DB connection
+	dbase, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	quarterlyTable := config.Config.Database.QuarterlyBatchTable
+	if quarterlyTable == "" {
+		t.Fatal("quarterly_batch table configuration not set")
+	}
+
+	// Insert a load of mock data and set status to 4
+	for i := 1; i <= 4; i++ {
+		batch := types.QuarterlyBatch{
+			Quarter:     i,
+			Year:        year,
+			Status:      4,
+			Description: "Mock data for Testing",
+		}
+		if err := dbase.CreateQuarterlyBatch(batch); err != nil {
 			t.Fatalf(err.Error())
 		}
 	}
@@ -189,15 +227,78 @@ func quarterlyTestCases() []testCase {
 			expectedCode: 200,
 		},
 		{
+			description:  "Quarterly",
+			year:         "2014",
+			period:       "Q3",
+			expectedCode: 200,
+		},
+		{
+			description:  "Quarterly",
+			year:         "2014",
+			period:       "Q2",
+			expectedCode: 200,
+		},
+		{
+			description:  "Quarterly",
+			year:         "2014",
+			period:       "Q1",
+			expectedCode: 200,
+		},
+		{
+			description:  "Quarterly (Assert Error: Already exists)",
+			year:         "2019",
+			period:       "Q4",
+			expectedCode: 418,
+		},
+		{
 			description:  "Quarterly (Assert Error: No valid months for Q4 2019)",
 			year:         "2019",
 			period:       "Q4",
 			expectedCode: 418,
 		},
 		{
-			description:  "Quarterly (Assert Error: Invalid period, exected one of Q1-Q4)",
+			description:  "Quarterly (Assert Error: Invalid period, expected one of Q1-Q4)",
 			year:         "2019",
 			period:       "4",
+			expectedCode: 418,
+		},
+		{
+			description:  "Quarterly (Assert Error: Invalid period, expected one of Q1-Q4)",
+			year:         "2019",
+			period:       "Q5",
+			expectedCode: 418,
+		},
+		{
+			description:  "Quarterly (Assert Error: Invalid year, expected integer)",
+			year:         "El is amazing",
+			period:       "Q4",
+			expectedCode: 418,
+		},
+	}
+
+	return testCases
+}
+
+func annualTestCases() []testCase {
+	testCases := []testCase{
+		{
+			description:  "Annual",
+			year:         "2015",
+			expectedCode: 200,
+		},
+		{
+			description:  "Annual (Assert Error: 12 valid months required)",
+			year:         "2016",
+			expectedCode: 418,
+		},
+		{
+			description:  "Annual (Assert Error: 4 valid quarters required)",
+			year:         "2014",
+			expectedCode: 418,
+		},
+		{
+			description:  "Annual (Assert Error: Valid year required)",
+			year:         "0",
 			expectedCode: 418,
 		},
 	}

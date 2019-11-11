@@ -132,7 +132,8 @@ func (b BatchHandler) CreateAnnualBatchHandler(w http.ResponseWriter, r *http.Re
 
 	// Convert year to int
 	yr := intConversion(year)
-	if yr == -1 {
+	if yr < -1 || yr == 0 {
+		w.WriteHeader(http.StatusTeapot)
 		ErrorResponse{
 			Status:       Error,
 			ErrorMessage: fmt.Sprintf("invalid year: %s, expected an integer", year)}.sendResponse(w, r)
