@@ -9,6 +9,7 @@ import (
 	"services/types"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type SurveyImportHandler struct {
@@ -27,65 +28,66 @@ func NewSurveyHandler() *SurveyImportHandler {
 	}
 }
 
+func (si *SurveyImportHandler) setUpload(val bool) {
+	si.mutux.Lock()
+	defer si.mutux.Unlock()
+	si.uploadInProgress = val
+}
+
+/*
+Upload GB survey file.
+The mutux lock is a little awkward to ensure it is locked as soon as possible to avoid race conditions
+*/
 func (si *SurveyImportHandler) SurveyUploadGBHandler(w http.ResponseWriter, r *http.Request) {
 
-	si.mutux.Lock()
-
-	w.Header().Set("Content-Type", "application/json")
-
 	if si.uploadInProgress {
-		log.Error().Msg("survey file is currently being uploaded")
-		w.WriteHeader(http.StatusBadRequest)
+		log.Error().Msg("Survey file is currently being uploaded")
 		ErrorResponse{Status: Error, ErrorMessage: "survey file is currently being uploaded"}.sendResponse(w, r)
-		si.mutux.Unlock()
+		si.setUpload(false)
 		return
 	}
-	si.uploadInProgress = true
-	si.mutux.Unlock()
+
+	si.setUpload(true)
 
 	vars := mux.Vars(r)
 	week := vars["week"]
 	year := vars["year"]
 
-	log.Debug().
-		Str("client", r.RemoteAddr).
-		Str("uri", r.RequestURI).
-		Str("week", week).
-		Str("yeay", year).
-		Msg("Received GB survey file upload request")
-
 	fileName := r.FormValue("fileName")
 	if fileName == "" {
-		log.Error().Msg("fileName not set")
+		log.Error().Msg("File name not set")
 		ErrorResponse{Status: Error, ErrorMessage: "fileName not set"}.sendResponse(w, r)
+		si.setUpload(false)
 		return
 	}
 
 	weekNo, err := strconv.Atoi(week)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Error().Msg("Week is not an integer")
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		si.setUpload(false)
 		return
 	}
 
 	yearNo, err := strconv.Atoi(year)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Error().Msg("Year is not an integer")
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		si.setUpload(false)
 		return
 	}
 
 	gbInfo, err := FindGBBatch(weekNo, yearNo)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		si.setUpload(false)
 		return
 	}
 
 	tmpfile, err := SaveStreamToTempFile(w, r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		si.setUpload(false)
 		return
 	}
 
@@ -94,75 +96,66 @@ func (si *SurveyImportHandler) SurveyUploadGBHandler(w http.ResponseWriter, r *h
 
 	go func() {
 		defer func() {
-			si.mutux.Lock()
-			si.uploadInProgress = false
-			si.mutux.Unlock()
+			si.setUpload(false)
 			_ = os.Remove(tmpfile)
 		}()
 		si.parseGBSurveyFile(tmpfile, fileName, weekNo, yearNo, gbInfo.Id)
 	}()
 
-	w.WriteHeader(http.StatusAccepted)
-	OkayResponse{OK}.sendResponse(w, r)
+	InProgressResponse{OK, time.Now().String(), "request submitted"}.sendResponse(w, r)
 }
 
 func (si *SurveyImportHandler) SurveyUploadNIHandler(w http.ResponseWriter, r *http.Request) {
 
-	si.mutux.Lock()
-
-	w.Header().Set("Content-Type", "application/json")
-
 	if si.uploadInProgress {
-		log.Error().Msg("survey file is currently being uploaded")
+		log.Error().Msg("Survey file is currently being uploaded")
 		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: "survey file is currently being uploaded"}.sendResponse(w, r)
-		si.mutux.Unlock()
+		si.setUpload(false)
 		return
 	}
-	si.uploadInProgress = true
-	si.mutux.Unlock()
+
+	si.setUpload(true)
 
 	vars := mux.Vars(r)
 	month := vars["month"]
 	year := vars["year"]
 
-	log.Debug().
-		Str("client", r.RemoteAddr).
-		Str("uri", r.RequestURI).
-		Msg("Received NI survey file upload request")
-
 	fileName := r.FormValue("fileName")
 	if fileName == "" {
-		log.Error().Msg("fileName not set")
+		log.Error().Msg("File name not set")
 		ErrorResponse{Status: Error, ErrorMessage: "fileName not set"}.sendResponse(w, r)
+		si.setUpload(false)
 		return
 	}
 
 	monthNo, err := strconv.Atoi(month)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Error().Msg("Month is not an integer")
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		si.setUpload(false)
 		return
 	}
 
 	yearNo, err := strconv.Atoi(year)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Error().Msg("Year is not an integer")
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		si.setUpload(false)
 		return
 	}
 
 	niInfo, err := FindNIBatch(monthNo, yearNo)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		si.setUpload(false)
 		return
 	}
 
 	tmpfile, err := SaveStreamToTempFile(w, r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		si.setUpload(false)
 		return
 	}
 
@@ -171,14 +164,12 @@ func (si *SurveyImportHandler) SurveyUploadNIHandler(w http.ResponseWriter, r *h
 
 	go func() {
 		defer func() {
-			si.mutux.Lock()
-			si.uploadInProgress = true
-			si.mutux.Unlock()
+			si.setUpload(false)
 			_ = os.Remove(tmpfile)
 		}()
 		si.parseNISurveyFile(tmpfile, fileName, monthNo, yearNo, niInfo.Id)
 	}()
 
-	w.WriteHeader(http.StatusAccepted)
-	OkayResponse{OK}.sendResponse(w, r)
+	InProgressResponse{OK, time.Now().String(), "request submitted"}.sendResponse(w, r)
+
 }

@@ -9,6 +9,7 @@ import (
 	"services/importdata/sav"
 	"services/types"
 	"services/util"
+	"sync"
 	"time"
 )
 
@@ -112,14 +113,34 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 		Status:  si.fileUploads,
 	}
 
-	if err := database.PersistSurvey(surveyVo); err != nil {
-		log.Error().
-			Err(err).
-			Str("datasetName", datasetName).
-			Msg("Cannot persist dataset")
-		si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist GB survey data: %s", err))
-		return
-	}
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		if err := database.PersistSurvey(surveyVo); err != nil {
+			log.Error().
+				Err(err).
+				Str("datasetName", datasetName).
+				Msg("Cannot persist GB survey data")
+			si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist GB survey data: %s", err))
+			return
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if err := database.PersistVariableDefinitions(spssData.Header); err != nil {
+			log.Error().
+				Err(err).
+				Str("datasetName", datasetName).
+				Msg("Cannot persist variable definitions (GB)")
+			si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist variable definitions (GB): %s", err))
+			return
+		}
+	}()
+
+	wg.Wait()
 
 	log.Debug().
 		Str("datasetName", datasetName).

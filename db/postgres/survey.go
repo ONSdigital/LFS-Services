@@ -154,7 +154,9 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 	} else {
 		vo.Audit.Status = types.UploadFinished
 	}
+
 	vo.Audit.Message = "File Uploaded"
+
 	if err := s.AuditFileUploadEvent(*vo.Audit); err != nil {
 		log.Error().
 			Err(err).
