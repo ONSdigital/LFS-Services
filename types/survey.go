@@ -1838,6 +1838,11 @@ type GBSurveyInput struct {
 }
 
 type NISurveyInput struct {
+	INDOUT        float64 `spss:"INDOUT"`
+	DVHRPNUM      float64 `spss:"DVHRPNUM"`
+	SERNO         float64 `spss:"SERNO"`
+	HHNO          float64 `spss:"HHNO"`
+	INTNUM        float64 `spss:"INTNUM"`
 	QUOTA         float64 `spss:"QUOTA"`
 	WEEK          float64 `spss:"WEEK"`
 	W1YR          float64 `spss:"W1YR"`
@@ -1845,68 +1850,25 @@ type NISurveyInput struct {
 	ADDR          float64 `spss:"ADDR"`
 	WAVFND        float64 `spss:"WAVFND"`
 	HHLD          float64 `spss:"HHLD"`
+	SAMPNO        float64 `spss:"SAMPNO"`
+	BOOFLAG       float64 `spss:"BOOFLAG"`
 	PERSON        float64 `spss:"PERSON"`
-	EXPSTARTINT   float64 `spss:"EXPSTARTINT"`
-	EXPENDINT     float64 `spss:"EXPENDINT"`
-	SURVEYYEAR    string  `spss:"SURVEYYEAR"`
-	YEAR          float64 `spss:"YEAR"`
-	MONTH         float64 `spss:"MONTH"`
-	STAGEATTEMPT  string  `spss:"STAGEATTEMPT"`
-	SURVID        string  `spss:"SURVID"`
-	SUBSAMPLE     float64 `spss:"SUBSAMPLE"`
-	QUOTA2        string  `spss:"QUOTA2"`
-	ADDRESSKEY    string  `spss:"ADDRESSKEY"`
-	MO            float64 `spss:"MO"`
-	SAMPAREA      string  `spss:"SAMPAREA"`
-	OSGRIDREF     float64 `spss:"OSGRIDREF"`
-	LEA           string  `spss:"LEA"`
-	MAJORSTRAT    float64 `spss:"MAJORSTRAT"`
-	GOR           float64 `spss:"GOR"`
-	ACORN         string  `spss:"ACORN"`
-	GFFMU         float64 `spss:"GFFMU"`
-	PREVISSSERNO  string  `spss:"PREVISSSERNO"`
-	OLDSERIAL     string  `spss:"OLDSERIAL"`
-	PIDNO         string  `spss:"PIDNO"`
-	RAND          string  `spss:"RAND"`
-	OSCTY         string  `spss:"OSCTY"`
-	OSLAUA        string  `spss:"OSLAUA"`
-	OSWARD        string  `spss:"OSWARD"`
-	OSHLTHAU      string  `spss:"OSHLTHAU"`
-	CTRY          string  `spss:"CTRY"`
-	PCON          string  `spss:"PCON"`
-	TECLEC        string  `spss:"TECLEC"`
-	TTWA          string  `spss:"TTWA"`
-	PCT           string  `spss:"PCT"`
-	NUTS          string  `spss:"NUTS"`
-	PSED          string  `spss:"PSED"`
-	WARDC91       string  `spss:"WARDC91"`
-	WARDO91       string  `spss:"WARDO91"`
-	WARD98        string  `spss:"WARD98"`
-	STATSWARD     string  `spss:"STATSWARD"`
-	OACODE        string  `spss:"OACODE"`
-	CASWARD       string  `spss:"CASWARD"`
-	SOA1          string  `spss:"SOA1"`
-	DZONE1        string  `spss:"DZONE1"`
-	SOA2          string  `spss:"SOA2"`
-	DZONE2        string  `spss:"DZONE2"`
-	OAC           string  `spss:"OAC"`
-	MOCOUNT       string  `spss:"MOCOUNT"`
-	ATTEMPT       float64 `spss:"ATTEMPT"`
-	LA            string  `spss:"LA"`
-	SAMPQTR       float64 `spss:"SAMPQTR"`
+	LGD2014       string  `spss:"LGD2014"`
+	WARD2014      string  `spss:"WARD2014"`
+	RV            string  `spss:"RV"`
+	PDESC         string  `spss:"PDESC"`
+	BRIEF         string  `spss:"BRIEF"`
+	INTTYPID      float64 `spss:"INTTYPID"`
+	PHONE         string  `spss:"PHONE"`
 	HIND          float64 `spss:"HIND"`
 	NURSE         float64 `spss:"NURSE"`
 	CARGOH        string  `spss:"CARGOH"`
 	COUNTRY       float64 `spss:"COUNTRY"`
-	GB            float64 `spss:"GB"`
 	LFSSAMP       float64 `spss:"LFSSAMP"`
-	PCODE         string  `spss:"PCODE"`
 	CID96         string  `spss:"CID96"`
-	LAD96         string  `spss:"LAD96"`
-	WAD96         string  `spss:"WAD96"`
 	TLEC99        string  `spss:"TLEC99"`
+	TTWA          string  `spss:"TTWA"`
 	PCA           string  `spss:"PCA"`
-	TELEPH        float64 `spss:"TELEPH"`
 	TRAIN         float64 `spss:"TRAIN"`
 	THISWV        float64 `spss:"THISWV"`
 	THISQTR       float64 `spss:"THISQTR"`
@@ -1922,6 +1884,7 @@ type NISurveyInput struct {
 	WORKLOAD      float64 `spss:"WORKLOAD"`
 	CONT          float64 `spss:"CONT"`
 	NEWHLD        float64 `spss:"NEWHLD"`
+	REFWEEK       string  `spss:"REFWEEK"`
 	REFDTE        float64 `spss:"REFDTE"`
 	REFDAY        float64 `spss:"REFDAY"`
 	REFMNTH       string  `spss:"REFMNTH"`
@@ -1930,6 +1893,81 @@ type NISurveyInput struct {
 	CALW1YR       float64 `spss:"CALW1YR"`
 	INTVNO        float64 `spss:"INTVNO"`
 	LINTNUM       float64 `spss:"LINTNUM"`
+	IOUT1         float64 `spss:"IOUT1"`
+	IOUT2         float64 `spss:"IOUT2"`
+	IOUT4         float64 `spss:"IOUT4"`
+	PROXPERS      float64 `spss:"PROXPERS"`
+	AGECHECK      float64 `spss:"AGECHECK"`
+	NUMFUPER      float64 `spss:"NUMFUPER"`
+	NUMPAPRY      float64 `spss:"NUMPAPRY"`
+	NUMFUPRY      float64 `spss:"NUMFUPRY"`
+	NUMPAPER      float64 `spss:"NUMPAPER"`
+	NUMNOELG      float64 `spss:"NUMNOELG"`
+	NUMREFUS      float64 `spss:"NUMREFUS"`
+	NUMNONCO      float64 `spss:"NUMNONCO"`
+	NUMPARLS      float64 `spss:"NUMPARLS"`
+	NUMFULL       float64 `spss:"NUMFULL"`
+	NUMINT        float64 `spss:"NUMINT"`
+	NUMNOTEL      float64 `spss:"NUMNOTEL"`
+	NUMSEVIN      float64 `spss:"NUMSEVIN"`
+	INDCHECK      float64 `spss:"INDCHECK"`
+	HARMINTR      float64 `spss:"HARMINTR"`
+	INTSOME       float64 `spss:"INTSOME"`
+	INTFIN        float64 `spss:"INTFIN"`
+	OUTSUM        float64 `spss:"OUTSUM"`
+	INDOUT4       float64 `spss:"INDOUT4"`
+	INELIG1       float64 `spss:"INELIG1"`
+	UNCER1        float64 `spss:"UNCER1"`
+	NONSUM        float64 `spss:"NONSUM"`
+	REF1          float64 `spss:"REF1"`
+	REF2          float64 `spss:"REF2"`
+	REF3          float64 `spss:"REF3"`
+	REFREAS1      float64 `spss:"REFREAS1"`
+	REFREAS2      float64 `spss:"REFREAS2"`
+	REFREAS3      float64 `spss:"REFREAS3"`
+	NONC1         float64 `spss:"NONC1"`
+	NONREAS1      float64 `spss:"NONREAS1"`
+	NONREAS2      float64 `spss:"NONREAS2"`
+	NONREAS3      float64 `spss:"NONREAS3"`
+	OTHR1         float64 `spss:"OTHR1"`
+	OTHR2         float64 `spss:"OTHR2"`
+	OTHR3         float64 `spss:"OTHR3"`
+	HOUT04        float64 `spss:"HOUT04"`
+	HOUTLFS       float64 `spss:"HOUTLFS"`
+	ANYVISIT      float64 `spss:"ANYVISIT"`
+	RTYPHH        float64 `spss:"RTYPHH"`
+	RTYPOTH       string  `spss:"RTYPOTH"`
+	DWELLTYP      float64 `spss:"DWELLTYP"`
+	FLOORN        float64 `spss:"FLOORN"`
+	ENTRYN1       float64 `spss:"ENTRYN1"`
+	ENTRYN2       float64 `spss:"ENTRYN2"`
+	ENTRYN3       float64 `spss:"ENTRYN3"`
+	ENTRYN4       float64 `spss:"ENTRYN4"`
+	ENTRYN5       float64 `spss:"ENTRYN5"`
+	ENTRYN6       float64 `spss:"ENTRYN6"`
+	HOUTCOME      float64 `spss:"HOUTCOME"`
+	HOUT1         float64 `spss:"HOUT1"`
+	OFFCHCK1      float64 `spss:"OFFCHCK1"`
+	OFFCHCK2      float64 `spss:"OFFCHCK2"`
+	REFUSE        float64 `spss:"REFUSE"`
+	REFREAS       float64 `spss:"REFREAS"`
+	NONCON        float64 `spss:"NONCON"`
+	NONELIG       float64 `spss:"NONELIG"`
+	REALREA       float64 `spss:"REALREA"`
+	HOUT          float64 `spss:"HOUT"`
+	HOUTW1        float64 `spss:"HOUTW1"`
+	HOUTW2        float64 `spss:"HOUTW2"`
+	HOUTW3        float64 `spss:"HOUTW3"`
+	HOUTW4        float64 `spss:"HOUTW4"`
+	HOUTW5        float64 `spss:"HOUTW5"`
+	HOUTC         float64 `spss:"HOUTC"`
+	TTIMECALC     float64 `spss:"TTIMECALC"`
+	NUMCALLS      float64 `spss:"NUMCALLS"`
+	CALLDATE      float64 `spss:"CALLDATE"`
+	TIMEST        float64 `spss:"TIMEST"`
+	TIMEND        float64 `spss:"TIMEND"`
+	CALLO         float64 `spss:"CALLO"`
+	CALLTYP       float64 `spss:"CALLTYP"`
 	RESPHH        float64 `spss:"RESPHH"`
 	OLDNPER       float64 `spss:"OLDNPER"`
 	RELS1         string  `spss:"RELS1"`
@@ -1937,7 +1975,12 @@ type NISurveyInput struct {
 	HHNEW         float64 `spss:"HHNEW"`
 	WV1NUM        float64 `spss:"WV1NUM"`
 	CHKST         float64 `spss:"CHKST"`
+	TMOVGS        float64 `spss:"TMOVGS"`
+	GSDATE        float64 `spss:"GSDATE"`
+	GSTIME        float64 `spss:"GSTIME"`
 	NUMPER        float64 `spss:"NUMPER"`
+	HSTTIME       float64 `spss:"HSTTIME"`
+	HSTDATE       float64 `spss:"HSTDATE"`
 	PERNO         float64 `spss:"PERNO"`
 	RELTXT        string  `spss:"RELTXT"`
 	LESTIMTE      string  `spss:"LESTIMTE"`
@@ -1956,6 +1999,7 @@ type NISurveyInput struct {
 	MARCOMP12     float64 `spss:"MARCOMP12"`
 	DVMRDF12      float64 `spss:"DVMRDF12"`
 	HLDCOUNT      float64 `spss:"HLDCOUNT"`
+	RESHRPCT      float64 `spss:"RESHRPCT"`
 	HH1           float64 `spss:"HH1"`
 	RELTXT2       string  `spss:"RELTXT2"`
 	R01           float64 `spss:"R01"`
@@ -1984,7 +2028,7 @@ type NISurveyInput struct {
 	PARENTB1      float64 `spss:"PARENTB1"`
 	PARENT2       float64 `spss:"PARENT2"`
 	NOUNITSSS     float64 `spss:"NOUNITSSS"`
-	FAMUNIT1      float64 `spss:"FAMUNIT1"`
+	FAMUNIT       float64 `spss:"FAMUNIT"`
 	SHOWFAM2      float64 `spss:"SHOWFAM2"`
 	U14KIDS2      float64 `spss:"U14KIDS2"`
 	U18KIDS2      float64 `spss:"U18KIDS2"`
@@ -1992,44 +2036,83 @@ type NISurveyInput struct {
 	PARENTB2      float64 `spss:"PARENTB2"`
 	SSC1          float64 `spss:"SSC1"`
 	SSCTYPE1      float64 `spss:"SSCTYPE1"`
-	RDAY1         float64 `spss:"RDAY1"`
-	RIND1         float64 `spss:"RIND1"`
-	NDOB1         float64 `spss:"NDOB1"`
-	NUMADS        float64 `spss:"NUMADS"`
 	PENFLAG       float64 `spss:"PENFLAG"`
 	RANDOB        float64 `spss:"RANDOB"`
 	DUMDOB        float64 `spss:"DUMDOB"`
+	CHKDATE01     float64 `spss:"CHKDATE01"`
+	CHKDATE02     float64 `spss:"CHKDATE02"`
+	CHKDATE03     float64 `spss:"CHKDATE03"`
+	CHKDATE04     float64 `spss:"CHKDATE04"`
+	CHKDATE05     float64 `spss:"CHKDATE05"`
+	CHKDATE06     float64 `spss:"CHKDATE06"`
+	CHKDATE07     float64 `spss:"CHKDATE07"`
+	CHKDATE08     float64 `spss:"CHKDATE08"`
+	CHKDATE09     float64 `spss:"CHKDATE09"`
+	CHKDATE10     float64 `spss:"CHKDATE10"`
+	CHKDATE11     float64 `spss:"CHKDATE11"`
 	LONEPAR1      float64 `spss:"LONEPAR1"`
 	DVMRDF1       float64 `spss:"DVMRDF1"`
 	MARCOMP1      float64 `spss:"MARCOMP1"`
 	SSC2          float64 `spss:"SSC2"`
 	SSCTYPE2      float64 `spss:"SSCTYPE2"`
+	TMOVGEHS      float64 `spss:"TMOVGEHS"`
+	GEDATE        float64 `spss:"GEDATE"`
+	GETIME        float64 `spss:"GETIME"`
+	HSDATE        float64 `spss:"HSDATE"`
+	HSTIME        float64 `spss:"HSTIME"`
 	TEN1          float64 `spss:"TEN1"`
 	TIED          float64 `spss:"TIED"`
 	LLORD         float64 `spss:"LLORD"`
 	FURN          float64 `spss:"FURN"`
+	TMOVHE        float64 `spss:"TMOVHE"`
+	HEDATE        float64 `spss:"HEDATE"`
+	HETIME        float64 `spss:"HETIME"`
 	ENDHHINF      float64 `spss:"ENDHHINF"`
+	HENDTIME      float64 `spss:"HENDTIME"`
+	HENDDATE      float64 `spss:"HENDDATE"`
+	HTIMECALC     float64 `spss:"HTIMECALC"`
 	PIND          float64 `spss:"PIND"`
 	CARGOP        string  `spss:"CARGOP"`
+	TMOVIS        float64 `spss:"TMOVIS"`
+	ISDATE        float64 `spss:"ISDATE"`
+	ISTIME        float64 `spss:"ISTIME"`
 	PERSNO        float64 `spss:"PERSNO"`
 	LINOW         float64 `spss:"LINOW"`
 	LIOUT         float64 `spss:"LIOUT"`
 	INTNOW        float64 `spss:"INTNOW"`
 	IOUTDATE      string  `spss:"IOUTDATE"`
-	FAMUNIT       float64 `spss:"FAMUNIT"`
+	STTIME        float64 `spss:"STTIME"`
 	RESPNO        float64 `spss:"RESPNO"`
+	LYRESID1      float64 `spss:"LYRESID1"`
+	LYRESID2      float64 `spss:"LYRESID2"`
+	LYRESID3      float64 `spss:"LYRESID3"`
+	RESDV1        float64 `spss:"RESDV1"`
+	RESDV2        float64 `spss:"RESDV2"`
+	RESDV3        float64 `spss:"RESDV3"`
 	NTNLTY12      float64 `spss:"NTNLTY12"`
+	TIMENAT       float64 `spss:"TIMENAT"`
+	DATENAT       float64 `spss:"DATENAT"`
 	NATSPEC       string  `spss:"NATSPEC"`
 	NLTYSPC       string  `spss:"NLTYSPC"`
 	NATO7         float64 `spss:"NATO7"`
 	CRY12         float64 `spss:"CRY12"`
 	CRYSPEC       string  `spss:"CRYSPEC"`
 	CRYO7         float64 `spss:"CRYO7"`
+	YRESID1       float64 `spss:"YRESID1"`
+	YRESID2       float64 `spss:"YRESID2"`
+	YRESID3       float64 `spss:"YRESID3"`
 	CAMEYR        float64 `spss:"CAMEYR"`
 	CONTUK        float64 `spss:"CONTUK"`
 	CAMEYR2       float64 `spss:"CAMEYR2"`
 	CAMEMT        float64 `spss:"CAMEMT"`
-	WHYUK10       float64 `spss:"WHYUK10"`
+	CAMEMTI       float64 `spss:"CAMEMTI"`
+	N             float64 `spss:"N"`
+	TEXTNUM       float64 `spss:"TEXTNUM"`
+	TEXTMONTHS    string  `spss:"TEXTMONTHS"`
+	LYRESTEXT     string  `spss:"LYRESTEXT"`
+	LYRESID3T     string  `spss:"LYRESID3T"`
+	INTETM        float64 `spss:"INTETM"`
+	WHYUK15       float64 `spss:"WHYUK15"`
 	NATLDE111     float64 `spss:"NATLDE111"`
 	NATLDE112     float64 `spss:"NATLDE112"`
 	NATLDE113     float64 `spss:"NATLDE113"`
@@ -2098,10 +2181,17 @@ type NISurveyInput struct {
 	SIDFTFQN      float64 `spss:"SIDFTFQN"`
 	SIDTUQN       float64 `spss:"SIDTUQN"`
 	SIDV          float64 `spss:"SIDV"`
+	SIDVW1        float64 `spss:"SIDVW1"`
+	SIDVW2        float64 `spss:"SIDVW2"`
+	SIDVW3        float64 `spss:"SIDVW3"`
+	SIDVW4        float64 `spss:"SIDVW4"`
+	SIDVW5        float64 `spss:"SIDVW5"`
 	CARDNO        float64 `spss:"CARDNO"`
 	RELIGE        float64 `spss:"RELIGE"`
 	RELIGW        float64 `spss:"RELIGW"`
 	RELIGS        float64 `spss:"RELIGS"`
+	TIMEREL       float64 `spss:"TIMEREL"`
+	DATEREL       float64 `spss:"DATEREL"`
 	RELOTH        string  `spss:"RELOTH"`
 	RELOCOD       float64 `spss:"RELOCOD"`
 	LANG          float64 `spss:"LANG"`
@@ -2114,14 +2204,9 @@ type NISurveyInput struct {
 	HAPPY         float64 `spss:"HAPPY"`
 	ANXIOUS       float64 `spss:"ANXIOUS"`
 	SUBPOST       float64 `spss:"SUBPOST"`
-	VETSERV       float64 `spss:"VETSERV"`
-	VETCURR       float64 `spss:"VETCURR"`
-	VETYRLFT1     float64 `spss:"VETYRLFT1"`
-	VTYRLFT2      float64 `spss:"VTYRLFT2"`
-	VTYRLFT3      float64 `spss:"VTYRLFT3"`
-	VETYEARLFT    float64 `spss:"VETYEARLFT"`
-	VLFT2CHK      float64 `spss:"VLFT2CHK"`
 	SCHM12        float64 `spss:"SCHM12"`
+	TIMESCH       float64 `spss:"TIMESCH"`
+	DATESCH       float64 `spss:"DATESCH"`
 	NEWDEA10      float64 `spss:"NEWDEA10"`
 	FUND12        float64 `spss:"FUND12"`
 	YTETMP        float64 `spss:"YTETMP"`
@@ -2182,6 +2267,7 @@ type NISurveyInput struct {
 	OMCONT        float64 `spss:"OMCONT"`
 	NOCUST        float64 `spss:"NOCUST"`
 	FTPTWK        float64 `spss:"FTPTWK"`
+	FTPTWK1       float64 `spss:"FTPTWK1"`
 	YPTCIA        float64 `spss:"YPTCIA"`
 	YPTJOB        float64 `spss:"YPTJOB"`
 	PTNCRE71      float64 `spss:"PTNCRE71"`
@@ -2194,10 +2280,58 @@ type NISurveyInput struct {
 	JBTP104       float64 `spss:"JBTP104"`
 	JBTP105       float64 `spss:"JBTP105"`
 	WHYTMP6       float64 `spss:"WHYTMP6"`
+	WHYOTH        string  `spss:"WHYOTH"`
 	TEMLEN        float64 `spss:"TEMLEN"`
 	CONMPY        float64 `spss:"CONMPY"`
 	CONSEY        float64 `spss:"CONSEY"`
 	CONMON        float64 `spss:"CONMON"`
+	RANDRESP1     string  `spss:"RANDRESP1"`
+	RANDRESP2     string  `spss:"RANDRESP2"`
+	RANDRESP3     string  `spss:"RANDRESP3"`
+	RANDRESP4     string  `spss:"RANDRESP4"`
+	RANDRESP5     string  `spss:"RANDRESP5"`
+	RANDRESP6     string  `spss:"RANDRESP6"`
+	RANDRESP7     string  `spss:"RANDRESP7"`
+	RANDRESP8     string  `spss:"RANDRESP8"`
+	RANDRESP9     string  `spss:"RANDRESP9"`
+	RANDMAP1      float64 `spss:"RANDMAP1"`
+	RANDMAP2      float64 `spss:"RANDMAP2"`
+	RANDMAP3      float64 `spss:"RANDMAP3"`
+	RANDMAP4      float64 `spss:"RANDMAP4"`
+	RANDMAP5      float64 `spss:"RANDMAP5"`
+	RANDMAP6      float64 `spss:"RANDMAP6"`
+	RANDMAP7      float64 `spss:"RANDMAP7"`
+	RANDMAP8      float64 `spss:"RANDMAP8"`
+	RANDMAP9      float64 `spss:"RANDMAP9"`
+	RANDRESPM1    string  `spss:"RANDRESPM1"`
+	RANDRESPM2    string  `spss:"RANDRESPM2"`
+	RANDRESPM3    string  `spss:"RANDRESPM3"`
+	RANDRESPM4    string  `spss:"RANDRESPM4"`
+	RANDRESPM5    string  `spss:"RANDRESPM5"`
+	RANDRESPM6    string  `spss:"RANDRESPM6"`
+	RANDRESPM7    string  `spss:"RANDRESPM7"`
+	RANDRESPM8    string  `spss:"RANDRESPM8"`
+	RANDRESPM9    string  `spss:"RANDRESPM9"`
+	RDMSLFA1      float64 `spss:"RDMSLFA1"`
+	RDMSLFA2      float64 `spss:"RDMSLFA2"`
+	RDMSLFA3      float64 `spss:"RDMSLFA3"`
+	RDMSLFA4      float64 `spss:"RDMSLFA4"`
+	RDMSLFA5      float64 `spss:"RDMSLFA5"`
+	RDMSLFA6      float64 `spss:"RDMSLFA6"`
+	RDMSLFA7      float64 `spss:"RDMSLFA7"`
+	RDMSLFA8      float64 `spss:"RDMSLFA8"`
+	RDMSLFA9      float64 `spss:"RDMSLFA9"`
+	RDMSLFB       float64 `spss:"RDMSLFB"`
+	MSELFA1       float64 `spss:"MSELFA1"`
+	MSELFA2       float64 `spss:"MSELFA2"`
+	MSELFA3       float64 `spss:"MSELFA3"`
+	MSELFA4       float64 `spss:"MSELFA4"`
+	MSELFA5       float64 `spss:"MSELFA5"`
+	MSELFA6       float64 `spss:"MSELFA6"`
+	MSELFA7       float64 `spss:"MSELFA7"`
+	MSELFA8       float64 `spss:"MSELFA8"`
+	MSELFA9       float64 `spss:"MSELFA9"`
+	MSELFB        float64 `spss:"MSELFB"`
 	HOWGET        float64 `spss:"HOWGET"`
 	CONPRE        float64 `spss:"CONPRE"`
 	CONPRY        float64 `spss:"CONPRY"`
@@ -2251,8 +2385,6 @@ type NISurveyInput struct {
 	TRVTME        float64 `spss:"TRVTME"`
 	TRVMTH        float64 `spss:"TRVMTH"`
 	TRVDRV        float64 `spss:"TRVDRV"`
-	HWW4WK        float64 `spss:"HWW4WK"`
-	HWWRET        float64 `spss:"HWWRET"`
 	ACTWKDY1      float64 `spss:"ACTWKDY1"`
 	ACTWKDY2      float64 `spss:"ACTWKDY2"`
 	ACTWKDY3      float64 `spss:"ACTWKDY3"`
@@ -2277,11 +2409,27 @@ type NISurveyInput struct {
 	ILLNE11       float64 `spss:"ILLNE11"`
 	IL2BEF        float64 `spss:"IL2BEF"`
 	ILLFST11      float64 `spss:"ILLFST11"`
-	ILLST         float64 `spss:"ILLST"`
+	ILLST17       float64 `spss:"ILLST17"`
 	ILNXSM        float64 `spss:"ILNXSM"`
 	ILLNXT11      float64 `spss:"ILLNXT11"`
+	EMPSICK4      float64 `spss:"EMPSICK4"`
+	WKSK4         float64 `spss:"WKSK4"`
+	DIFPER        float64 `spss:"DIFPER"`
+	ABSWK         float64 `spss:"ABSWK"`
+	CONTAB        float64 `spss:"CONTAB"`
+	HWW12WT       float64 `spss:"HWW12WT"`
+	ILNE12M       float64 `spss:"ILNE12M"`
+	ILNE12O       string  `spss:"ILNE12O"`
+	ILNE12SE      float64 `spss:"ILNE12SE"`
+	HWRET12E      float64 `spss:"HWRET12E"`
+	HWRET12S      float64 `spss:"HWRET12S"`
 	EVEROT        float64 `spss:"EVEROT"`
 	TOTUS1        float64 `spss:"TOTUS1"`
+	TOTUS1E       float64 `spss:"TOTUS1E"`
+	NOTFT         float64 `spss:"NOTFT"`
+	NOTPT         float64 `spss:"NOTPT"`
+	TOTUS1T       float64 `spss:"TOTUS1T"`
+	FTPTWKT       float64 `spss:"FTPTWKT"`
 	USUHR         float64 `spss:"USUHR"`
 	POTHR         float64 `spss:"POTHR"`
 	UOTHR         float64 `spss:"UOTHR"`
@@ -2292,6 +2440,7 @@ type NISurveyInput struct {
 	ACTUOT        float64 `spss:"ACTUOT"`
 	TOTAC2        float64 `spss:"TOTAC2"`
 	YLESS6        float64 `spss:"YLESS6"`
+	YLESSOTH      string  `spss:"YLESSOTH"`
 	MATLVE        float64 `spss:"MATLVE"`
 	YMORE         float64 `spss:"YMORE"`
 	VARYHR        float64 `spss:"VARYHR"`
@@ -2325,6 +2474,7 @@ type NISurveyInput struct {
 	SATDY         float64 `spss:"SATDY"`
 	EVSUN         float64 `spss:"EVSUN"`
 	SUNDY         float64 `spss:"SUNDY"`
+	JOBSATNI      float64 `spss:"JOBSATNI"`
 	HOLS          float64 `spss:"HOLS"`
 	HOLSB         float64 `spss:"HOLSB"`
 	BHOLCHK       float64 `spss:"BHOLCHK"`
@@ -2342,6 +2492,8 @@ type NISurveyInput struct {
 	BNKH1109      float64 `spss:"BNKH1109"`
 	BNKH1110      float64 `spss:"BNKH1110"`
 	BNKH1111      float64 `spss:"BNKH1111"`
+	BNKH1112      float64 `spss:"BNKH1112"`
+	BNKH1113      float64 `spss:"BNKH1113"`
 	BNKHOLF       float64 `spss:"BNKHOLF"`
 	BHPAID        float64 `spss:"BHPAID"`
 	BHNOTA        float64 `spss:"BHNOTA"`
@@ -2393,6 +2545,35 @@ type NISurveyInput struct {
 	WKTOW2        string  `spss:"WKTOW2"`
 	WKCTY2        string  `spss:"WKCTY2"`
 	WKPL299       float64 `spss:"WKPL299"`
+	RDSSLFA1      float64 `spss:"RDSSLFA1"`
+	RDSSLFA2      float64 `spss:"RDSSLFA2"`
+	RDSSLFA3      float64 `spss:"RDSSLFA3"`
+	RDSSLFA4      float64 `spss:"RDSSLFA4"`
+	RDSSLFA5      float64 `spss:"RDSSLFA5"`
+	RDSSLFA6      float64 `spss:"RDSSLFA6"`
+	RDSSLFA7      float64 `spss:"RDSSLFA7"`
+	RDSSLFA8      float64 `spss:"RDSSLFA8"`
+	RDSSLFA9      float64 `spss:"RDSSLFA9"`
+	RANDRESPS1    string  `spss:"RANDRESPS1"`
+	RANDRESPS2    string  `spss:"RANDRESPS2"`
+	RANDRESPS3    string  `spss:"RANDRESPS3"`
+	RANDRESPS4    string  `spss:"RANDRESPS4"`
+	RANDRESPS5    string  `spss:"RANDRESPS5"`
+	RANDRESPS6    string  `spss:"RANDRESPS6"`
+	RANDRESPS7    string  `spss:"RANDRESPS7"`
+	RANDRESPS8    string  `spss:"RANDRESPS8"`
+	RANDRESPS9    string  `spss:"RANDRESPS9"`
+	RDSSLFB       float64 `spss:"RDSSLFB"`
+	SSELFA1       float64 `spss:"SSELFA1"`
+	SSELFA2       float64 `spss:"SSELFA2"`
+	SSELFA3       float64 `spss:"SSELFA3"`
+	SSELFA4       float64 `spss:"SSELFA4"`
+	SSELFA5       float64 `spss:"SSELFA5"`
+	SSELFA6       float64 `spss:"SSELFA6"`
+	SSELFA7       float64 `spss:"SSELFA7"`
+	SSELFA8       float64 `spss:"SSELFA8"`
+	SSELFA9       float64 `spss:"SSELFA9"`
+	SSELFB        float64 `spss:"SSELFB"`
 	DIFJOB        float64 `spss:"DIFJOB"`
 	ADDJOB        float64 `spss:"ADDJOB"`
 	LOOKM111      float64 `spss:"LOOKM111"`
@@ -2432,6 +2613,7 @@ type NISurveyInput struct {
 	NOLOWA09      float64 `spss:"NOLOWA09"`
 	NOLOWA10      float64 `spss:"NOLOWA10"`
 	NOLWM         float64 `spss:"NOLWM"`
+	NOLOTH        string  `spss:"NOLOTH"`
 	NOLWF         float64 `spss:"NOLWF"`
 	NWNCRE1       float64 `spss:"NWNCRE1"`
 	NWNCRE2       float64 `spss:"NWNCRE2"`
@@ -2486,6 +2668,8 @@ type NISurveyInput struct {
 	LLKTIMA       float64 `spss:"LLKTIMA"`
 	LKTIMB        float64 `spss:"LKTIMB"`
 	BEFOR         float64 `spss:"BEFOR"`
+	UPCAREA1      float64 `spss:"UPCAREA1"`
+	UPCAREA2      float64 `spss:"UPCAREA2"`
 	STTBEN        float64 `spss:"STTBEN"`
 	BENFTS        float64 `spss:"BENFTS"`
 	TPBN1301      float64 `spss:"TPBN1301"`
@@ -2498,7 +2682,6 @@ type NISurveyInput struct {
 	TPBN1308      float64 `spss:"TPBN1308"`
 	TPBN1309      float64 `spss:"TPBN1309"`
 	TPBN1310      float64 `spss:"TPBN1310"`
-	BENOTH        string  `spss:"BENOTH"`
 	UNEMBN1       float64 `spss:"UNEMBN1"`
 	UNEMBN2       float64 `spss:"UNEMBN2"`
 	UCREDIT       float64 `spss:"UCREDIT"`
@@ -2518,9 +2701,11 @@ type NISurveyInput struct {
 	PENBN133      float64 `spss:"PENBN133"`
 	HSNGGB1       float64 `spss:"HSNGGB1"`
 	HSNGGB2       float64 `spss:"HSNGGB2"`
+	MLESS0        float64 `spss:"MLESS0"`
 	MARRCOHAB     float64 `spss:"MARRCOHAB"`
 	MCNUM         float64 `spss:"MCNUM"`
 	OYCIRC        float64 `spss:"OYCIRC"`
+	LEFTMI        float64 `spss:"LEFTMI"`
 	OYSIND        float64 `spss:"OYSIND"`
 	OYINDD        string  `spss:"OYINDD"`
 	OYINDT        string  `spss:"OYINDT"`
@@ -2537,6 +2722,18 @@ type NISurveyInput struct {
 	OYMPS02       float64 `spss:"OYMPS02"`
 	OYOEMPSTAT    float64 `spss:"OYOEMPSTAT"`
 	OYFTPT        float64 `spss:"OYFTPT"`
+	SRCHSMSOC     string  `spss:"SRCHSMSOC"`
+	INTROSMH      float64 `spss:"INTROSMH"`
+	SMOYAREA      string  `spss:"SMOYAREA"`
+	SMOYCTY       string  `spss:"SMOYCTY"`
+	SMOYRESC      float64 `spss:"SMOYRESC"`
+	SMHCOMP       float64 `spss:"SMHCOMP"`
+	SMEARNER      float64 `spss:"SMEARNER"`
+	SMOCCT        string  `spss:"SMOCCT"`
+	SMOCCD        string  `spss:"SMOCCD"`
+	SMSOC10       string  `spss:"SMSOC10"`
+	SMSC10C       float64 `spss:"SMSC10C"`
+	SMERESE       float64 `spss:"SMERESE"`
 	SUBJQ         string  `spss:"SUBJQ"`
 	SUBCODE       string  `spss:"SUBCODE"`
 	SUBQAL        string  `spss:"SUBQAL"`
@@ -2578,7 +2775,9 @@ type NISurveyInput struct {
 	QLFOR116      float64 `spss:"QLFOR116"`
 	QUALUK        float64 `spss:"QUALUK"`
 	QUALRE        float64 `spss:"QUALRE"`
-	FORTYP11      float64 `spss:"FORTYP11"`
+	FORTYP15      float64 `spss:"FORTYP15"`
+	TIMEFORT      float64 `spss:"TIMEFORT"`
+	DATEFORT      float64 `spss:"DATEFORT"`
 	FORSUB        string  `spss:"FORSUB"`
 	QULCH111      float64 `spss:"QULCH111"`
 	QULCH112      float64 `spss:"QULCH112"`
@@ -2611,6 +2810,9 @@ type NISurveyInput struct {
 	SCQUAL23      float64 `spss:"SCQUAL23"`
 	SCQUAL24      float64 `spss:"SCQUAL24"`
 	SCQUAL25      float64 `spss:"SCQUAL25"`
+	SCQUAL26      float64 `spss:"SCQUAL26"`
+	SCQUAL27      float64 `spss:"SCQUAL27"`
+	SCQUAL28      float64 `spss:"SCQUAL28"`
 	UNIQUAL01     float64 `spss:"UNIQUAL01"`
 	UNIQUAL02     float64 `spss:"UNIQUAL02"`
 	UNIQUAL03     float64 `spss:"UNIQUAL03"`
@@ -2642,6 +2844,9 @@ type NISurveyInput struct {
 	UNIQUAL29     float64 `spss:"UNIQUAL29"`
 	UNIQUAL30     float64 `spss:"UNIQUAL30"`
 	UNIQUAL31     float64 `spss:"UNIQUAL31"`
+	UNIQUAL32     float64 `spss:"UNIQUAL32"`
+	UNIQUAL33     float64 `spss:"UNIQUAL33"`
+	UNIQUAL34     float64 `spss:"UNIQUAL34"`
 	WOQUAL01      float64 `spss:"WOQUAL01"`
 	WOQUAL02      float64 `spss:"WOQUAL02"`
 	WOQUAL03      float64 `spss:"WOQUAL03"`
@@ -2673,6 +2878,9 @@ type NISurveyInput struct {
 	WOQUAL29      float64 `spss:"WOQUAL29"`
 	WOQUAL30      float64 `spss:"WOQUAL30"`
 	WOQUAL31      float64 `spss:"WOQUAL31"`
+	WOQUAL32      float64 `spss:"WOQUAL32"`
+	WOQUAL33      float64 `spss:"WOQUAL33"`
+	WOQUAL34      float64 `spss:"WOQUAL34"`
 	GSQUAL01      float64 `spss:"GSQUAL01"`
 	GSQUAL02      float64 `spss:"GSQUAL02"`
 	GSQUAL03      float64 `spss:"GSQUAL03"`
@@ -2704,6 +2912,9 @@ type NISurveyInput struct {
 	GSQUAL29      float64 `spss:"GSQUAL29"`
 	GSQUAL30      float64 `spss:"GSQUAL30"`
 	GSQUAL31      float64 `spss:"GSQUAL31"`
+	GSQUAL32      float64 `spss:"GSQUAL32"`
+	GSQUAL33      float64 `spss:"GSQUAL33"`
+	GSQUAL34      float64 `spss:"GSQUAL34"`
 	OTQUAL01      float64 `spss:"OTQUAL01"`
 	OTQUAL02      float64 `spss:"OTQUAL02"`
 	OTQUAL03      float64 `spss:"OTQUAL03"`
@@ -2735,17 +2946,9 @@ type NISurveyInput struct {
 	OTQUAL29      float64 `spss:"OTQUAL29"`
 	OTQUAL30      float64 `spss:"OTQUAL30"`
 	OTQUAL31      float64 `spss:"OTQUAL31"`
-	QLYR1101      float64 `spss:"QLYR1101"`
-	QLYR1102      float64 `spss:"QLYR1102"`
-	QLYR1103      float64 `spss:"QLYR1103"`
-	QLYR1104      float64 `spss:"QLYR1104"`
-	QLYR1105      float64 `spss:"QLYR1105"`
-	QLYR1106      float64 `spss:"QLYR1106"`
-	QLYR1107      float64 `spss:"QLYR1107"`
-	QLYR1108      float64 `spss:"QLYR1108"`
-	QLYR1109      float64 `spss:"QLYR1109"`
-	QLYR1110      float64 `spss:"QLYR1110"`
-	QLYR1111      float64 `spss:"QLYR1111"`
+	OTQUAL32      float64 `spss:"OTQUAL32"`
+	OTQUAL33      float64 `spss:"OTQUAL33"`
+	OTQUAL34      float64 `spss:"OTQUAL34"`
 	INTROLEV      float64 `spss:"INTROLEV"`
 	DEGREE71      float64 `spss:"DEGREE71"`
 	DEGREE72      float64 `spss:"DEGREE72"`
@@ -2754,56 +2957,56 @@ type NISurveyInput struct {
 	DEGREE75      float64 `spss:"DEGREE75"`
 	HIGHO         float64 `spss:"HIGHO"`
 	SUBJCTN       string  `spss:"SUBJCTN"`
-	SINCOMN       float64 `spss:"SINCOMN"`
+	NDSICO        float64 `spss:"NDSICO"`
 	SNGDEGN       string  `spss:"SNGDEGN"`
-	CMBDEGN01     float64 `spss:"CMBDEGN01"`
-	CMBDEGN02     float64 `spss:"CMBDEGN02"`
-	CMBDEGN03     float64 `spss:"CMBDEGN03"`
-	CMBDEGN04     float64 `spss:"CMBDEGN04"`
-	CMBDEGN05     float64 `spss:"CMBDEGN05"`
-	CMBDEGN06     float64 `spss:"CMBDEGN06"`
-	CMBDEGN07     float64 `spss:"CMBDEGN07"`
-	CMBDEGN08     float64 `spss:"CMBDEGN08"`
-	CMBDEGN09     float64 `spss:"CMBDEGN09"`
-	CMBDEGN10     float64 `spss:"CMBDEGN10"`
-	CMBDEGN11     float64 `spss:"CMBDEGN11"`
-	CMBDEGN12     float64 `spss:"CMBDEGN12"`
-	CMBMAINN      float64 `spss:"CMBMAINN"`
+	COMDEG01      float64 `spss:"COMDEG01"`
+	COMDEG02      float64 `spss:"COMDEG02"`
+	COMDEG03      float64 `spss:"COMDEG03"`
+	COMDEG04      float64 `spss:"COMDEG04"`
+	COMDEG05      float64 `spss:"COMDEG05"`
+	COMDEG06      float64 `spss:"COMDEG06"`
+	COMDEG07      float64 `spss:"COMDEG07"`
+	COMDEG08      float64 `spss:"COMDEG08"`
+	COMDEG09      float64 `spss:"COMDEG09"`
+	COMDEG10      float64 `spss:"COMDEG10"`
+	COMDEG11      float64 `spss:"COMDEG11"`
+	COMDEG12      float64 `spss:"COMDEG12"`
+	COMMAIN       float64 `spss:"COMMAIN"`
 	FDSUBJ        string  `spss:"FDSUBJ"`
-	FDSINCOM      float64 `spss:"FDSINCOM"`
+	FDSICO        float64 `spss:"FDSICO"`
 	FDSNGDEG      string  `spss:"FDSNGDEG"`
-	FDCMBD01      float64 `spss:"FDCMBD01"`
-	FDCMBD02      float64 `spss:"FDCMBD02"`
-	FDCMBD03      float64 `spss:"FDCMBD03"`
-	FDCMBD04      float64 `spss:"FDCMBD04"`
-	FDCMBD05      float64 `spss:"FDCMBD05"`
-	FDCMBD06      float64 `spss:"FDCMBD06"`
-	FDCMBD07      float64 `spss:"FDCMBD07"`
-	FDCMBD08      float64 `spss:"FDCMBD08"`
-	FDCMBD09      float64 `spss:"FDCMBD09"`
-	FDCMBD10      float64 `spss:"FDCMBD10"`
-	FDCMBD11      float64 `spss:"FDCMBD11"`
-	FDCMBD12      float64 `spss:"FDCMBD12"`
-	FDCMBMA       float64 `spss:"FDCMBMA"`
+	UNCOMB01      float64 `spss:"UNCOMB01"`
+	UNCOMB02      float64 `spss:"UNCOMB02"`
+	UNCOMB03      float64 `spss:"UNCOMB03"`
+	UNCOMB04      float64 `spss:"UNCOMB04"`
+	UNCOMB05      float64 `spss:"UNCOMB05"`
+	UNCOMB06      float64 `spss:"UNCOMB06"`
+	UNCOMB07      float64 `spss:"UNCOMB07"`
+	UNCOMB08      float64 `spss:"UNCOMB08"`
+	UNCOMB09      float64 `spss:"UNCOMB09"`
+	UNCOMB10      float64 `spss:"UNCOMB10"`
+	UNCOMB11      float64 `spss:"UNCOMB11"`
+	UNCOMB12      float64 `spss:"UNCOMB12"`
+	UNCOMBMA      float64 `spss:"UNCOMBMA"`
 	FDINST        string  `spss:"FDINST"`
 	UGINST        string  `spss:"UGINST"`
 	DEGCLS7       float64 `spss:"DEGCLS7"`
 	HDSUBJCT      string  `spss:"HDSUBJCT"`
-	HDSINCOM      float64 `spss:"HDSINCOM"`
+	HDSICO        float64 `spss:"HDSICO"`
 	SNGHD         string  `spss:"SNGHD"`
-	CMBHD01       float64 `spss:"CMBHD01"`
-	CMBHD02       float64 `spss:"CMBHD02"`
-	CMBHD03       float64 `spss:"CMBHD03"`
-	CMBHD04       float64 `spss:"CMBHD04"`
-	CMBHD05       float64 `spss:"CMBHD05"`
-	CMBHD06       float64 `spss:"CMBHD06"`
-	CMBHD07       float64 `spss:"CMBHD07"`
-	CMBHD08       float64 `spss:"CMBHD08"`
-	CMBHD09       float64 `spss:"CMBHD09"`
-	CMBHD10       float64 `spss:"CMBHD10"`
-	CMBHD11       float64 `spss:"CMBHD11"`
-	CMBHD12       float64 `spss:"CMBHD12"`
-	CMBHDMA       float64 `spss:"CMBHDMA"`
+	HICOMB01      float64 `spss:"HICOMB01"`
+	HICOMB02      float64 `spss:"HICOMB02"`
+	HICOMB03      float64 `spss:"HICOMB03"`
+	HICOMB04      float64 `spss:"HICOMB04"`
+	HICOMB05      float64 `spss:"HICOMB05"`
+	HICOMB06      float64 `spss:"HICOMB06"`
+	HICOMB07      float64 `spss:"HICOMB07"`
+	HICOMB08      float64 `spss:"HICOMB08"`
+	HICOMB09      float64 `spss:"HICOMB09"`
+	HICOMB10      float64 `spss:"HICOMB10"`
+	HICOMB11      float64 `spss:"HICOMB11"`
+	HICOMB12      float64 `spss:"HICOMB12"`
+	HICOMBMA      float64 `spss:"HICOMBMA"`
 	HDINST        string  `spss:"HDINST"`
 	PGINST        string  `spss:"PGINST"`
 	CRYDEG        float64 `spss:"CRYDEG"`
@@ -2822,17 +3025,28 @@ type NISurveyInput struct {
 	TYPHST5       float64 `spss:"TYPHST5"`
 	ADVHST        float64 `spss:"ADVHST"`
 	HST           float64 `spss:"HST"`
+	TYPHSTN1      float64 `spss:"TYPHSTN1"`
+	TYPHSTN2      float64 `spss:"TYPHSTN2"`
+	TYPHSTN3      float64 `spss:"TYPHSTN3"`
+	TYPHSTN4      float64 `spss:"TYPHSTN4"`
+	TYPHSTN5      float64 `spss:"TYPHSTN5"`
+	TYPHSTS1      float64 `spss:"TYPHSTS1"`
+	TYPHSTS2      float64 `spss:"TYPHSTS2"`
+	TYPHSTS3      float64 `spss:"TYPHSTS3"`
+	TYPHSTS4      float64 `spss:"TYPHSTS4"`
 	WLSHBC8       float64 `spss:"WLSHBC8"`
 	QGCSE41       float64 `spss:"QGCSE41"`
 	QGCSE42       float64 `spss:"QGCSE42"`
 	QGCSE43       float64 `spss:"QGCSE43"`
 	QGCSE44       float64 `spss:"QGCSE44"`
 	QGCSE45       float64 `spss:"QGCSE45"`
+	QGCSE46       float64 `spss:"QGCSE46"`
 	GCSE41        float64 `spss:"GCSE41"`
 	GCSE42        float64 `spss:"GCSE42"`
 	GCSE43        float64 `spss:"GCSE43"`
 	GCSE44        float64 `spss:"GCSE44"`
 	GCSE45        float64 `spss:"GCSE45"`
+	GCSE46        float64 `spss:"GCSE46"`
 	NUMOL5        float64 `spss:"NUMOL5"`
 	MEGCSE        float64 `spss:"MEGCSE"`
 	NUMOL5O       float64 `spss:"NUMOL5O"`
@@ -2847,145 +3061,37 @@ type NISurveyInput struct {
 	BTCTH112      float64 `spss:"BTCTH112"`
 	BTCTH113      float64 `spss:"BTCTH113"`
 	BTCTH114      float64 `spss:"BTCTH114"`
-	BTCOTLA1      float64 `spss:"BTCOTLA1"`
-	BTCOTLA2      float64 `spss:"BTCOTLA2"`
-	BTCOTLA3      float64 `spss:"BTCOTLA3"`
-	BTCOTLB1      float64 `spss:"BTCOTLB1"`
-	BTCOTLB2      float64 `spss:"BTCOTLB2"`
-	BTCOTLB3      float64 `spss:"BTCOTLB3"`
-	BTCOTLB4      float64 `spss:"BTCOTLB4"`
-	BTCOTLB5      float64 `spss:"BTCOTLB5"`
-	BTCOTLB6      float64 `spss:"BTCOTLB6"`
-	BTCOTLB7      float64 `spss:"BTCOTLB7"`
-	BTCOTLB8      float64 `spss:"BTCOTLB8"`
-	BTCOTLB9      float64 `spss:"BTCOTLB9"`
 	VOCYRB        float64 `spss:"VOCYRB"`
 	SCTVC11       float64 `spss:"SCTVC11"`
 	SCACD         float64 `spss:"SCACD"`
 	SCLEV         float64 `spss:"SCLEV"`
 	SCSUBJ        string  `spss:"SCSUBJ"`
-	STCOT111      float64 `spss:"STCOT111"`
-	STCOT112      float64 `spss:"STCOT112"`
-	STCOT113      float64 `spss:"STCOT113"`
-	STCOT114      float64 `spss:"STCOT114"`
-	STCOT115      float64 `spss:"STCOT115"`
-	STCOTLA1      float64 `spss:"STCOTLA1"`
-	STCOTLA2      float64 `spss:"STCOTLA2"`
-	STCOTLA3      float64 `spss:"STCOTLA3"`
-	STCOTLB1      float64 `spss:"STCOTLB1"`
-	STCOTLB2      float64 `spss:"STCOTLB2"`
-	STCOTLB3      float64 `spss:"STCOTLB3"`
-	STCOTLB4      float64 `spss:"STCOTLB4"`
-	STCOTLB5      float64 `spss:"STCOTLB5"`
-	STCOTLB6      float64 `spss:"STCOTLB6"`
-	STCOTLB7      float64 `spss:"STCOTLB7"`
-	STCOTLB8      float64 `spss:"STCOTLB8"`
-	STCOTLB9      float64 `spss:"STCOTLB9"`
 	VOCYRC        float64 `spss:"VOCYRC"`
 	RSA11         float64 `spss:"RSA11"`
 	RSACD         float64 `spss:"RSACD"`
 	RSLEV         float64 `spss:"RSLEV"`
 	RSASUBJ       string  `spss:"RSASUBJ"`
-	RSAOT111      float64 `spss:"RSAOT111"`
-	RSAOT112      float64 `spss:"RSAOT112"`
-	RSAOT113      float64 `spss:"RSAOT113"`
-	RSAOT114      float64 `spss:"RSAOT114"`
-	RSAOTLA1      float64 `spss:"RSAOTLA1"`
-	RSAOTLA2      float64 `spss:"RSAOTLA2"`
-	RSAOTLA3      float64 `spss:"RSAOTLA3"`
-	RSAOTLB1      float64 `spss:"RSAOTLB1"`
-	RSAOTLB2      float64 `spss:"RSAOTLB2"`
-	RSAOTLB3      float64 `spss:"RSAOTLB3"`
-	RSAOTLB4      float64 `spss:"RSAOTLB4"`
-	RSAOTLB5      float64 `spss:"RSAOTLB5"`
-	RSAOTLB6      float64 `spss:"RSAOTLB6"`
-	RSAOTLB7      float64 `spss:"RSAOTLB7"`
-	RSAOTLB8      float64 `spss:"RSAOTLB8"`
-	RSAOTLB9      float64 `spss:"RSAOTLB9"`
 	VOCYRD        float64 `spss:"VOCYRD"`
 	CAG11         float64 `spss:"CAG11"`
 	CAGACD        float64 `spss:"CAGACD"`
 	CAGLEV        float64 `spss:"CAGLEV"`
 	CGSUBJ        string  `spss:"CGSUBJ"`
-	CAGOT111      float64 `spss:"CAGOT111"`
-	CAGOT112      float64 `spss:"CAGOT112"`
-	CAGOT113      float64 `spss:"CAGOT113"`
-	CAGOTLA1      float64 `spss:"CAGOTLA1"`
-	CAGOTLA2      float64 `spss:"CAGOTLA2"`
-	CAGOTLA3      float64 `spss:"CAGOTLA3"`
-	CAGOTLB1      float64 `spss:"CAGOTLB1"`
-	CAGOTLB2      float64 `spss:"CAGOTLB2"`
-	CAGOTLB3      float64 `spss:"CAGOTLB3"`
-	CAGOTLB4      float64 `spss:"CAGOTLB4"`
-	CAGOTLB5      float64 `spss:"CAGOTLB5"`
-	CAGOTLB6      float64 `spss:"CAGOTLB6"`
-	CAGOTLB7      float64 `spss:"CAGOTLB7"`
-	CAGOTLB8      float64 `spss:"CAGOTLB8"`
-	CAGOTLB9      float64 `spss:"CAGOTLB9"`
 	QGNVQ         float64 `spss:"QGNVQ"`
 	VOCYRE        float64 `spss:"VOCYRE"`
 	GNVQ11        float64 `spss:"GNVQ11"`
 	GNACD         float64 `spss:"GNACD"`
 	GNLEV         float64 `spss:"GNLEV"`
 	GNVQSUBJ      string  `spss:"GNVQSUBJ"`
-	GNVQO111      float64 `spss:"GNVQO111"`
-	GNVQO112      float64 `spss:"GNVQO112"`
-	GNVQO113      float64 `spss:"GNVQO113"`
-	GNVQO114      float64 `spss:"GNVQO114"`
-	GNVQO115      float64 `spss:"GNVQO115"`
-	GNVQOLA1      float64 `spss:"GNVQOLA1"`
-	GNVQOLA2      float64 `spss:"GNVQOLA2"`
-	GNVQOLA3      float64 `spss:"GNVQOLA3"`
-	GNVQOLB1      float64 `spss:"GNVQOLB1"`
-	GNVQOLB2      float64 `spss:"GNVQOLB2"`
-	GNVQOLB3      float64 `spss:"GNVQOLB3"`
-	GNVQOLB4      float64 `spss:"GNVQOLB4"`
-	GNVQOLB5      float64 `spss:"GNVQOLB5"`
-	GNVQOLB6      float64 `spss:"GNVQOLB6"`
-	GNVQOLB7      float64 `spss:"GNVQOLB7"`
-	GNVQOLB8      float64 `spss:"GNVQOLB8"`
-	GNVQOLB9      float64 `spss:"GNVQOLB9"`
 	NVQSVQ        float64 `spss:"NVQSVQ"`
 	VOCYRF        float64 `spss:"VOCYRF"`
 	NVQ11         float64 `spss:"NVQ11"`
 	NVACD         float64 `spss:"NVACD"`
 	NVLEV         float64 `spss:"NVLEV"`
 	NVQSUBJ       string  `spss:"NVQSUBJ"`
-	NVQO111       float64 `spss:"NVQO111"`
-	NVQO112       float64 `spss:"NVQO112"`
-	NVQO113       float64 `spss:"NVQO113"`
-	NVQO114       float64 `spss:"NVQO114"`
-	NVQO115       float64 `spss:"NVQO115"`
-	NVQO116       float64 `spss:"NVQO116"`
-	NVOTLEA1      float64 `spss:"NVOTLEA1"`
-	NVOTLEA2      float64 `spss:"NVOTLEA2"`
-	NVOTLEA3      float64 `spss:"NVOTLEA3"`
-	NVOTLEB1      float64 `spss:"NVOTLEB1"`
-	NVOTLEB2      float64 `spss:"NVOTLEB2"`
-	NVOTLEB3      float64 `spss:"NVOTLEB3"`
-	NVOTLEB4      float64 `spss:"NVOTLEB4"`
-	NVOTLEB5      float64 `spss:"NVOTLEB5"`
-	NVOTLEB6      float64 `spss:"NVOTLEB6"`
-	NVOTLEB7      float64 `spss:"NVOTLEB7"`
-	NVOTLEB8      float64 `spss:"NVOTLEB8"`
-	NVOTLEB9      float64 `spss:"NVOTLEB9"`
-	NVQUN         float64 `spss:"NVQUN"`
 	VOCYRG        float64 `spss:"VOCYRG"`
 	QCFACD        float64 `spss:"QCFACD"`
 	QCFLEV        float64 `spss:"QCFLEV"`
 	QCFSUBJ       string  `spss:"QCFSUBJ"`
-	QCFOTHA1      float64 `spss:"QCFOTHA1"`
-	QCFOTHA2      float64 `spss:"QCFOTHA2"`
-	QCFOTHA3      float64 `spss:"QCFOTHA3"`
-	QCFOTHB1      float64 `spss:"QCFOTHB1"`
-	QCFOTHB2      float64 `spss:"QCFOTHB2"`
-	QCFOTHB3      float64 `spss:"QCFOTHB3"`
-	QCFOTHB4      float64 `spss:"QCFOTHB4"`
-	QCFOTHB5      float64 `spss:"QCFOTHB5"`
-	QCFOTHB6      float64 `spss:"QCFOTHB6"`
-	QCFOTHB7      float64 `spss:"QCFOTHB7"`
-	QCFOTHB8      float64 `spss:"QCFOTHB8"`
-	QCFOTHB9      float64 `spss:"QCFOTHB9"`
 	TPQL111       float64 `spss:"TPQL111"`
 	TPQL112       float64 `spss:"TPQL112"`
 	TPQL113       float64 `spss:"TPQL113"`
@@ -2994,11 +3100,7 @@ type NISurveyInput struct {
 	OTHQU93       float64 `spss:"OTHQU93"`
 	OTHQU94       float64 `spss:"OTHQU94"`
 	OTHQU95       float64 `spss:"OTHQU95"`
-	VOCYRH        float64 `spss:"VOCYRH"`
 	OTHQAL11      string  `spss:"OTHQAL11"`
-	OTHQLEV       float64 `spss:"OTHQLEV"`
-	QALPL11       float64 `spss:"QALPL11"`
-	VOCQPL11      float64 `spss:"VOCQPL11"`
 	YERQAL1       float64 `spss:"YERQAL1"`
 	YERQAL2       float64 `spss:"YERQAL2"`
 	YERQAL3       float64 `spss:"YERQAL3"`
@@ -3044,6 +3146,8 @@ type NISurveyInput struct {
 	CGNWACD       float64 `spss:"CGNWACD"`
 	CGNWLEV       float64 `spss:"CGNWLEV"`
 	HSTNOW        float64 `spss:"HSTNOW"`
+	HSTNOWN       float64 `spss:"HSTNOWN"`
+	HSTNOWS       float64 `spss:"HSTNOWS"`
 	WBAC          float64 `spss:"WBAC"`
 	NVQKN2        float64 `spss:"NVQKN2"`
 	NVQLE11       float64 `spss:"NVQLE11"`
@@ -3092,19 +3196,15 @@ type NISurveyInput struct {
 	TRNLEN        float64 `spss:"TRNLEN"`
 	TRHR11        float64 `spss:"TRHR11"`
 	TRONJB        float64 `spss:"TRONJB"`
-	NFE13WK       float64 `spss:"NFE13WK"`
-	NFE4WK        float64 `spss:"NFE4WK"`
-	TAUT4WK       float64 `spss:"TAUT4WK"`
-	T4PURP        float64 `spss:"T4PURP"`
-	T4WORK        float64 `spss:"T4WORK"`
-	TAUT3M        float64 `spss:"TAUT3M"`
+	NONFORM3      float64 `spss:"NONFORM3"`
+	NONFORM4      float64 `spss:"NONFORM4"`
 	TSUBJ4WK      string  `spss:"TSUBJ4WK"`
 	TSUB4COD      string  `spss:"TSUB4COD"`
-	TSUBJ3M       string  `spss:"TSUBJ3M"`
-	TSUB3COD      string  `spss:"TSUB3COD"`
+	T4PURP        float64 `spss:"T4PURP"`
+	T4WORK        float64 `spss:"T4WORK"`
 	TAUTHRS       float64 `spss:"TAUTHRS"`
-	TLRN4WK       float64 `spss:"TLRN4WK"`
-	TLRN3M        float64 `spss:"TLRN3M"`
+	INFORM3       float64 `spss:"INFORM3"`
+	INFORM4       float64 `spss:"INFORM4"`
 	NEETS         float64 `spss:"NEETS"`
 	HPRMB         float64 `spss:"HPRMB"`
 	HPRMB2        float64 `spss:"HPRMB2"`
@@ -3147,6 +3247,7 @@ type NISurveyInput struct {
 	HEAL15        float64 `spss:"HEAL15"`
 	HEAL16        float64 `spss:"HEAL16"`
 	HEAL17        float64 `spss:"HEAL17"`
+	HEALOTH       string  `spss:"HEALOTH"`
 	LERND         float64 `spss:"LERND"`
 	HEALTH        float64 `spss:"HEALTH"`
 	LIMACT        float64 `spss:"LIMACT"`
@@ -3199,7 +3300,7 @@ type NISurveyInput struct {
 	AWARE         float64 `spss:"AWARE"`
 	REASOFF9      float64 `spss:"REASOFF9"`
 	NOBACK9       float64 `spss:"NOBACK9"`
-	SMOKEVER      float64 `spss:"SMOKEVER"`
+	CIGEVER       float64 `spss:"CIGEVER"`
 	CIGNOW        float64 `spss:"CIGNOW"`
 	REDACT        float64 `spss:"REDACT"`
 	NRINT         float64 `spss:"NRINT"`
@@ -3237,6 +3338,7 @@ type NISurveyInput struct {
 	USBANDN       string  `spss:"USBANDN"`
 	YVARY99       float64 `spss:"YVARY99"`
 	YPAYL         float64 `spss:"YPAYL"`
+	PAYOTH        string  `spss:"PAYOTH"`
 	PAYSSP        float64 `spss:"PAYSSP"`
 	YPAYM         float64 `spss:"YPAYM"`
 	ERNFILT       float64 `spss:"ERNFILT"`
@@ -3272,34 +3374,43 @@ type NISurveyInput struct {
 	BANDG2        string  `spss:"BANDG2"`
 	BANDN2        string  `spss:"BANDN2"`
 	IREND2        float64 `spss:"IREND2"`
+	IRENOTH       string  `spss:"IRENOTH"`
 	RELBUP        float64 `spss:"RELBUP"`
-	CRYFTH        float64 `spss:"CRYFTH"`
-	CRYFSPC       string  `spss:"CRYFSPC"`
-	CRYFFRM       float64 `spss:"CRYFFRM"`
-	CRYMTH        float64 `spss:"CRYMTH"`
-	CRYMSPC       string  `spss:"CRYMSPC"`
-	CRYMFRM       float64 `spss:"CRYMFRM"`
-	FATHEDU       float64 `spss:"FATHEDU"`
-	MOTHEDU       float64 `spss:"MOTHEDU"`
-	WKOTHCRY      float64 `spss:"WKOTHCRY"`
-	CRYSIX        float64 `spss:"CRYSIX"`
-	WCHCRY        string  `spss:"WCHCRY"`
-	WCHCRYFR      float64 `spss:"WCHCRYFR"`
-	COMEUK1       float64 `spss:"COMEUK1"`
-	COMEUK2       float64 `spss:"COMEUK2"`
-	COMEUK3       float64 `spss:"COMEUK3"`
-	COMEUK4       float64 `spss:"COMEUK4"`
-	COMEUK5       float64 `spss:"COMEUK5"`
-	COMEUKMN      float64 `spss:"COMEUKMN"`
-	JOBINUK       float64 `spss:"JOBINUK"`
-	OVRQUAL       float64 `spss:"OVRQUAL"`
-	OBSKILM       float64 `spss:"OBSKILM"`
-	OBSKILS       float64 `spss:"OBSKILS"`
-	OBJOBM        float64 `spss:"OBJOBM"`
-	OBJOBS        float64 `spss:"OBJOBS"`
-	LANGSKIL      float64 `spss:"LANGSKIL"`
-	LANGCOUR      float64 `spss:"LANGCOUR"`
-	FINDJOB       float64 `spss:"FINDJOB"`
+	RELBOTH       string  `spss:"RELBOTH"`
+	TMOVIE        float64 `spss:"TMOVIE"`
+	IEDATE        float64 `spss:"IEDATE"`
+	IETIME        float64 `spss:"IETIME"`
+	PAYSCA        float64 `spss:"PAYSCA"`
+	NOTICE        float64 `spss:"NOTICE"`
+	NOTOTH        string  `spss:"NOTOTH"`
+	LADDER        float64 `spss:"LADDER"`
+	INCLUD1       float64 `spss:"INCLUD1"`
+	INCLUD2       float64 `spss:"INCLUD2"`
+	INCLUD3       float64 `spss:"INCLUD3"`
+	INCLUD4       float64 `spss:"INCLUD4"`
+	INCLUD5       float64 `spss:"INCLUD5"`
+	AHMSTIME      float64 `spss:"AHMSTIME"`
+	AHMSDATE      float64 `spss:"AHMSDATE"`
+	VARIWT1A      float64 `spss:"VARIWT1A"`
+	VARIWT1B      float64 `spss:"VARIWT1B"`
+	FREEHOU1      float64 `spss:"FREEHOU1"`
+	FREELEA1      float64 `spss:"FREELEA1"`
+	FLEXWT1       float64 `spss:"FLEXWT1"`
+	AVAIFRE1      float64 `spss:"AVAIFRE1"`
+	AVAIFRE2      float64 `spss:"AVAIFRE2"`
+	RECHOUR1      float64 `spss:"RECHOUR1"`
+	RECHOUR2      float64 `spss:"RECHOUR2"`
+	PRESSUR1      float64 `spss:"PRESSUR1"`
+	JOBAUTO1      float64 `spss:"JOBAUTO1"`
+	JOBAUTO2      float64 `spss:"JOBAUTO2"`
+	PLACEWK1      float64 `spss:"PLACEWK1"`
+	COMMUTM1      float64 `spss:"COMMUTM1"`
+	OTHERLO1      float64 `spss:"OTHERLO1"`
+	OTHERLO2      float64 `spss:"OTHERLO2"`
+	AHM19ETQ      float64 `spss:"AHM19ETQ"`
+	AHMETIME      float64 `spss:"AHMETIME"`
+	AHMEDATE      float64 `spss:"AHMEDATE"`
+	MLESS12       float64 `spss:"MLESS12"`
 	SOC10MU       string  `spss:"SOC10MU"`
 	S2KSTMU_INDEX float64 `spss:"S2KSTMU_INDEX"`
 	SOC2KMU_INDEX string  `spss:"SOC2KMU_INDEX"`
@@ -3418,22 +3529,38 @@ type NISurveyInput struct {
 	RDIC2007      string  `spss:"RDIC2007"`
 	RDICD07       float64 `spss:"RDICD07"`
 	CODCHK        float64 `spss:"CODCHK"`
-	INDOUT        float64 `spss:"INDOUT"`
+	CENDTIME      float64 `spss:"CENDTIME"`
+	CENDDATE      float64 `spss:"CENDDATE"`
+	CTIMECALC     float64 `spss:"CTIMECALC"`
+	TITIMECAL     float64 `spss:"TITIMECAL"`
+	ENDTIMEQ      float64 `spss:"ENDTIMEQ"`
+	ENDTIME       float64 `spss:"ENDTIME"`
+	IENDDATE      float64 `spss:"IENDDATE"`
+	LASTTIME      float64 `spss:"LASTTIME"`
 	PERSFLAG      float64 `spss:"PERSFLAG"`
 	RPERSFLAG     float64 `spss:"RPERSFLAG"`
 	RECALLP       float64 `spss:"RECALLP"`
 	CODENOW       float64 `spss:"CODENOW"`
+	TIMECALC      float64 `spss:"TIMECALC"`
+	TIMECALT1     float64 `spss:"TIMECALT1"`
+	TIMECALT2     float64 `spss:"TIMECALT2"`
+	TIMECALT3     float64 `spss:"TIMECALT3"`
+	TIMECALT4     float64 `spss:"TIMECALT4"`
+	CSTIME        float64 `spss:"CSTIME"`
+	CSTDATE       float64 `spss:"CSTDATE"`
 	HIHNUM        string  `spss:"HIHNUM"`
 	ISHIC1        float64 `spss:"ISHIC1"`
 	JNTELDA       float64 `spss:"JNTELDA"`
 	JNTELDB       float64 `spss:"JNTELDB"`
-	DVHRPNUM      float64 `spss:"DVHRPNUM"`
 	HRPCHECK      float64 `spss:"HRPCHECK"`
 	SHOWBEN       float64 `spss:"SHOWBEN"`
 	DVBENU1       float64 `spss:"DVBENU1"`
 	DVNUMBU       float64 `spss:"DVNUMBU"`
 	THANKS        float64 `spss:"THANKS"`
-	THANKE        float64 `spss:"THANKE"`
+	THANKW1       float64 `spss:"THANKW1"`
+	THANKW2       float64 `spss:"THANKW2"`
+	THANKW3       float64 `spss:"THANKW3"`
+	THANKWO       string  `spss:"THANKWO"`
 	THANKWVF      float64 `spss:"THANKWVF"`
 	THANKETH      float64 `spss:"THANKETH"`
 	FLAG75        float64 `spss:"FLAG75"`
@@ -3442,21 +3569,13 @@ type NISurveyInput struct {
 	RECALLH       float64 `spss:"RECALLH"`
 	GOTPHONE      float64 `spss:"GOTPHONE"`
 	RECPHONE      float64 `spss:"RECPHONE"`
+	REFPHONE      float64 `spss:"REFPHONE"`
+	REFPHOTH      string  `spss:"REFPHOTH"`
 	CHK_NUM1      float64 `spss:"CHK_NUM1"`
 	PREFNO        float64 `spss:"PREFNO"`
 	CHK_NUM2      float64 `spss:"CHK_NUM2"`
 	ALTNO         float64 `spss:"ALTNO"`
 	DISPLAY       float64 `spss:"DISPLAY"`
-	APPOINTTYPE   float64 `spss:"APPOINTTYPE"`
-	WEEKDAYS1     float64 `spss:"WEEKDAYS1"`
-	WEEKDAYS2     float64 `spss:"WEEKDAYS2"`
-	WEEKDAYS3     float64 `spss:"WEEKDAYS3"`
-	WEEKDAYS4     float64 `spss:"WEEKDAYS4"`
-	WEEKDAYS5     float64 `spss:"WEEKDAYS5"`
-	WEEKDAYS6     float64 `spss:"WEEKDAYS6"`
-	APPOINTTIME   float64 `spss:"APPOINTTIME"`
-	TIMESTART     float64 `spss:"TIMESTART"`
-	TIMEEND       float64 `spss:"TIMEEND"`
 	CALSUN        float64 `spss:"CALSUN"`
 	MULTHH11      float64 `spss:"MULTHH11"`
 	MHHTYPE       float64 `spss:"MHHTYPE"`
@@ -3492,103 +3611,29 @@ type NISurveyInput struct {
 	WHOTRANS5     float64 `spss:"WHOTRANS5"`
 	WHOTRANS6     float64 `spss:"WHOTRANS6"`
 	NMTRANS       float64 `spss:"NMTRANS"`
-	IOUT1         float64 `spss:"IOUT1"`
-	IOUT2         float64 `spss:"IOUT2"`
-	IOUT4         float64 `spss:"IOUT4"`
-	PROXPERS      float64 `spss:"PROXPERS"`
-	AGECHECK      float64 `spss:"AGECHECK"`
-	NUMFUPER      float64 `spss:"NUMFUPER"`
-	NUMPAPRY      float64 `spss:"NUMPAPRY"`
-	NUMFUPRY      float64 `spss:"NUMFUPRY"`
-	NUMPAPER      float64 `spss:"NUMPAPER"`
-	NUMNOELG      float64 `spss:"NUMNOELG"`
-	NUMREFUS      float64 `spss:"NUMREFUS"`
-	NUMNONCO      float64 `spss:"NUMNONCO"`
-	NUMPARLS      float64 `spss:"NUMPARLS"`
-	NUMFULL       float64 `spss:"NUMFULL"`
-	NUMINT        float64 `spss:"NUMINT"`
-	NUMNOTEL      float64 `spss:"NUMNOTEL"`
-	NUMSEVIN      float64 `spss:"NUMSEVIN"`
-	INDCHECK      float64 `spss:"INDCHECK"`
-	HARMINTR      float64 `spss:"HARMINTR"`
-	INTSOME       float64 `spss:"INTSOME"`
-	INTFIN        float64 `spss:"INTFIN"`
-	OUTSUM        float64 `spss:"OUTSUM"`
-	INDOUT4       float64 `spss:"INDOUT4"`
-	INELIG1       float64 `spss:"INELIG1"`
-	UNCER1        float64 `spss:"UNCER1"`
-	NONSUM        float64 `spss:"NONSUM"`
-	REF1          float64 `spss:"REF1"`
-	REF2          float64 `spss:"REF2"`
-	REF3          float64 `spss:"REF3"`
-	REFREAS1      float64 `spss:"REFREAS1"`
-	REFREAS2      float64 `spss:"REFREAS2"`
-	REFREAS3      float64 `spss:"REFREAS3"`
-	NONC1         float64 `spss:"NONC1"`
-	NONREAS1      float64 `spss:"NONREAS1"`
-	NONREAS2      float64 `spss:"NONREAS2"`
-	NONREAS3      float64 `spss:"NONREAS3"`
-	OTHR1         float64 `spss:"OTHR1"`
-	OTHR2         float64 `spss:"OTHR2"`
-	OTHR3         float64 `spss:"OTHR3"`
-	HOUT04        float64 `spss:"HOUT04"`
-	HOUTLFS       float64 `spss:"HOUTLFS"`
-	ANYVISIT      float64 `spss:"ANYVISIT"`
-	RTYPHH        float64 `spss:"RTYPHH"`
-	RTYPOTH       string  `spss:"RTYPOTH"`
-	DWELLTYP      float64 `spss:"DWELLTYP"`
-	FLOORN        float64 `spss:"FLOORN"`
-	ENTRYN1       float64 `spss:"ENTRYN1"`
-	ENTRYN2       float64 `spss:"ENTRYN2"`
-	ENTRYN3       float64 `spss:"ENTRYN3"`
-	ENTRYN4       float64 `spss:"ENTRYN4"`
-	ENTRYN5       float64 `spss:"ENTRYN5"`
-	ENTRYN6       float64 `spss:"ENTRYN6"`
+	UNCONDIT      float64 `spss:"UNCONDIT"`
+	CONDITWV1     float64 `spss:"CONDITWV1"`
+	VOUCHERWV1    string  `spss:"VOUCHERWV1"`
+	CONDITWV2     float64 `spss:"CONDITWV2"`
+	VOUCHERWV2    string  `spss:"VOUCHERWV2"`
 	TOTTIME       float64 `spss:"TOTTIME"`
+	TMOVFIN       float64 `spss:"TMOVFIN"`
+	FINDATE       float64 `spss:"FINDATE"`
+	FINTIME       float64 `spss:"FINTIME"`
 	MAIN          float64 `spss:"MAIN"`
-	INTVLANG      float64 `spss:"INTVLANG"`
-	FTFPHONE      float64 `spss:"FTFPHONE"`
-	DIRECTION     string  `spss:"DIRECTION"`
-	BRIEFSDC1     float64 `spss:"BRIEFSDC1"`
-	BRIEFSDC2     float64 `spss:"BRIEFSDC2"`
-	BRIEFSDC3     float64 `spss:"BRIEFSDC3"`
-	BRIEF1        string  `spss:"BRIEF1"`
-	LBRIEF1       string  `spss:"LBRIEF1"`
-	BRIEF2        string  `spss:"BRIEF2"`
 	ANYLEFT       float64 `spss:"ANYLEFT"`
 	DONECODE      float64 `spss:"DONECODE"`
-	REFNON        float64 `spss:"REFNON"`
-	REFUSE1       float64 `spss:"REFUSE1"`
-	REFUSE2       float64 `spss:"REFUSE2"`
-	REFUSE3       float64 `spss:"REFUSE3"`
-	REFOTH        string  `spss:"REFOTH"`
-	NNCONT        float64 `spss:"NNCONT"`
-	NNCOTH        string  `spss:"NNCOTH"`
-	REISSUE       float64 `spss:"REISSUE"`
-	REOTHER       string  `spss:"REOTHER"`
-	ISS1INT       float64 `spss:"ISS1INT"`
-	ISS1HOUT      float64 `spss:"ISS1HOUT"`
-	ISS1NC        float64 `spss:"ISS1NC"`
-	ISS1CREF      float64 `spss:"ISS1CREF"`
-	REISS         float64 `spss:"REISS"`
-	HOUT          float64 `spss:"HOUT"`
-	HOUTC         float64 `spss:"HOUTC"`
 	HOUTDATE      float64 `spss:"HOUTDATE"`
-	CREF          float64 `spss:"CREF"`
-	TOINTOUT      float64 `spss:"TOINTOUT"`
+	WELCOME       string  `spss:"WELCOME"`
 	CHKLET        string  `spss:"CHKLET"`
-	DIVADDIND     string  `spss:"DIVADDIND"`
-	CASEOJECTIND  string  `spss:"CASEOJECTIND"`
-	GORA          string  `spss:"GORA"`
-	COUNTRYCOD    string  `spss:"COUNTRYCOD"`
-	WAVE          string  `spss:"WAVE"`
-	CHKLET2       string  `spss:"CHKLET2"`
-	OAIND         string  `spss:"OAIND"`
-	URINDEW       string  `spss:"URINDEW"`
-	URINDSC       string  `spss:"URINDSC"`
+	STLMNTB       string  `spss:"STLMNTB"`
 	NHSACC        string  `spss:"NHSACC"`
 	GOR99         string  `spss:"GOR99"`
 	TELFTF        string  `spss:"TELFTF"`
+	TRAINS        string  `spss:"TRAINS"`
+	THISWAV       string  `spss:"THISWAV"`
+	THISQUTR      string  `spss:"THISQUTR"`
+	RELIGFLAG     string  `spss:"RELIGFLAG"`
 	SUPVSMU_INDEX string  `spss:"SUPVSMU_INDEX"`
 	SUPVSMC_INDEX string  `spss:"SUPVSMC_INDEX"`
 	SUPVS2U_INDEX string  `spss:"SUPVS2U_INDEX"`
@@ -3606,12 +3651,10 @@ type NISurveyInput struct {
 	BULATER       string  `spss:"BULATER"`
 	FLDREG        string  `spss:"FLDREG"`
 	DTEOFBTH      string  `spss:"DTEOFBTH"`
-	CID96_NEW     string  `spss:"CID96_NEW"`
-	LAD96_NEW     string  `spss:"LAD96_NEW"`
-	PRIMARYFIRST  float64 `spss:"PRIMARYFIRST"`
-	UALAD99       string  `spss:"UALAD99"`
-	URINDEW_NEW   string  `spss:"URINDEW_NEW"`
-	URINDSC_NEW   string  `spss:"URINDSC_NEW"`
-	URIND         string  `spss:"URIND"`
 	LIVWTH        float64 `spss:"LIVWTH"`
+	ANXDATE       string  `spss:"ANXDATE"`
+	UALAD99       string  `spss:"UALAD99"`
+	LAD96         string  `spss:"LAD96"`
+	DC            string  `spss:"DC"`
+	WAD96         string  `spss:"WAD96"`
 }

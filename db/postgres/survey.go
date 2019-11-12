@@ -145,6 +145,12 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 			vo.Audit.Status = types.UploadError
 			vo.Audit.Message = "Insert survey row failed"
 			_ = s.AuditFileUploadEvent(*vo.Audit)
+			log.Error().
+				Err(err).
+				Int("week", row.Week).
+				Int("month", row.Month).
+				Int("year", row.Year).
+				Msg("Cannot insert survey row")
 			return fmt.Errorf("cannot insert survey row, error: %s", err)
 		}
 	}

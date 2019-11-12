@@ -35,7 +35,6 @@ func (sf NISurveyFilter) SkipRowsFilter(header []string, data [][]string) ([][]s
 	}
 
 	filteredRows := make([][]string, 0, 0)
-	filteredRows = append(filteredRows, header)
 
 	for _, j := range data {
 
