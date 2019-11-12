@@ -52,7 +52,7 @@ func (s Postgres) insertAddressesRow(buffer bytes.Buffer) error {
 	return nil
 }
 
-func (s Postgres) PersistAddressDataset(header []string, rows [][]string, status *types.WSMessage) error {
+func (s Postgres) PersistAddresses(header []string, rows [][]string, status *types.WSMessage) error {
 
 	startTime := time.Now()
 
@@ -107,7 +107,7 @@ func (s Postgres) PersistAddressDataset(header []string, rows [][]string, status
 					buffer.WriteString("0.0")
 				default:
 					log.Error().
-						Str("methodName", "PersistAddressDataset").
+						Str("methodName", "PersistAddresses").
 						Int("type", int(columnKind)).
 						Msg("Unknown type - possible corruption")
 					return fmt.Errorf("unknown type - possible corruption")

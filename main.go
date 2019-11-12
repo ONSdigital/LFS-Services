@@ -23,21 +23,17 @@ func main() {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 	}
 
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-
-	if config.Config.LogLevel == "Debug" {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
-
 	// Command line flag overrides the configuration file
 	debug := flag.Bool("debug", false, "sets log level to debug")
 
 	router := mux.NewRouter()
 
 	flag.Parse()
-	if *debug {
+	if *debug || config.Config.LogLevel == "Debug" {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		router.Use(loggingMiddleware)
+	} else {
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
 	log.Info().
@@ -65,6 +61,7 @@ func main() {
 	// Batch/File info
 	router.HandleFunc("/imports/survey/gb/{year}/{week}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/survey/ni/{year}/{month}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
+
 	// Batch info
 	router.HandleFunc("/batches/display/annual/{year}", idHandler.HandleAnnualBatchIdsRequest).Methods(http.MethodGet)
 	router.HandleFunc("/batches/display/quarterly/{year}/{quarter}", idHandler.HandleQuarterlyBatchIdsRequest).Methods(http.MethodGet)
@@ -74,6 +71,7 @@ func main() {
 	router.HandleFunc("/imports/survey/gb/{week}/{year}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/survey/ni/{month}/{year}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/address", addressesHandler.AddressUploadHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/variable/definitions", vdHandler.HandleRequestVariableUpload).Methods(http.MethodPost)
 
 	// Audits
 	router.HandleFunc("/audits", auditHandler.HandleAllAuditRequest).Methods(http.MethodGet)
@@ -135,18 +133,19 @@ func main() {
 
 func loggingMiddleware(next http.Handler) http.Handler {
 
-	log.Info().Msg("logging middleware registered")
+	log.Info().Msg("Logging middleware registered")
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Debug().
 			Str("URI:", r.RequestURI).
 			Str("client", r.RemoteAddr).
-			Msg("Received request")
+			Msg("-> Received request")
 		startTime := time.Now()
 		next.ServeHTTP(w, r)
 
 		log.Debug().
 			Str("URI:", r.RequestURI).
-			Str("elapsedTime", util.FmtDuration(startTime)).Msg("Request Completed")
+			Str("elapsedTime", util.FmtDuration(startTime)).
+			Msg("<- Request Completed")
 	})
 }

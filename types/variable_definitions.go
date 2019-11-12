@@ -14,14 +14,14 @@ type VariableDefinitions struct {
 }
 
 type VariableDefinitionsImport struct {
-	Variable      string  `db:"variable" json:"variable"`
-	Description   string  `db:"description" json:"description"`
-	DataType      SavType `db:"type" json:"type"`
-	DataLength    string
-	DataPrecision string
-	Alias         string
-	SASFormatName string
-	Editable      bool `db:"editable" json:"editable"`
-	Imputation    bool `db:"imputation" json:"imputation"`
-	DV            bool `db:"dv" json:"dv"`
+	Variable       string `csv:"VARIABLE"`
+	Description    string `csv:"DESCRIPTION"`
+	VariableType   string `csv:"DATA_TYPE"`
+	VariableLength string `csv:"DATA_LENGTH"`
+	Precision      string `csv:"DATA_PRECISION"`
+	Alias          string `csv:"ALIAS"`
+	SASFormatName  string `csv:"-"`
+	Editable       string `csv:"EDITABLE"`
+	Imputation     string `csv:"IMPUTATION"`
+	DV             string `csv:"USED_FOR_DV"`
 }
