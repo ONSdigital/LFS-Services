@@ -41,7 +41,10 @@ func TestMonthlyBatchHandler(t *testing.T) {
 func TestQuarterlyBatchHandler(t *testing.T) {
 	// Cleansing and any setup
 	tearDown(t)
-	setupMonthlyTables(t, 2014)
+	setupMonthlyTables(t, 1, 2, 2015, 0)  // Jan-Feb 2015 status 0
+	setupMonthlyTables(t, 1, 2, 2016, 4)  // Jan-Feb 2016 status 4
+	setupMonthlyTables(t, 3, 1, 2016, 0)  // Mar 2016 status 0
+	setupMonthlyTables(t, 1, 12, 2017, 4) // Jan-Dec 2017 status 4
 
 	r := httptest.NewRequest("POST", "/batches/quarterly/", nil)
 
@@ -52,8 +55,8 @@ func TestQuarterlyBatchHandler(t *testing.T) {
 		BatchHandler{}.CreateQuarterlyBatchHandler(w, r)
 
 		if !assert.Equal(t, qtc.expectedCode, w.Code) {
-			t.Fatalf("\n\nFAILED TEST CASE: %s\nERROR MESSAGE: %s",
-				qtc.description, w.Body.String())
+			t.Fatalf("\n\nFAILED TEST CASE: %s\nPERIOD: %s, %s\nERROR MESSAGE: %s",
+				qtc.description, qtc.period, qtc.year, w.Body.String())
 		}
 		t.Logf("\nPASSED: %s\nPERIOD: %s, %s\nBODY: %s",
 			qtc.description, qtc.year, qtc.period, w.Body.String())
@@ -64,9 +67,15 @@ func TestAnnualBatchHandler(t *testing.T) {
 	// Cleansing and any setup
 	tearDown(t)
 
-	setupMonthlyTables(t, 2014)
-	setupMonthlyTables(t, 2015)
-	setupQuarterlyTables(t, 2015)
+	setupMonthlyTables(t, 1, 6, 2015, 0)  // Jan-Jun 2015 status 0
+	setupMonthlyTables(t, 1, 9, 2016, 4)  // Jan-Sep 2016 status 4
+	setupMonthlyTables(t, 10, 2, 2016, 0) // Oct-Dec 2016 status 0
+	setupMonthlyTables(t, 1, 12, 2017, 4) // Jan-Dec 2017 status 4
+
+	setupQuarterlyTables(t, 1, 2, 2015, 0) // Q1-Q2 2015 status 0
+	setupQuarterlyTables(t, 1, 3, 2016, 4) // Q1-Q3 2016 status 4
+	setupQuarterlyTables(t, 4, 1, 2016, 0) // Q4 2016 status 0
+	setupQuarterlyTables(t, 1, 4, 2017, 4) // Q1-Q4 2017 status 4
 
 	r := httptest.NewRequest("POST", "/batches/annual/", nil)
 
@@ -111,7 +120,7 @@ func tearDown(t *testing.T) {
 	}
 }
 
-func setupMonthlyTables(t *testing.T, year int) {
+func setupMonthlyTables(t *testing.T, month, count, year, status int) {
 	// Establish DB connection
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -124,21 +133,20 @@ func setupMonthlyTables(t *testing.T, year int) {
 	}
 
 	// Insert a load of mock data and set status to 4
-	for i := 1; i <= 12; i++ {
+	for i := month; i <= count; i++ {
 		batch := types.MonthlyBatch{
 			Year:        year,
 			Month:       i,
-			Status:      4,
+			Status:      status,
 			Description: "Mock data for Testing",
 		}
 		if err := dbase.CreateMonthlyBatch(batch); err != nil {
 			t.Fatalf(err.Error())
 		}
 	}
-
 }
 
-func setupQuarterlyTables(t *testing.T, year int) {
+func setupQuarterlyTables(t *testing.T, quarter, count, year, status int) {
 	// Establish DB connection
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
@@ -151,11 +159,11 @@ func setupQuarterlyTables(t *testing.T, year int) {
 	}
 
 	// Insert a load of mock data and set status to 4
-	for i := 1; i <= 4; i++ {
+	for i := quarter; i <= count; i++ {
 		batch := types.QuarterlyBatch{
 			Quarter:     i,
 			Year:        year,
-			Status:      4,
+			Status:      status,
 			Description: "Mock data for Testing",
 		}
 		if err := dbase.CreateQuarterlyBatch(batch); err != nil {
@@ -189,25 +197,25 @@ func monthlyTestCases() []testCase {
 			description:  "Monthly (Assert Error: Already exists)",
 			year:         "2018",
 			period:       "12",
-			expectedCode: 418,
+			expectedCode: 400,
 		},
 		{
 			description:  "Monthly (Assert Error: Invalid month, expected month one of 1-12)",
 			year:         "2014",
 			period:       "44",
-			expectedCode: 418,
+			expectedCode: 400,
 		},
 		{
 			description:  "Monthly (Assert Error: Invalid month, expected month one of 1-12)",
 			year:         "2018",
 			period:       "Q",
-			expectedCode: 418,
+			expectedCode: 400,
 		},
 		{
 			description:  "Monthly (Assert Error: Expected year as integer)",
 			year:         "Q",
 			period:       "4",
-			expectedCode: 418,
+			expectedCode: 400,
 		},
 	}
 
@@ -218,57 +226,69 @@ func quarterlyTestCases() []testCase {
 	testCases := []testCase{
 		{
 			description:  "Quarterly",
-			year:         "2014",
+			year:         "2017",
 			period:       "Q4",
 			expectedCode: 200,
 		},
 		{
 			description:  "Quarterly",
-			year:         "2014",
+			year:         "2017",
 			period:       "Q3",
 			expectedCode: 200,
 		},
 		{
 			description:  "Quarterly",
-			year:         "2014",
+			year:         "2017",
 			period:       "Q2",
 			expectedCode: 200,
 		},
 		{
 			description:  "Quarterly",
-			year:         "2014",
+			year:         "2017",
 			period:       "Q1",
 			expectedCode: 200,
 		},
 		{
 			description:  "Quarterly (Assert Error: Already exists)",
-			year:         "2019",
+			year:         "2017",
 			period:       "Q4",
-			expectedCode: 418,
+			expectedCode: 400,
 		},
 		{
-			description:  "Quarterly (Assert Error: No valid months for Q4 2019)",
-			year:         "2019",
+			description:  "Quarterly (Assert Error: no monthly batches exist for Q4, 2019. Required 3 monthly batches to continue)",
+			year:         "2014",
 			period:       "Q4",
-			expectedCode: 418,
+			expectedCode: 400,
+		},
+		{
+			description:  "Quarterly (Assert Error: 2 monthly batches exist for Q1, 2015. Required 3 monthly batches to continue)",
+			year:         "2015",
+			period:       "Q1",
+			expectedCode: 400,
+		},
+		{
+			description:  "Quarterly (Assert Error: 2 valid monthly batches exist for Q1, 2016. Required 3 valid monthly batches to continue)",
+			year:         "2016",
+			period:       "Q1",
+			expectedCode: 400,
 		},
 		{
 			description:  "Quarterly (Assert Error: Invalid period, expected one of Q1-Q4)",
 			year:         "2019",
 			period:       "4",
-			expectedCode: 418,
+			expectedCode: 400,
 		},
 		{
 			description:  "Quarterly (Assert Error: Invalid period, expected one of Q1-Q4)",
 			year:         "2019",
 			period:       "Q5",
-			expectedCode: 418,
+			expectedCode: 400,
 		},
 		{
 			description:  "Quarterly (Assert Error: Invalid year, expected integer)",
 			year:         "El is amazing",
 			period:       "Q4",
-			expectedCode: 418,
+			expectedCode: 400,
 		},
 	}
 
@@ -279,23 +299,38 @@ func annualTestCases() []testCase {
 	testCases := []testCase{
 		{
 			description:  "Annual",
-			year:         "2015",
+			year:         "2017",
 			expectedCode: 200,
+		},
+		{
+			description:  "Annual (Assert Error: Already exists)",
+			year:         "2017",
+			expectedCode: 400,
+		},
+		{
+			description:  "Annual (Assert Error: 0 monthly batches for 2014. 12 months required to continue)",
+			year:         "2014",
+			expectedCode: 400,
+		},
+		{
+			description:  "Annual (Assert Error: 12 months required)",
+			year:         "2015",
+			expectedCode: 400,
 		},
 		{
 			description:  "Annual (Assert Error: 12 valid months required)",
 			year:         "2016",
-			expectedCode: 418,
+			expectedCode: 400,
+		},
+		{
+			description:  "Annual (Assert Error: 4 quarter batches required)",
+			year:         "2015",
+			expectedCode: 400,
 		},
 		{
 			description:  "Annual (Assert Error: 4 valid quarters required)",
-			year:         "2014",
-			expectedCode: 418,
-		},
-		{
-			description:  "Annual (Assert Error: Valid year required)",
-			year:         "0",
-			expectedCode: 418,
+			year:         "2016",
+			expectedCode: 400,
 		},
 	}
 

@@ -83,12 +83,24 @@ func (b BatchHandler) CreateQuarterlyBatchHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	res := b.generateQuarterBatchId(p, yr, description)
+	// Do
+	res, qErr := b.generateQuarterBatchId(q, yr, description)
 	if res != nil {
-		ErrorResponse{Status: Error, ErrorMessage: res.Error()}.sendResponse(w, r)
+		BadDataResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("3 valid months for Q%d, %d required", q, yr),
+			Result:       res,
+		}.sendBadDataResponse(w, r, res)
+		return
+	}
+	if qErr != nil {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: qErr.Error()}.sendResponse(w, r)
 		return
 	}
 
+	// Return
 	OkayResponse{OK}.sendResponse(w, r)
 }
 
@@ -107,9 +119,16 @@ func (b BatchHandler) CreateAnnualBatchHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	res := b.generateYearBatchId(yr, description)
+	// Do
+	res, aErr := b.generateYearBatchId(yr, description)
 	if res != nil {
-		ErrorResponse{Status: Error, ErrorMessage: res.Error()}.sendResponse(w, r)
+		BadDataResponse{}.sendBadDataResponse(w, r, res)
+		return
+	}
+	if aErr != nil {
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: aErr.Error()}.sendResponse(w, r)
 		return
 	}
 
