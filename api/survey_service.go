@@ -26,6 +26,7 @@ func loadSav(in string, out interface{}) (types.SavImportData, error) {
 	start := time.Now()
 
 	records, err := sav.ImportSav(in)
+
 	if err != nil {
 		return types.SavImportData{}, err
 	}
@@ -168,6 +169,16 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 
 	headers, body := sav.SPSSDatatoArray(spssData)
 
+	// calculate starting week for the month
+	weekNo := 1
+	for i := 1; i < si.Audit.Month; i++ {
+		if i == 2 || i == 5 || i == 8 || i == 11 {
+			weekNo = weekNo + 5
+		} else {
+			weekNo = weekNo + 4
+		}
+	}
+
 	si.Audit.ReferenceDate = time.Now()
 	si.Audit.NumObFile = spssData.RowCount
 	si.Audit.NumObLoaded = spssData.RowCount
@@ -177,6 +188,7 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 	si.Audit.Id = id
 	si.Audit.Year = year
 	si.Audit.Month = month
+	si.Audit.Week = weekNo
 	si.Audit.FileSource = types.NISource
 
 	pipeline := filter.NewNIPipeLine(headers, body, &si.Audit)
@@ -217,15 +229,34 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 		Status:  si.fileUploads,
 	}
 
-	if err := database.PersistSurvey(surveyVo); err != nil {
-		log.Error().
-			Err(err).
-			Str("datasetName", datasetName).
-			Msg("Cannot persist dataset")
-		si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist NI survey data: %s", err))
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-		return
-	}
+	go func() {
+		defer wg.Done()
+		if err := database.PersistSurvey(surveyVo); err != nil {
+			log.Error().
+				Err(err).
+				Str("datasetName", datasetName).
+				Msg("Cannot persist NI survey data")
+			si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist NI survey data: %s", err))
+			return
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if err := database.PersistVariableDefinitions(spssData.Header); err != nil {
+			log.Error().
+				Err(err).
+				Str("datasetName", datasetName).
+				Msg("Cannot persist variable definitions (NI)")
+			si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist variable definitions (NI): %s", err))
+			return
+		}
+	}()
+
+	wg.Wait()
 
 	log.Debug().
 		Str("datasetName", datasetName).

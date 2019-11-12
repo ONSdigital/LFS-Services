@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"os"
 	"services/types"
+	"strings"
 	"unsafe"
 )
 
@@ -67,13 +68,15 @@ func ImportSav(fileName string) (types.SavImportData, error) {
 			typeString = types.TypeDouble
 		}
 
+		// Convert all variable names to uppercase
 		header[i] = types.Header{
-			VariableName:        C.GoString(z.var_name),
+			VariableName:        strings.ToUpper(C.GoString(z.var_name)),
 			VariableDescription: C.GoString(z.var_description),
 			VariableType:        typeString,
 			VariableLength:      int(z.length),
 			VariablePrecision:   int(z.precision),
 		}
+
 	}
 
 	var savRows = make([]types.Rows, rowCount)

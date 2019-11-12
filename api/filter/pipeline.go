@@ -61,18 +61,26 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 		return nil, nil, fmt.Errorf(response.ErrorMessage)
 	}
 
-	for k, v := range p.headers {
-		to, ok := p.filter.RenameColumns(v)
-		if ok {
-			p.headers[k] = to
-		}
+	// Skip rows
+	p.data, err = p.filter.SkipRowsFilter(p.headers, p.data)
+	if err != nil {
+		return nil, nil, err
 	}
 
+	// add variables
 	newColumns, err := p.filter.AddVariables(p.headers, p.data)
 	if err != nil {
 		log.Error().
 			Err(err)
 		return nil, nil, err
+	}
+
+	// rename variables
+	for k, v := range p.headers {
+		to, ok := p.filter.RenameColumns(v)
+		if ok {
+			p.headers[k] = to
+		}
 	}
 
 	t1 := reflect.TypeOf(p.StructType)
@@ -98,11 +106,6 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 	}
 
 	columns = append(columns, newColumns...)
-
-	p.data, err = p.filter.SkipRowsFilter(p.headers, p.data)
-	if err != nil {
-		return nil, nil, err
-	}
 
 	return columns, p.data, nil
 }

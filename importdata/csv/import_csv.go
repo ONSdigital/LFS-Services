@@ -6,6 +6,7 @@ import (
 	"github.com/gocarina/gocsv"
 	"io"
 	"os"
+	"strings"
 )
 
 type ImportCSV struct{}
@@ -18,7 +19,7 @@ func ImportCSVToSlice(fileName string) (out [][]string, err error) {
 	defer func() { _ = csvfile.Close() }()
 
 	r := csv.NewReader(csvfile)
-
+	cnt := 0
 	for {
 		// Read each record from csv
 		record, err := r.Read()
@@ -28,6 +29,12 @@ func ImportCSVToSlice(fileName string) (out [][]string, err error) {
 		if err != nil {
 			return nil, fmt.Errorf("error reading CSV file: %s, error: %w", fileName, err)
 		}
+		if cnt == 0 {
+			for i, j := range record {
+				record[i] = strings.ToUpper(j)
+			}
+		}
+		cnt++
 		out = append(out, record)
 	}
 	return out, nil

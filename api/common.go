@@ -9,6 +9,7 @@ import (
 	"services/db"
 	"services/types"
 	"services/util"
+	"strconv"
 	"time"
 )
 
@@ -103,4 +104,12 @@ func FindGBBatch(weekNo, yearNo int) (types.GBBatchItem, error) {
 	}
 
 	return info, nil
+}
+
+func intConversion(year string) int {
+	yr, err := strconv.Atoi(year)
+	if err != nil {
+		return -1
+	}
+	return yr
 }

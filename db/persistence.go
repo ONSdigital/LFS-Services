@@ -46,11 +46,11 @@ type Persistence interface {
 	GetQuarterlyBatches() ([]types.Dashboard, error)
 	GetMonthlyBatches() ([]types.Dashboard, error)
 
-	// Address
 	// Import
 	PersistSurvey(vo types.SurveyVO) error
 	PersistVariableDefinitions([]types.Header) error
-	PersistAddressDataset(headers []string, rows [][]string, status *types.WSMessage) error
+	PersistDVChanges(definitions []types.VariableDefinitions) error
+	PersistAddresses(headers []string, rows [][]string, status *types.WSMessage) error
 
 	// User
 	GetUserID(user string) (types.UserCredentials, error)

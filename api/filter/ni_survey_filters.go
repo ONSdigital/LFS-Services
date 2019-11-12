@@ -20,22 +20,21 @@ func NewNISurveyFilter(audit *types.Audit) Filter {
 func (sf NISurveyFilter) SkipRowsFilter(header []string, data [][]string) ([][]string, error) {
 
 	// get indexes of items we are interested in
-	sex, err := findPosition(header, "Sex")
+	sex, err := findPosition(header, "SEX")
 	if err != nil {
 		return nil, err
 	}
 
-	age, err := findPosition(header, "Age")
+	age, err := findPosition(header, "AGE")
 	if err != nil {
 		return nil, err
 	}
-	houtcome, err := findPosition(header, "Houtcome")
+	houtcome, err := findPosition(header, "HOUTCOME")
 	if err != nil {
 		return nil, err
 	}
 
 	filteredRows := make([][]string, 0, 0)
-	filteredRows = append(filteredRows, header)
 
 	for _, j := range data {
 
@@ -43,18 +42,18 @@ func (sf NISurveyFilter) SkipRowsFilter(header []string, data [][]string) ([][]s
 
 		s, err := strconv.ParseFloat(row[sex], 64)
 		if err != nil {
-			log.Error().Msg("sex field is not a float, ignoring")
+			log.Error().Msg("SEX field is not a float, ignoring")
 			continue
 		}
 		if math.IsNaN(s) {
 			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-			log.Debug().Msg("Dropping row because column Sex is missing")
+			log.Debug().Msg("Dropping row because column SEX is missing")
 			continue
 		}
 
 		a, err := strconv.ParseFloat(row[age], 64)
 		if err != nil {
-			log.Error().Msg("age field is not a float, ignoring")
+			log.Error().Msg("AGE field is not a float, ignoring")
 			continue
 		}
 		if math.IsNaN(a) {
@@ -65,7 +64,7 @@ func (sf NISurveyFilter) SkipRowsFilter(header []string, data [][]string) ([][]s
 
 		h, err := strconv.ParseFloat(row[houtcome], 64)
 		if err != nil {
-			log.Error().Msg("age field is not a float, ignoring")
+			log.Error().Msg("HOUTCOME field is not a float, ignoring")
 			continue
 		}
 		if math.IsNaN(h) {
@@ -82,7 +81,7 @@ func (sf NISurveyFilter) AddVariables(headers []string, data [][]string) ([]type
 	startTime := time.Now()
 
 	log.Debug().
-		Str("variable", "CaseNo").
+		Str("variable", "CASENO").
 		Timestamp().
 		Msg("Start adding variable")
 
@@ -94,7 +93,7 @@ func (sf NISurveyFilter) AddVariables(headers []string, data [][]string) ([]type
 	columns := make([]types.Column, 0, 0)
 
 	log.Debug().
-		Str("variable", "CaseNo").
+		Str("variable", "CASENO").
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Finished adding variable")
 
@@ -102,7 +101,7 @@ func (sf NISurveyFilter) AddVariables(headers []string, data [][]string) ([]type
 	startTime = time.Now()
 
 	log.Debug().
-		Str("variable", "HSerial").
+		Str("variable", "HSERIAL").
 		Timestamp().
 		Msg("Start adding variable")
 
@@ -113,7 +112,7 @@ func (sf NISurveyFilter) AddVariables(headers []string, data [][]string) ([]type
 	columns = append(columns, column)
 
 	log.Debug().
-		Str("variable", "HSerial").
+		Str("variable", "HSERIAL").
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Finished adding variable")
 
