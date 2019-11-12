@@ -232,15 +232,10 @@ func (s Postgres) CreateMonthlyBatch(batch types.MonthlyBatch) error {
 		return fmt.Errorf("insert into %s failed, error: %s", niBatchTable, err)
 	}
 
-	cnt := 4
-	if batch.Month%3 == 0 {
-		cnt = 5
-	}
-
-	// get week number - if % 3 then 5 weeks else 4
+	// calculate starting week for the month
 	weekNo := 1
 	for i := 1; i < batch.Month; i++ {
-		if i%3 == 0 {
+		if i == 2 || i == 5 || i == 8 || i == 11 {
 			weekNo = weekNo + 5
 		} else {
 			weekNo = weekNo + 4
@@ -248,6 +243,11 @@ func (s Postgres) CreateMonthlyBatch(batch types.MonthlyBatch) error {
 	}
 
 	gbBatch := tx.Collection(gbBatchTable)
+
+	cnt := 4
+	if batch.Month == 2 || batch.Month == 5 || batch.Month == 8 || batch.Month == 11 {
+		cnt = 5
+	}
 
 	for i := 0; i < cnt; i++ {
 		var gb types.GBBatchItem
