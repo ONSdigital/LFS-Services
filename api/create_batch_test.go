@@ -1,7 +1,3 @@
-// TODO: How to display w.Body as JSON? This will help improve the error messages
-// TODO: Add more quarterly test cases?
-// TODO: Annual batch testing
-
 package api
 
 import (

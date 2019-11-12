@@ -66,6 +66,7 @@ func (b BatchHandler) generateQuarterBatchId(quarter int, year int, description 
 
 	// Ensure successful monthly exist
 	if found := dbase.ValidateMonthsForQuarterlyBatch(quarter, year); !found {
+		// TODO: Return statuses of all months for that quarter
 		return fmt.Errorf("3 valid months for year %d required", year)
 	}
 
@@ -100,6 +101,7 @@ func (b BatchHandler) generateYearBatchId(year int, description string) error {
 
 	// Ensure successful monthly exist
 	if found := dbase.ValidateMonthsForAnnualBatch(year); !found {
+		// TODO: Return statuses of all months for that year
 		return fmt.Errorf("12 valid months for year %d required", year)
 	}
 
