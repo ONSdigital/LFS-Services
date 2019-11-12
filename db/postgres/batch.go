@@ -146,7 +146,7 @@ func (s Postgres) ValidateMonthsForQuarterlyBatch(period, year int) bool {
 
 	log.Debug().
 		Int("year", year).
-		Msg("Qarterly batch check - All 3 valid months exist")
+		Msg("Quarterly batch check - All 3 valid months exist")
 
 	return true
 }
