@@ -26,6 +26,7 @@ func loadSav(in string, out interface{}) (types.SavImportData, error) {
 	start := time.Now()
 
 	records, err := sav.ImportSav(in)
+
 	if err != nil {
 		return types.SavImportData{}, err
 	}

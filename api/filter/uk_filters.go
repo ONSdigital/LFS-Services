@@ -22,34 +22,34 @@ func findPosition(headers []string, column string) (int, error) {
 
 func (sf UKFilter) addHSerial(header []string, rows [][]string) (types.Column, error) {
 
-	header = append(header, "Hserial")
+	header = append(header, "HSERIAL")
 
 	// get indexes of items we are interested in for the calculation
-	quotaInx, err := findPosition(header, "Quota")
+	quotaInx, err := findPosition(header, "QUOTA")
 	if err != nil {
 		return types.Column{}, err
 	}
-	weekInx, err := findPosition(header, "Week")
+	weekInx, err := findPosition(header, "WEEK")
 	if err != nil {
 		return types.Column{}, err
 	}
-	w1yrInx, err := findPosition(header, "W1Yr")
+	w1yrInx, err := findPosition(header, "W1YR")
 	if err != nil {
 		return types.Column{}, err
 	}
-	qrtrInx, err := findPosition(header, "Qrtr")
+	qrtrInx, err := findPosition(header, "QRTR")
 	if err != nil {
 		return types.Column{}, err
 	}
-	addrInx, err := findPosition(header, "Addr")
+	addrInx, err := findPosition(header, "ADDR")
 	if err != nil {
 		return types.Column{}, err
 	}
-	wavfndInx, err := findPosition(header, "WavFnd")
+	wavfndInx, err := findPosition(header, "WAVFND")
 	if err != nil {
 		return types.Column{}, err
 	}
-	hhldInx, err := findPosition(header, "Hhld")
+	hhldInx, err := findPosition(header, "HHLD")
 	if err != nil {
 		return types.Column{}, err
 	}
@@ -100,7 +100,7 @@ func (sf UKFilter) addHSerial(header []string, rows [][]string) (types.Column, e
 	}
 
 	column := types.Column{
-		Name:  "Hserial",
+		Name:  "HSERIAL",
 		Skip:  false,
 		ColNo: len(header),
 		Kind:  reflect.Int64,
@@ -111,38 +111,38 @@ func (sf UKFilter) addHSerial(header []string, rows [][]string) (types.Column, e
 
 func (sf UKFilter) addCaseno(header []string, rows [][]string) (types.Column, error) {
 
-	header = append(header, "CaseNo")
+	header = append(header, "CASENO")
 
 	// get indexes of items we are interested in for the calculation
-	quotaInx, err := findPosition(header, "Quota")
+	quotaInx, err := findPosition(header, "QUOTA")
 	if err != nil {
 		return types.Column{}, err
 	}
-	weekInx, err := findPosition(header, "Week")
+	weekInx, err := findPosition(header, "WEEK")
 	if err != nil {
 		return types.Column{}, err
 	}
-	w1yrInx, err := findPosition(header, "W1Yr")
+	w1yrInx, err := findPosition(header, "W1YR")
 	if err != nil {
 		return types.Column{}, err
 	}
-	qrtrInx, err := findPosition(header, "Qrtr")
+	qrtrInx, err := findPosition(header, "QRTR")
 	if err != nil {
 		return types.Column{}, err
 	}
-	addrInx, err := findPosition(header, "Addr")
+	addrInx, err := findPosition(header, "ADDR")
 	if err != nil {
 		return types.Column{}, err
 	}
-	wavfndInx, err := findPosition(header, "WavFnd")
+	wavfndInx, err := findPosition(header, "WAVFND")
 	if err != nil {
 		return types.Column{}, err
 	}
-	hhldInx, err := findPosition(header, "Hhld")
+	hhldInx, err := findPosition(header, "HHLD")
 	if err != nil {
 		return types.Column{}, err
 	}
-	persnoInx, err := findPosition(header, "PersNo")
+	persnoInx, err := findPosition(header, "PERSNO")
 	if err != nil {
 		return types.Column{}, err
 	}
@@ -198,7 +198,7 @@ func (sf UKFilter) addCaseno(header []string, rows [][]string) (types.Column, er
 	}
 
 	column := types.Column{
-		Name:  "CaseNo",
+		Name:  "CASENO",
 		Skip:  false,
 		ColNo: len(header),
 		Kind:  reflect.Int64,

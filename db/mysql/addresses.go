@@ -105,7 +105,7 @@ func (s MySQL) PersistAddressDataset(header []string, rows [][]string, status *t
 					buffer.WriteString("0.0")
 				default:
 					log.Error().
-						Str("methodName", "PersistAddressDataset").
+						Str("methodName", "PersistAddresses").
 						Int("type", int(columnKind)).
 						Msg("Unknown type - possible corruption")
 					return fmt.Errorf("unknown type - possible corruption")

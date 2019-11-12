@@ -17,7 +17,7 @@ func NewGBSurveyValidation(headers []string, rows [][]string) GBSurveyValidation
 func (sf GBSurveyValidation) Validate(period, year int) (ValidationResponse, error) {
 
 	var columnsToCheck = []string{
-		"RefDte", "PCode", "Quota", "Week", "W1Yr", "Qrtr", "Addr", "WavFnd", "Hhld", "PersNo",
+		"REFDTE", "PCODE", "QUOTA", "WEEK", "W1YR", "QRTR", "ADDR", "WAVFND", "HHLD", "PERSNO",
 	}
 	v, e := sf.validateMissingValues(columnsToCheck)
 

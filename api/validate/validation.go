@@ -168,7 +168,7 @@ and a given time on a given date. To get the actual date from this we need to:
 
 */
 func (v Validator) validateREFDTE(period, year int, origin types.FileOrigin) (ValidationResponse, error) {
-	rows, err := v.GetRowsAsDouble("RefDte")
+	rows, err := v.GetRowsAsDouble("REFDTE")
 	if err != nil {
 		return ValidationResponse{
 			ValidationResult: ValidationFailed,
@@ -184,8 +184,8 @@ func (v Validator) validateREFDTE(period, year int, origin types.FileOrigin) (Va
 		if val != j {
 			return ValidationResponse{
 				ValidationResult: ValidationFailed,
-				ErrorMessage:     "rows contain different values for RefDte",
-			}, fmt.Errorf("rows contain different values for RefDte")
+				ErrorMessage:     "rows contain different values for REFDTE",
+			}, fmt.Errorf("rows contain different values for REFDTE")
 		}
 	}
 

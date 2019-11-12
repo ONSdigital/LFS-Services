@@ -20,33 +20,32 @@ func NewGBSurveyFilter(audit *types.Audit) Filter {
 func (sf GBSurveyFilter) SkipRowsFilter(header []string, rows [][]string) ([][]string, error) {
 
 	// get indexes of items we are interested in
-	sex, err := findPosition(header, "Sex")
+	sex, err := findPosition(header, "SEX")
 	if err != nil {
 		return nil, err
 	}
 
-	age, err := findPosition(header, "Age")
+	age, err := findPosition(header, "AGE")
 	if err != nil {
 		return nil, err
 	}
 
-	indout, err := findPosition(header, "IndOut")
+	indout, err := findPosition(header, "INDOUT")
 	if err != nil {
 		return nil, err
 	}
 
-	hout, err := findPosition(header, "HOut")
+	hout, err := findPosition(header, "HOUT")
 	if err != nil {
 		return nil, err
 	}
 
-	lstho, err := findPosition(header, "LstHO")
+	lstho, err := findPosition(header, "LSTHO")
 	if err != nil {
 		return nil, err
 	}
 
 	filteredRows := make([][]string, 0, 0)
-	filteredRows = append(filteredRows, header)
 
 	for _, j := range rows {
 
@@ -62,7 +61,7 @@ func (sf GBSurveyFilter) SkipRowsFilter(header []string, rows [][]string) ([][]s
 		a, err := strconv.ParseFloat(row[age], 64)
 		if err != nil || math.IsNaN(a) {
 			sf.Audit.NumObLoaded = sf.Audit.NumObLoaded - 1
-			log.Debug().Msg("Dropping row because column Age is missing")
+			log.Debug().Msg("Dropping row because column AGE is missing")
 			continue
 		}
 
@@ -113,7 +112,7 @@ func (sf GBSurveyFilter) AddVariables(headers []string, data [][]string) ([]type
 	startTime := time.Now()
 
 	log.Debug().
-		Str("variable", "CaseNo").
+		Str("variable", "CASENO").
 		Timestamp().
 		Msg("Start adding variable")
 
@@ -125,7 +124,7 @@ func (sf GBSurveyFilter) AddVariables(headers []string, data [][]string) ([]type
 	columns := make([]types.Column, 0, 0)
 
 	log.Debug().
-		Str("variable", "CaseNo").
+		Str("variable", "CASENO").
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Finished adding variable")
 
@@ -133,7 +132,7 @@ func (sf GBSurveyFilter) AddVariables(headers []string, data [][]string) ([]type
 	startTime = time.Now()
 
 	log.Debug().
-		Str("variable", "HSerial").
+		Str("variable", "HSERIAL").
 		Timestamp().
 		Msg("Start adding variable")
 
@@ -144,7 +143,7 @@ func (sf GBSurveyFilter) AddVariables(headers []string, data [][]string) ([]type
 	columns = append(columns, column)
 
 	log.Debug().
-		Str("variable", "HSerial").
+		Str("variable", "HSERIAL").
 		Str("elapsedTime", util.FmtDuration(startTime)).
 		Msg("Finished adding variable")
 

@@ -28,9 +28,9 @@ func (ah AddressImportHandler) ParseAddressFile(fileName, datasetName string) {
 
 	if len(rows) < 2 {
 		log.Warn().
-			Str("method", "parseAddressFile").
+			Str("fileName", fileName).
 			Msg("The CSV file is empty")
-		ah.fileUploads.SetUploadError("CSV file is empty import CSV file")
+		ah.fileUploads.SetUploadError("CSV file is empty")
 		return
 	}
 
@@ -44,17 +44,17 @@ func (ah AddressImportHandler) ParseAddressFile(fileName, datasetName string) {
 		return
 	}
 
-	if err := database.PersistAddressDataset(rows[0], rows[1:], ah.fileUploads); err != nil {
+	if err := database.PersistAddresses(rows[0], rows[1:], ah.fileUploads); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
-			Msg("Cannot persist dataset")
-		ah.fileUploads.SetUploadError(fmt.Sprintf("cannot persist dataset: %s", err))
+			Msg("Cannot persist addresses")
+		ah.fileUploads.SetUploadError(fmt.Sprintf("cannot persist addresses: %s", err))
 	}
 
 	log.Debug().
 		Str("datasetName", datasetName).
 		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Imported and persisted dataset")
+		Msg("Imported and persisted addresses")
 
 }

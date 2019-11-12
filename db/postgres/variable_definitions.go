@@ -91,7 +91,7 @@ func (s Postgres) PersistVariableDefinitions(header []types.Header) error {
 	}
 
 	if len(changes) > 0 {
-		return s.persistChanges(changes)
+		return s.PersistDVChanges(changes)
 	} else {
 		log.Info().Msg("No new or changed variable definitions")
 	}
@@ -99,7 +99,7 @@ func (s Postgres) PersistVariableDefinitions(header []types.Header) error {
 	return nil
 }
 
-func (s Postgres) persistChanges(definitions []types.VariableDefinitions) error {
+func (s Postgres) PersistDVChanges(definitions []types.VariableDefinitions) error {
 
 	tx, err := s.DB.NewTx(nil)
 	if err != nil {
@@ -134,7 +134,7 @@ func (s Postgres) persistChanges(definitions []types.VariableDefinitions) error 
 
 	log.Info().
 		Int("numberItems", len(definitions)).
-		Msg("Persisted new or changes variable definitions")
+		Msg("Persisted new or changed variable definitions")
 
 	return nil
 }

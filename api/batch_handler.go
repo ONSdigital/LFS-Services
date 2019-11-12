@@ -14,14 +14,6 @@ func NewBatchHandler() *BatchHandler {
 	return &BatchHandler{}
 }
 
-func intConversion(year string) int {
-	yr, err := strconv.Atoi(year)
-	if err != nil {
-		return -1
-	}
-	return yr
-}
-
 func (b BatchHandler) CreateMonthlyBatchHandler(w http.ResponseWriter, r *http.Request) {
 	// Variables
 
