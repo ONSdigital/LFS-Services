@@ -1,0 +1,3 @@
+"VARIABLE","DESCRIPTION","DATA_TYPE","DATA_LENGTH","DATA_PRECISION","ALIAS","SAS_FORMAT_NAME","EDITABLE","IMPUTATION","USED_FOR_DV"
+"UPCAREA1","Unpaid Carers - Do you look after or give support to","NUMBER","16","0","","BEST","N","N","N"
+"UPCAREA2","Unpaid Carers - How many hours a week","NUMBER","16","0","","BEST","N","N","N"

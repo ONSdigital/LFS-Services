@@ -12,3 +12,16 @@ type VariableDefinitions struct {
 	Imputation     bool    `db:"imputation" json:"imputation"`
 	DV             bool    `db:"dv" json:"dv"`
 }
+
+type VariableDefinitionsImport struct {
+	Variable      string  `db:"variable" json:"variable"`
+	Description   string  `db:"description" json:"description"`
+	DataType      SavType `db:"type" json:"type"`
+	DataLength    string
+	DataPrecision string
+	Alias         string
+	SASFormatName string
+	Editable      bool `db:"editable" json:"editable"`
+	Imputation    bool `db:"imputation" json:"imputation"`
+	DV            bool `db:"dv" json:"dv"`
+}

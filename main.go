@@ -32,17 +32,17 @@ func main() {
 	// Command line flag overrides the configuration file
 	debug := flag.Bool("debug", false, "sets log level to debug")
 
+	router := mux.NewRouter()
+
 	flag.Parse()
 	if *debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		router.Use(loggingMiddleware)
 	}
 
 	log.Info().
 		Str("startTime", time.Now().String()).
-		Msg("LFS Services: Starting up")
-
-	router := mux.NewRouter()
-	router.Use(loggingMiddleware)
+		Msg("LFS Imports: Starting up")
 
 	batchHandler := api.NewBatchHandler()
 	dashboardHandler := api.NewDashboardHandler()
@@ -124,7 +124,7 @@ func main() {
 		Str("listenAddress", listenAddress).
 		Str("writeTimeout", writeTimeout.String()).
 		Str("readTimeout", readTimeout.String()).
-		Msg("LFS Services: Waiting for requests")
+		Msg("LFS Imports: Waiting for requests")
 
 	err = srv.ListenAndServe()
 	log.Fatal().
