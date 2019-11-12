@@ -29,4 +29,5 @@ type DatabaseConfiguration struct {
 	GbBatchTable        string
 	NiBatchTable        string
 	UserTable           string
+	DefinitionsTable    string
 }

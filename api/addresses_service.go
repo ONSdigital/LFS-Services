@@ -49,6 +49,7 @@ func (ah AddressImportHandler) ParseAddressFile(fileName, datasetName string) {
 			Err(err).
 			Str("datasetName", datasetName).
 			Msg("Cannot persist dataset")
+		ah.fileUploads.SetUploadError(fmt.Sprintf("cannot persist dataset: %s", err))
 	}
 
 	log.Debug().

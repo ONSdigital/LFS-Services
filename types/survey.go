@@ -45,6 +45,7 @@ type SurveyVO struct {
 	Audit   *Audit
 	Records [][]string
 	Columns []Column
+	Status  *WSMessage
 }
 
 type SurveyRow struct {

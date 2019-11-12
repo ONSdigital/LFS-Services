@@ -25,7 +25,6 @@ func ImportSav(fileName string) (types.SavImportData, error) {
 	}
 
 	name := C.CString(fileName)
-	defer C.free(unsafe.Pointer(name))
 
 	var res = C.parse_sav(name)
 	if res == nil {
@@ -33,6 +32,7 @@ func ImportSav(fileName string) (types.SavImportData, error) {
 	}
 
 	defer func() {
+		C.free(unsafe.Pointer(name))
 		if res == nil {
 			return
 		}

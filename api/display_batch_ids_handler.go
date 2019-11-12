@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -39,9 +38,6 @@ func (i IdHandler) HandleAnnualBatchIdsRequest(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
 	// Functionality
 	res, err := i.GetIdsForYear(types.Year(yr))
 
@@ -60,13 +56,7 @@ func (i IdHandler) HandleAnnualBatchIdsRequest(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Return valid json or handle
-	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Error().
-			Str("client", r.RemoteAddr).
-			Str("uri", r.RequestURI).
-			Msg("json.NewEncoder() failed in sendIdResponse")
-	}
+	SendDataResponse{}.sendDataResponse(w, r, res)
 
 	// Logging
 	log.Debug().
@@ -78,16 +68,9 @@ func (i IdHandler) HandleAnnualBatchIdsRequest(w http.ResponseWriter, r *http.Re
 
 func (i IdHandler) HandleQuarterlyBatchIdsRequest(w http.ResponseWriter, r *http.Request) {
 	// Variables
-	startTime := time.Now()
 	vars := mux.Vars(r)
 	year := vars["year"]
 	quarter := vars["quarter"]
-
-	// Logging
-	log.Debug().
-		Str("client", r.RemoteAddr).
-		Str("uri", r.RequestURI).
-		Msg("Received Quarterly Batch ID request")
 
 	// Convert year to integer
 	yr, err := strconv.Atoi(year)
@@ -108,9 +91,6 @@ func (i IdHandler) HandleQuarterlyBatchIdsRequest(w http.ResponseWriter, r *http
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
 	// Functionality
 	res, err := i.GetIdsForQuarter(types.Year(yr), types.Quarter(q))
 
@@ -129,34 +109,15 @@ func (i IdHandler) HandleQuarterlyBatchIdsRequest(w http.ResponseWriter, r *http
 		return
 	}
 
-	// Return valid json or handle
-	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Error().
-			Str("client", r.RemoteAddr).
-			Str("uri", r.RequestURI).
-			Msg("json.NewEncoder() failed in sendIdResponse")
-	}
+	SendDataResponse{}.sendDataResponse(w, r, res)
 
-	// Logging
-	log.Debug().
-		Str("client", r.RemoteAddr).
-		Str("uri", r.RequestURI).
-		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Retrieve Quarterly Batch ID request completed")
 }
 
 func (i IdHandler) HandleMonthlyBatchIdsRequest(w http.ResponseWriter, r *http.Request) {
-	// Variables
-	startTime := time.Now()
+
 	vars := mux.Vars(r)
 	year := vars["year"]
 	month := vars["month"]
-
-	// Logging
-	log.Debug().
-		Str("client", r.RemoteAddr).
-		Str("uri", r.RequestURI).
-		Msg("Received Monthly Batch ID request")
 
 	// Convert year to integer
 	yr, err := strconv.Atoi(year)
@@ -175,9 +136,6 @@ func (i IdHandler) HandleMonthlyBatchIdsRequest(w http.ResponseWriter, r *http.R
 			ErrorMessage: fmt.Sprintf("invalid month: %s, expected one of 1-12", month)}.sendResponse(w, r)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 
 	// Functionality
 	res, err := i.GetIdsForMonth(types.Year(yr), types.Month(mth))
@@ -198,17 +156,6 @@ func (i IdHandler) HandleMonthlyBatchIdsRequest(w http.ResponseWriter, r *http.R
 	}
 
 	// Return valid json or handle
-	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Error().
-			Str("client", r.RemoteAddr).
-			Str("uri", r.RequestURI).
-			Msg("json.NewEncoder() failed in sendIdResponse")
-	}
+	SendDataResponse{}.sendDataResponse(w, r, res)
 
-	// Logging
-	log.Debug().
-		Str("client", r.RemoteAddr).
-		Str("uri", r.RequestURI).
-		Str("elapsedTime", util.FmtDuration(startTime)).
-		Msg("Retrieve Monthly Batch ID request completed")
 }

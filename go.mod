@@ -10,12 +10,12 @@ require (
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
+	github.com/justinas/alice v1.2.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lib/pq v1.2.0 // indirect
-	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pelletier/go-toml v1.4.0
 	github.com/rs/zerolog v1.15.0
+	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/senseyeio/roger v0.0.0-20180904151654-5a944f2c5ceb
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.3.0
