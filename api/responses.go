@@ -68,10 +68,21 @@ func (response OkayResponse) sendResponse(w http.ResponseWriter, r *http.Request
 	sendResponse(w, r, response)
 }
 
-func (response BadDataResponse) sendBadDataResponse(w http.ResponseWriter, r *http.Request, d interface{}) {
+type badDataesult struct {
+	Status       string `json:"status"`
+	ErrorMessage string `json:"errorMessage"`
+	Result       interface{}
+}
+
+func (response BadDataResponse) sendResponse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadRequest)
-	if err := json.NewEncoder(w).Encode(d); err != nil {
+	s := badDataesult{
+		Status:       response.Status,
+		ErrorMessage: response.ErrorMessage,
+		Result:       response.Result,
+	}
+	if err := json.NewEncoder(w).Encode(s); err != nil {
 		log.Error().
 			Str("client", r.RemoteAddr).
 			Str("uri", r.RequestURI).
