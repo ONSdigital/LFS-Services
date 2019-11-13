@@ -3,6 +3,7 @@ package types
 type VariableDefinitions struct {
 	Id             int     `db:"id,omitempty"`
 	Variable       string  `db:"variable" json:"variable"`
+	Source         string  `db:"source" json:"source"`
 	Description    string  `db:"description" json:"description"`
 	VariableType   SavType `db:"type" json:"type"`
 	VariableLength int     `db:"length "json:"length"`

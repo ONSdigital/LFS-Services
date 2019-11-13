@@ -48,7 +48,7 @@ type Persistence interface {
 
 	// Import
 	PersistSurvey(vo types.SurveyVO) error
-	PersistVariableDefinitions([]types.Header) error
+	PersistVariableDefinitions([]types.Header, types.FileSource) error
 	PersistDVChanges(definitions []types.VariableDefinitions) error
 	PersistAddresses(headers []string, rows [][]string, status *types.WSMessage) error
 

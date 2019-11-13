@@ -129,7 +129,7 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 
 	go func() {
 		defer wg.Done()
-		if err := database.PersistVariableDefinitions(spssData.Header); err != nil {
+		if err := database.PersistVariableDefinitions(spssData.Header, types.GBSource); err != nil {
 			log.Error().
 				Err(err).
 				Str("datasetName", datasetName).
@@ -242,7 +242,7 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 
 	go func() {
 		defer wg.Done()
-		if err := database.PersistVariableDefinitions(spssData.Header); err != nil {
+		if err := database.PersistVariableDefinitions(spssData.Header, types.NISource); err != nil {
 			log.Error().
 				Err(err).
 				Str("datasetName", datasetName).

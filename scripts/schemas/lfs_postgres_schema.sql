@@ -254,6 +254,7 @@ create table variable_definitions
 (
     id          integer generated always as identity primary key,
     variable    text       not null,
+    source      varchar(2) not null,
     description text,
     type        spss_types not null default 'string',
     valid_from  timestamp           default NOW(),
@@ -266,7 +267,7 @@ create table variable_definitions
 );
 
 create index definitions_name_idx
-    on variable_definitions (variable);
+    on variable_definitions (variable, source);
 
 alter table variable_definitions
     owner to lfs;

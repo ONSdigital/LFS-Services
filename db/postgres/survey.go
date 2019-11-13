@@ -22,17 +22,29 @@ func init() {
 	}
 }
 
-func (s Postgres) DeleteSurveyData(name string) (bool, error) {
-	cnt, err := s.DB.Collection(surveyTable).Find(db.Cond{"file_name": name}).Count()
+func (s Postgres) DeleteSurveyData(audit types.Audit) (bool, error) {
+	col := s.DB.Collection(surveyTable)
 
-	if err != nil {
-		return false, err
+	res := col.Find(db.Cond{
+		"file_name": audit.FileName, "week": audit.Week,
+		"year": audit.Year, "file_source": audit.FileSource,
+	})
+
+	defer func() { _ = res.Close() }()
+
+	if res.Err() != nil {
+		return false, res.Err()
 	}
-	if cnt == 0 {
+
+	count, err := res.Count()
+	if err != nil {
+		return true, err
+	}
+	if count == 0 {
 		return false, nil
 	}
-	q := s.DB.DeleteFrom(surveyTable).Where("file_name", name)
-	_, err = q.Exec()
+	err = res.Delete()
+
 	if err != nil {
 		return true, err
 	}
@@ -43,7 +55,7 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 
 	log.Debug().Msg("Starting persistence into DB")
 
-	existingDataset, err := s.DeleteSurveyData(vo.Audit.FileName)
+	existingDataset, err := s.DeleteSurveyData(*vo.Audit)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -71,9 +83,10 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 		Label *string     `json:"label"`
 	}
 
-	var details = make([]ColumnDetails, 0)
-
 	for _, v := range body {
+
+		details := make([]ColumnDetails, 0, len(vo.Columns))
+
 		for colNo, val := range v {
 
 			if columns[colNo].Skip {
@@ -135,7 +148,10 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 				return fmt.Errorf("unknown type - possible corruption or structure does not map to file")
 			}
 
-			details = append(details, a)
+			if a.Value != nil {
+				details = append(details, a)
+			}
+
 		}
 
 		a, err := json.Marshal(details)
@@ -145,6 +161,8 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 				Msg("Cannot marshal survey columns structure")
 			return fmt.Errorf("cannot marshal survey columns structure, error: %s", err)
 		}
+
+		details = nil
 
 		row := types.SurveyRow{
 			Id:         vo.Audit.Id,

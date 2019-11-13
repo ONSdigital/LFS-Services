@@ -107,7 +107,7 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 
 		col.Skip = false
 		col.Kind = a.Type.Kind()
-		col.Name = a.Name
+		col.Name = headers[i]
 		col.ColNo = colNo
 		col.Label = p.data.Header[i].LabelName
 		colNo++

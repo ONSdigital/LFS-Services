@@ -56,7 +56,7 @@ func (s Postgres) GetDefinitionsForVariable(variable string) ([]types.VariableDe
 /* persist any new variable definitions.
 New is defined as any changes to the description
 */
-func (s Postgres) PersistVariableDefinitions(header []types.Header) error {
+func (s Postgres) PersistVariableDefinitions(header []types.Header, source types.FileSource) error {
 
 	// get existing items
 	all, err := s.GetAllDefinitions()
@@ -73,10 +73,12 @@ func (s Postgres) PersistVariableDefinitions(header []types.Header) error {
 
 	for _, v := range header {
 		item, ok := newItems[v.VariableName]
-		if !ok || item.Description != v.VariableDescription {
+		sou := string(source)
+		if !ok || (item.Description != v.VariableDescription && item.Source == sou) {
 
 			r := types.VariableDefinitions{
 				Variable:       v.VariableName,
+				Source:         sou,
 				Description:    v.VariableDescription,
 				VariableType:   v.VariableType,
 				VariableLength: v.VariableLength,
