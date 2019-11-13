@@ -37,7 +37,8 @@ func (b BatchHandler) generateMonthBatchId(month int, year int, description stri
 	return nil
 }
 
-func (b BatchHandler) generateQuarterBatchId(quarter int, year int, description string) error {
+func (b BatchHandler) generateQuarterBatchId(quarter int, year int, description string) ([]types.MonthlyBatch, error) {
+	// Set batch variables
 	batch := types.QuarterlyBatch{
 		Id:          0,
 		Quarter:     quarter,
@@ -48,35 +49,39 @@ func (b BatchHandler) generateQuarterBatchId(quarter int, year int, description 
 
 	// Validate quarter
 	if quarter < 1 || quarter > 4 {
-		return fmt.Errorf("the quarter value is %d, must be between 1 and 4", quarter)
+		return nil, fmt.Errorf("the quarter value is %d, must be between 1 and 4", quarter)
 	}
 
 	// Establish DB connection
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
-		return err
+		return nil, err
 	}
 
 	// Check if quarter batch already exists
 	if found := dbase.QuarterBatchExists(quarter, year); found {
-		return fmt.Errorf("q%d batch for year %d already exists", quarter, year)
+		return nil, fmt.Errorf("q%d batch for year %d already exists", quarter, year)
 	}
 
 	// Ensure successful monthly exist
-	if found := dbase.ValidateMonthsForQuarterlyBatch(quarter, year); !found {
-		return fmt.Errorf("3 valid months for year %d required", year)
+	result, err := dbase.ValidateMonthsForQuarterlyBatch(quarter, year)
+	if result != nil {
+		return result, fmt.Errorf("3 valid months for Q%d, %d required", quarter, year)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	// Create shizznizz
 	if err = dbase.CreateQuarterlyBatch(batch); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
-func (b BatchHandler) generateYearBatchId(year int, description string) error {
+func (b BatchHandler) generateYearBatchId(year int, description string) (interface{}, error) {
 	// Set batch variables
 	batch := types.AnnualBatch{
 		Id:          0,
@@ -89,28 +94,36 @@ func (b BatchHandler) generateYearBatchId(year int, description string) error {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
-		return err
+		return nil, err
 	}
 
 	// Check if year batch already exists
 	if found := dbase.AnnualBatchExists(year); found {
-		return fmt.Errorf("annual batch for year %d already exists", year)
+		return nil, fmt.Errorf("annual batch for year %d already exists", year)
 	}
 
-	// Ensure successful monthly exist
-	if found := dbase.ValidateMonthsForAnnualBatch(year); !found {
-		return fmt.Errorf("12 valid months for year %d required", year)
+	//Ensure successful monthly exist
+	result, err := dbase.ValidateMonthsForAnnualBatch(year)
+	if result != nil {
+		return result, fmt.Errorf("12 valid months for year %d required", year)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	// Ensure successful quarterly exist
-	if found := dbase.ValidateQuartersForAnnualBatch(year); !found {
-		return fmt.Errorf("4 valid quarters for year %d required", year)
+	res, err := dbase.ValidateQuartersForAnnualBatch(year)
+	if res != nil {
+		return res, fmt.Errorf("4 valid quarters for year %d required", year)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	// Create shizznizz
 	if err = dbase.CreateAnnualBatch(batch); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }

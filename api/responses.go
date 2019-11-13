@@ -25,11 +25,23 @@ type ErrorResponse struct {
 	ErrorMessage string `json:"errorMessage"`
 }
 
+type BadDataResponse struct {
+	Status       string `json:"status"`
+	ErrorMessage string `json:"errorMessage"`
+	Result       interface{}
+}
+
 type OkayResponse struct {
 	Status string `json:"status"`
 }
 
 type SendDataResponse struct{}
+
+type InProgressResponse struct {
+	Status  string `json:"status"`
+	When    string `json:"time"`
+	Message string `json:"message"`
+}
 
 func (re SendDataResponse) sendDataResponse(w http.ResponseWriter, r *http.Request, d interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -40,12 +52,6 @@ func (re SendDataResponse) sendDataResponse(w http.ResponseWriter, r *http.Reque
 			Str("uri", r.RequestURI).
 			Msg("json.NewEncoder() failed in sendDataResponse")
 	}
-}
-
-type InProgressResponse struct {
-	Status  string `json:"status"`
-	When    string `json:"time"`
-	Message string `json:"message"`
 }
 
 func (response InProgressResponse) sendResponse(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +66,28 @@ func (response OkayResponse) sendResponse(w http.ResponseWriter, r *http.Request
 	response.Status = OK
 	w.WriteHeader(http.StatusOK)
 	sendResponse(w, r, response)
+}
+
+type badDataesult struct {
+	Status       string `json:"status"`
+	ErrorMessage string `json:"errorMessage"`
+	Result       interface{}
+}
+
+func (response BadDataResponse) sendResponse(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
+	s := badDataesult{
+		Status:       response.Status,
+		ErrorMessage: response.ErrorMessage,
+		Result:       response.Result,
+	}
+	if err := json.NewEncoder(w).Encode(s); err != nil {
+		log.Error().
+			Str("client", r.RemoteAddr).
+			Str("uri", r.RequestURI).
+			Msg("json.NewEncoder() failed in sendBadDataResponse")
+	}
 }
 
 func (response ErrorResponse) sendResponse(w http.ResponseWriter, r *http.Request) {

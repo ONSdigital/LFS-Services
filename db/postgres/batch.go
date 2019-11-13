@@ -114,9 +114,10 @@ func (s Postgres) QuarterBatchExists(quarter, year int) bool {
 	return true
 }
 
-func (s Postgres) ValidateMonthsForQuarterlyBatch(period, year int) bool {
+func (s Postgres) ValidateMonthsForQuarterlyBatch(period, year int) ([]types.MonthlyBatch, error) {
+	var entireResult []types.MonthlyBatch
+	var validResult []types.MonthlyBatch
 	var months []int
-
 	switch period {
 	case 1:
 		months = append(months, 1, 2, 3)
@@ -129,74 +130,161 @@ func (s Postgres) ValidateMonthsForQuarterlyBatch(period, year int) bool {
 	}
 
 	col := s.DB.Collection(batchTable)
-	res := col.Find(db.Cond{"year": year, "status": 4, "month": months})
+	if !col.Exists() {
+		return nil, fmt.Errorf("table: %s does not exist", batchTable)
+	}
 
-	total, err := res.Count()
+	// Confirm 3 months exist
+	threeRes := col.Find(db.Cond{"year": year, "month": months})
+	threeErr := threeRes.All(&entireResult)
+	if threeErr != nil {
+		return nil, threeErr
+	}
 
+	total, err := threeRes.Count()
 	if err != nil {
-		log.Debug().Msg("Fatal: " + err.Error())
+		return nil, err
 	}
 
-	if total != 3 {
-		log.Warn().
-			Int("period", period).
-			Msg("Cannot continue without 3 valid months")
-		return false
+	if total == 0 {
+		return nil, fmt.Errorf("no monthly batches exist for Q%d, %d. Required 3 monthly batches to continue", period, year)
 	}
 
-	log.Debug().
-		Int("year", year).
-		Msg("Qarterly batch check - All 3 valid months exist")
+	if total < 3 {
+		return entireResult, fmt.Errorf(
+			"%d monthly batches exist for Q%d, %d. Required 3 monthly batches to continue",
+			total, period, year)
+	}
 
-	return true
+	// Get results for a valid quarter where status is complete
+	validRes := col.Find(db.Cond{"year": year, "status": 4, "month": months})
+	validErr := validRes.All(&validResult)
+	if validErr != nil {
+		return nil, validErr
+	}
+
+	// Count results
+	total, err = validRes.Count()
+	if err != nil {
+		return nil, err
+	}
+
+	if total < 3 {
+		// Return valid and invalid results for a the quarter
+		return entireResult, fmt.Errorf(
+			"%d valid monthly batches exist for Q%d, %d. Required 3 valid monthly batches to continue",
+			total, period, year)
+	}
+
+	return nil, nil
 }
 
-func (s Postgres) ValidateMonthsForAnnualBatch(year int) bool {
+func (s Postgres) ValidateMonthsForAnnualBatch(year int) ([]types.MonthlyBatch, error) {
+	var entireResult []types.MonthlyBatch
+	var validResult []types.MonthlyBatch
+
 	col := s.DB.Collection(batchTable)
-	res := col.Find(db.Cond{"year": year, "status": 4})
+	if !col.Exists() {
+		return nil, fmt.Errorf("table: %s does not exist", batchTable)
+	}
 
-	total, err := res.Count()
-
+	// confirm 12 months exist
+	res := col.Find(db.Cond{"year": year})
+	err := res.All(&entireResult)
 	if err != nil {
-		log.Debug().Msg("Fatal: " + err.Error())
+		return nil, err
 	}
 
-	if total != 12 {
-		log.Warn().
-			Int("year", year).
-			Msg("Cannot continue without 12 valid months")
-		return false
+	total, countErr := res.Count()
+	if countErr != nil {
+		return nil, err
 	}
 
-	log.Debug().
-		Int("year", year).
-		Msg("Annual batch check - All 12 valid months exist")
+	if total == 0 {
+		return nil, fmt.Errorf("no monthly batches exist for %d. Required 12 monthly batches to continue", year)
+	}
 
-	return true
+	if total < 12 {
+		return entireResult, fmt.Errorf(
+			"%d monthly batches exist for %d. Required 12 monthly batches to continue",
+			total, year)
+	}
+
+	// Get results for a 12 valid months where status is complete
+	validRes := col.Find(db.Cond{"year": year, "status": 4})
+	validErr := validRes.All(&validResult)
+	if validErr != nil {
+		return nil, validErr
+	}
+
+	// Count results
+	validTotal, validErr := validRes.Count()
+	if validErr != nil {
+		return nil, err
+	}
+
+	if validTotal != 12 {
+		// Return valid and invalid results for a the quarter
+		return entireResult, fmt.Errorf(
+			"%d valid monthly batches exist for %d. Required 12 valid monthly batches to continue",
+			total, year)
+	}
+
+	return nil, nil
 }
 
-func (s Postgres) ValidateQuartersForAnnualBatch(year int) bool {
+func (s Postgres) ValidateQuartersForAnnualBatch(year int) ([]types.QuarterlyBatch, error) {
+	var entireResult []types.QuarterlyBatch
+	var validResult []types.QuarterlyBatch
+
 	col := s.DB.Collection(quarterlyBatchTable)
-	res := col.Find(db.Cond{"year": year, "status": 4})
+	if !col.Exists() {
+		return nil, fmt.Errorf("table: %s does not exist", quarterlyBatchTable)
+	}
 
-	total, err := res.Count()
+	// Confirm 4 quarters exist
+	entireRes := col.Find(db.Cond{"year": year})
+	entireErr := entireRes.All(&entireResult)
+	if entireErr != nil {
+		return nil, entireErr
+	}
 
+	total, err := entireRes.Count()
 	if err != nil {
-		log.Debug().Msg("Fatal: " + err.Error())
+		return nil, err
+	}
+
+	if total == 0 {
+		return nil, fmt.Errorf("no quarterly batches exist for %d. Required 4 quarterly batches to continue", year)
+	}
+
+	if total < 4 {
+		return entireResult, fmt.Errorf(
+			"%d quarterly batches exist for %d. Required 4 quarterly batches to continue",
+			total, year)
+	}
+
+	// Get results for a valid quarter where status is complete
+	validRes := col.Find(db.Cond{"year": year, "status": 4})
+	validErr := validRes.All(&validResult)
+	if validErr != nil {
+		return nil, validErr
+	}
+
+	// Count results
+	total, err = validRes.Count()
+	if err != nil {
+		return nil, err
 	}
 
 	if total != 4 {
-		log.Warn().
-			Int("year", year).
-			Msg("Cannot continue without 4 valid quarters")
-		return false
+		// Return valid and invalid results for a the quarter
+		return entireResult, fmt.Errorf(
+			"%d valid quarterly batches exist for %d. Required 4 valid quarterly batches to continue",
+			total, year)
 	}
 
-	log.Debug().
-		Int("year", year).
-		Msg("Annual batch check - All 4 valid quarters exist")
-
-	return true
+	return nil, nil
 }
 
 func (s Postgres) CreateMonthlyBatch(batch types.MonthlyBatch) error {
