@@ -9,57 +9,57 @@ import (
 	"sync"
 )
 
-type VariableDefinitionsHandler struct {
+type ValueLabelsHandler struct {
 	mutux            *sync.Mutex
 	uploadInProgress bool // we can only handle a single upload at a time
 }
 
-func NewVariableDefinitionsHandler() *VariableDefinitionsHandler {
-	return &VariableDefinitionsHandler{
+func NewValueLabelsHandler() *ValueLabelsHandler {
+	return &ValueLabelsHandler{
 		mutux:            &sync.Mutex{},
 		uploadInProgress: false,
 	}
 }
 
-func (vd *VariableDefinitionsHandler) setUpload(val bool) {
-	vd.mutux.Lock()
-	vd.uploadInProgress = val
-	vd.mutux.Unlock()
+func (vl *ValueLabelsHandler) setUpload(val bool) {
+	vl.mutux.Lock()
+	vl.uploadInProgress = val
+	vl.mutux.Unlock()
 }
 
-func (vd VariableDefinitionsHandler) HandleRequestVariableUpload(w http.ResponseWriter, r *http.Request) {
-	if vd.uploadInProgress {
-		// TODO: Correct error message for Variable Definitions?
+func (vl ValueLabelsHandler) HandleValLabRequestlUpload(w http.ResponseWriter, r *http.Request) {
+	if vl.uploadInProgress {
+		// TODO: Value Labels: Survey file? Correct error message for Value Labels?
 		log.Error().Msg("Survey file is currently being uploaded")
 		ErrorResponse{Status: Error, ErrorMessage: "survey file is currently being uploaded"}.sendResponse(w, r)
-		vd.setUpload(false)
+		vl.setUpload(false)
 		return
 	}
 
-	vd.setUpload(true)
+	vl.setUpload(true)
 
 	fileName := r.FormValue("fileName")
 	if fileName == "" {
 		log.Error().Msg("File name not set")
 		ErrorResponse{Status: Error, ErrorMessage: "fileName not set"}.sendResponse(w, r)
-		vd.setUpload(false)
+		vl.setUpload(false)
 		return
 	}
 
 	tmpfile, err := SaveStreamToTempFile(w, r)
 	if err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
-		vd.setUpload(false)
+		vl.setUpload(false)
 		return
 	}
 
 	defer func() {
-		vd.setUpload(false)
+		vl.setUpload(false)
 		_ = os.Remove(tmpfile)
 	}()
 
-	if err := vd.parseVDUpload(tmpfile, fileName); err != nil {
-		log.Debug().Msg("Cannot process Variable Definitions upload")
+	if err := vl.parseValLabUpload(tmpfile, fileName); err != nil {
+		log.Debug().Msg("Cannot process Value Upload upload")
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
@@ -67,19 +67,19 @@ func (vd VariableDefinitionsHandler) HandleRequestVariableUpload(w http.Response
 	OkayResponse{OK}.sendResponse(w, r)
 }
 
-func (vd VariableDefinitionsHandler) HandleRequestVariable(w http.ResponseWriter, r *http.Request) {
+func (vl ValueLabelsHandler) HandleValLabRequestValue(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	variableName := vars["variable"]
+	valueName := vars["value"]
 
-	if variableName == "" {
+	if valueName == "" {
 		ErrorResponse{
 			Status:       Error,
-			ErrorMessage: fmt.Sprintf("variable not defined")}.sendResponse(w, r)
+			ErrorMessage: fmt.Sprintf("value not defined")}.sendResponse(w, r)
 		return
 	}
 
-	res, err := vd.getVDByVariable(variableName)
+	res, err := vl.getValLabByValue(valueName)
 
 	if err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
@@ -93,16 +93,16 @@ func (vd VariableDefinitionsHandler) HandleRequestVariable(w http.ResponseWriter
 
 }
 
-func (vd VariableDefinitionsHandler) HandleRequestAll(w http.ResponseWriter, r *http.Request) {
+func (vl ValueLabelsHandler) HandleValLabRequestAll(w http.ResponseWriter, r *http.Request) {
 
-	res, err := vd.getAllVD()
+	res, err := vl.getAllVL()
 
 	if err != nil {
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 	}
 
 	if res == nil {
-		ErrorResponse{Status: Error, ErrorMessage: "no variable definitions found"}.sendResponse(w, r)
+		ErrorResponse{Status: Error, ErrorMessage: "no value labels found"}.sendResponse(w, r)
 	}
 
 	SendDataResponse{}.sendDataResponse(w, r, res)

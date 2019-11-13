@@ -25,6 +25,7 @@ niBatchTable="ni_batch_item"
 
 userTable="users"
 definitionsTable="variable_definitions"
+valueLabelsTable="value_labels"
 
 # connections configuration
 server = "localhost" # set by environment variables

@@ -51,6 +51,10 @@ type Persistence interface {
 	PersistVariableDefinitions([]types.Header) error
 	PersistDVChanges(definitions []types.VariableDefinitions) error
 	PersistAddresses(headers []string, rows [][]string, status *types.WSMessage) error
+	// TODO: Value labels
+	PersistValueLabels([]types.ValueLabels) error
+	PersistValues(types.ValueLabels) error
+	PersistValLabChanges(value []types.ValueLabels) error
 
 	// User
 	GetUserID(user string) (types.UserCredentials, error)
@@ -85,4 +89,9 @@ type Persistence interface {
 	// Variable Definitions
 	GetAllDefinitions() ([]types.VariableDefinitions, error)
 	GetDefinitionsForVariable(variable string) ([]types.VariableDefinitions, error)
+
+	// TODO: Value Labels
+	// Value Labels
+	GetAllValueLabels() ([]types.ValueLabels, error)
+	GetLabelsForValue(variable string) ([]types.ValueLabels, error)
 }
