@@ -27,15 +27,29 @@ type Header struct {
 	VariableType        SavType
 	VariableLength      int
 	VariablePrecision   int
+	LabelName           string
 }
 
 type Rows struct {
 	RowData []string
 }
 
+type Labels struct {
+	Name          string
+	Value         interface{}
+	Label         string
+	Tag           rune
+	TagMissing    int
+	SystemMissing int
+	VariableType  SavType
+}
+
 type SavImportData struct {
 	Header      []Header
 	HeaderCount int
+
+	Labels      map[string][]Labels
+	LabelsCount int
 
 	Rows     []Rows
 	RowCount int

@@ -7,4 +7,5 @@ type Column struct {
 	Skip  bool
 	ColNo int
 	Kind  reflect.Kind
+	Label string
 }

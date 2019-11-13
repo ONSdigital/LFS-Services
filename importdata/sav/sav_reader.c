@@ -47,6 +47,64 @@ int handle_metadata(readstat_metadata_t *metadata, void *ctx) {
     return READSTAT_HANDLER_OK;
 }
 
+int handle_value_labels(const char *val_labels, readstat_value_t value, const char *label, void *ctx) {
+    struct Data *data = (struct Data *) ctx;
+
+    int labels_size = sizeof(struct Labels);
+    data->labels = realloc(data->labels, (data->labels_count * labels_size)  + labels_size);
+
+    struct Labels *label_struct = malloc(sizeof(struct Labels));
+    data->labels[data->labels_count] = label_struct;
+
+    label_struct->name = malloc(strlen(val_labels) + 1);
+    strcpy(label_struct->name, val_labels);
+
+    label_struct->label = malloc(strlen(label) + 1);
+    strcpy(label_struct->label, label);
+
+    label_struct->tag_missing = value.is_tagged_missing;
+    label_struct->system_missing = value.is_system_missing;
+    label_struct->tag = value.tag;
+    label_struct->var_type = value.type;
+
+    switch (value.type) {
+        case READSTAT_TYPE_STRING:
+        case READSTAT_TYPE_STRING_REF:
+            if (value.v.string_value != NULL) {
+                label_struct->string_value = malloc(strlen(value.v.string_value) + 1);
+                strcpy(label_struct->string_value, value.v.string_value);
+            } else {
+               label_struct->string_value = NULL;
+            }
+            break;
+
+        case READSTAT_TYPE_INT8:
+            label_struct->i8_value = value.v.i8_value;
+            break;
+
+        case READSTAT_TYPE_INT16:
+            label_struct->i16_value = value.v.i8_value;
+            break;
+
+        case READSTAT_TYPE_INT32:
+            label_struct->i32_value = value.v.i32_value;
+            break;
+
+        case READSTAT_TYPE_FLOAT:
+            label_struct->float_value = value.v.float_value;
+            break;
+
+        case READSTAT_TYPE_DOUBLE:
+            label_struct->double_value = value.v.double_value;
+            break;
+
+    }
+
+    data->labels_count++;
+
+    return READSTAT_HANDLER_OK;
+}
+
 int handle_variable(int index, readstat_variable_t *variable, const char *val_labels, void *ctx) {
     struct Data *data = (struct Data *) ctx;
     const char *var_name = readstat_variable_get_name(variable);
@@ -69,6 +127,14 @@ int handle_variable(int index, readstat_variable_t *variable, const char *val_la
         strcpy(header->var_description, var_description);
     } else {
         header->var_description = NULL;
+    }
+
+    if (val_labels != NULL) {
+        unsigned long len = strlen(val_labels) + 1;
+        header->label_name = malloc(len);
+        strcpy(header->label_name, val_labels);
+    } else {
+        header->label_name = NULL;
     }
 
     header->var_type = readstat_variable_get_type(variable);
@@ -172,8 +238,21 @@ void cleanup(struct Data *data) {
         struct Header *header = data->header[i];
         if (header->var_name != NULL) free(header->var_name);
         if (header->var_description != NULL) free(header->var_description);
+        if (header->label_name != NULL) free(header->label_name);
         free(header);
    }
+
+   if (data->header != NULL) free(data->header);
+
+    for (int i = 0; i < data->labels_count; i++) {
+        struct Labels *l = data->labels[i];
+        if (l->name != NULL) free(l->name);
+        if (l->label != NULL) free(l->label);
+        if (l->var_type == READSTAT_TYPE_STRING && l->string_value != NULL) free(l->string_value);
+        free(l);
+   }
+
+   if (data->labels != NULL) free(data->labels);
 
    for (int i = 0; i < data->row_count; i++) {
        struct Rows *rows = data->rows[i];
@@ -183,9 +262,12 @@ void cleanup(struct Data *data) {
        free(rows);
    }
 
+   if (data->rows != NULL) free(data->rows);
+   if (data->buffer != NULL) free(data->buffer);
+
 }
 
-struct Data * parse_sav(const char *input_file) {
+struct Data *parse_sav(const char *input_file) {
 
     if (input_file == 0) {
         return NULL;
@@ -196,6 +278,7 @@ struct Data * parse_sav(const char *input_file) {
     readstat_set_metadata_handler(parser, &handle_metadata);
     readstat_set_variable_handler(parser, &handle_variable);
     readstat_set_value_handler(parser, &handle_value);
+    readstat_set_value_label_handler(parser, &handle_value_labels);
 
     struct Data *sav_data = (struct Data *) malloc(sizeof(struct Data));
     sav_data->rows = NULL;
@@ -206,6 +289,9 @@ struct Data * parse_sav(const char *input_file) {
 
     sav_data->header = NULL;
     sav_data->header_count = 0;
+
+    sav_data->labels = NULL;
+    sav_data->labels_count = 0;
 
     error = readstat_parse_sav(parser, input_file, sav_data);
 

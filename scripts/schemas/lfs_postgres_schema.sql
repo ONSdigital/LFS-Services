@@ -11,6 +11,7 @@ drop table if exists survey_audit;
 drop table if exists status_values;
 drop table if exists definitions;
 drop table if exists variable_definitions;
+drop table if exists value_labels;
 drop type if exists spss_types;
 
 create table addresses
@@ -207,13 +208,14 @@ create table survey
 alter table survey
     owner to lfs;
 
-create index survey_id_name_index
+create index survey_id_name_idx
     on survey (id);
 
-create index survey_period_index
+create index survey_period_idx
     on survey (year, month, week);
 
-create index survey_columns on survey using gin (columns);
+create index survey_columns_idx
+    on survey using gin (columns);
 
 create table survey_audit
 (
@@ -234,7 +236,7 @@ create table survey_audit
     foreign key (status) references status_values (id)
 );
 
-create index survey_audit_file_name_index
+create index survey_audit_file_name_idx
     on survey_audit (file_name);
 
 create table users
@@ -263,5 +265,23 @@ create table variable_definitions
     dv          bool                default false
 );
 
-create index definitions_name_index
+create index definitions_name_idx
     on variable_definitions (variable);
+
+alter table variable_definitions
+    owner to lfs;
+
+create table value_labels
+(
+    id           integer generated always as identity primary key,
+    name         text       not null,
+    label        text,
+    type         spss_types not null default 'string',
+    last_updated timestamp           default NOW()
+);
+
+create index labels_name_idx
+    on value_labels (name);
+
+alter table value_labels
+    owner to lfs;

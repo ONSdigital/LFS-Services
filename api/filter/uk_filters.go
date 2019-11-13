@@ -104,6 +104,7 @@ func (sf UKFilter) addHSerial(header []string, rows [][]string) (types.Column, e
 		Skip:  false,
 		ColNo: len(header),
 		Kind:  reflect.Int64,
+		Label: "HSERIAL",
 	}
 
 	return column, nil
@@ -202,6 +203,7 @@ func (sf UKFilter) addCaseno(header []string, rows [][]string) (types.Column, er
 		Skip:  false,
 		ColNo: len(header),
 		Kind:  reflect.Int64,
+		Label: "CASENO",
 	}
 
 	return column, nil

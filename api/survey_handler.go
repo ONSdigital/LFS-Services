@@ -43,7 +43,6 @@ func (si *SurveyImportHandler) SurveyUploadGBHandler(w http.ResponseWriter, r *h
 	if si.uploadInProgress {
 		log.Error().Msg("Survey file is currently being uploaded")
 		ErrorResponse{Status: Error, ErrorMessage: "survey file is currently being uploaded"}.sendResponse(w, r)
-		si.setUpload(false)
 		return
 	}
 
@@ -109,9 +108,7 @@ func (si *SurveyImportHandler) SurveyUploadNIHandler(w http.ResponseWriter, r *h
 
 	if si.uploadInProgress {
 		log.Error().Msg("Survey file is currently being uploaded")
-		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{Status: Error, ErrorMessage: "survey file is currently being uploaded"}.sendResponse(w, r)
-		si.setUpload(false)
 		return
 	}
 

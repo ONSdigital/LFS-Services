@@ -26,7 +26,7 @@ for current configuration options.
 
 ### Running
 
-You will need a suitable MYSQL installation. The schema is under the _scripts_ directory and the configuration is set in 
+You will need a suitable PostgreSql installation. The schema is under the _scripts_ directory and the configuration is set in 
 the configuration file. Note that the database configuration can, and really must, be 
 overidden by the following environment variables:
 
