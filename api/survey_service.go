@@ -127,6 +127,8 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 		}
 	}()
 
+	// todo: add value labels here
+
 	go func() {
 		defer wg.Done()
 		if err := database.PersistVariableDefinitions(spssData.Header, types.GBSource); err != nil {

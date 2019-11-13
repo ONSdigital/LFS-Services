@@ -11,6 +11,7 @@ drop table if exists survey_audit;
 drop table if exists status_values;
 drop table if exists definitions;
 drop table if exists variable_definitions;
+drop table if exists column_labels;
 drop table if exists value_labels;
 drop type if exists spss_types;
 
@@ -250,28 +251,6 @@ alter table users
 
 CREATE TYPE spss_types AS ENUM ('string', 'int8', 'int16', 'int32', 'float', 'double');
 
-create table variable_definitions
-(
-    id          integer generated always as identity primary key,
-    variable    text       not null,
-    source      varchar(2) not null,
-    description text,
-    type        spss_types not null default 'string',
-    valid_from  timestamp           default NOW(),
-    length      integer,
-    precision   integer,
-    alias       text,
-    editable    bool                default false,
-    imputation  bool                default false,
-    dv          bool                default false
-);
-
-create index definitions_name_idx
-    on variable_definitions (variable, source);
-
-alter table variable_definitions
-    owner to lfs;
-
 create table value_labels
 (
     id           integer generated always as identity primary key,
@@ -286,3 +265,30 @@ create index labels_name_idx
 
 alter table value_labels
     owner to lfs;
+
+create table variable_definitions
+(
+    id          integer generated always as identity primary key,
+    variable    text       not null,
+    label       text,
+    source      varchar(2) not null,
+    description text,
+    type        spss_types not null default 'string',
+    valid_from  timestamp           default NOW(),
+    length      integer,
+    precision   integer,
+    alias       text,
+    editable    bool                default false,
+    imputation  bool                default false,
+    dv          bool                default false
+
+--     foreign key (label) references value_labels (name)
+);
+
+create index definitions_name_idx
+    on variable_definitions (variable, source);
+
+alter table variable_definitions
+    owner to lfs;
+
+

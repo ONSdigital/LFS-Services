@@ -84,5 +84,8 @@ type Persistence interface {
 
 	// Variable Definitions
 	GetAllDefinitions() ([]types.VariableDefinitions, error)
+	PersistDefinitions(d types.VariableDefinitions) error
 	GetDefinitionsForVariable(variable string) ([]types.VariableDefinitions, error)
+	GetAllGBDefinitions() ([]types.VariableDefinitions, error)
+	GetAllNIDefinitions() ([]types.VariableDefinitions, error)
 }

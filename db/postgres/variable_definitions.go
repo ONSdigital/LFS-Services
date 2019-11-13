@@ -28,6 +28,30 @@ func (s Postgres) PersistDefinitions(d types.VariableDefinitions) error {
 	return nil
 }
 
+func (s Postgres) GetAllGBDefinitions() ([]types.VariableDefinitions, error) {
+
+	var definitions []types.VariableDefinitions
+	res := s.DB.Collection(definitionsTable).Find(db.Cond{"source": string(types.GBSource)})
+	err := res.All(&definitions)
+	if err != nil {
+		return nil, res.Err()
+	}
+
+	return definitions, nil
+}
+
+func (s Postgres) GetAllNIDefinitions() ([]types.VariableDefinitions, error) {
+
+	var definitions []types.VariableDefinitions
+	res := s.DB.Collection(definitionsTable).Find(db.Cond{"source": string(types.NISource)})
+	err := res.All(&definitions)
+	if err != nil {
+		return nil, res.Err()
+	}
+
+	return definitions, nil
+}
+
 func (s Postgres) GetAllDefinitions() ([]types.VariableDefinitions, error) {
 
 	var definitions []types.VariableDefinitions
@@ -59,7 +83,14 @@ New is defined as any changes to the description
 func (s Postgres) PersistVariableDefinitions(header []types.Header, source types.FileSource) error {
 
 	// get existing items
-	all, err := s.GetAllDefinitions()
+	var all []types.VariableDefinitions
+	var err error
+	if source == types.GBSource {
+		all, err = s.GetAllGBDefinitions()
+	} else {
+		all, err = s.GetAllNIDefinitions()
+	}
+
 	if err != nil {
 		return err
 	}
@@ -74,10 +105,11 @@ func (s Postgres) PersistVariableDefinitions(header []types.Header, source types
 	for _, v := range header {
 		item, ok := newItems[v.VariableName]
 		sou := string(source)
-		if !ok || (item.Description != v.VariableDescription && item.Source == sou) {
+		if !ok || (item.Description != v.VariableDescription) {
 
 			r := types.VariableDefinitions{
 				Variable:       v.VariableName,
+				Label:          v.LabelName,
 				Source:         sou,
 				Description:    v.VariableDescription,
 				VariableType:   v.VariableType,

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "b10f35d7-6cdb-4730-bbdf-3634b6283748",
+		"_postman_id": "931b9293-2c60-4f4a-bc83-c00ce05d2d10",
 		"name": "LFS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -34,7 +34,7 @@
 						{
 							"key": "lfsFile",
 							"type": "file",
-							"src": "/Users/paul/ONS/LFS/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
+							"src": "/C:/Users/Paul/GolandProjects/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
 						}
 					]
 				},
@@ -85,7 +85,7 @@
 						{
 							"key": "lfsFile",
 							"type": "file",
-							"src": "/Users/paul/ONS/LFS/LFS-Services/testdata/LFSwkJANUARYNI_non_confidential.SAV"
+							"src": "/C:/Users/Paul/GolandProjects/LFS-Services/testdata/LFSwkJANUARYNI_non_confidential.SAV"
 						}
 					]
 				},
