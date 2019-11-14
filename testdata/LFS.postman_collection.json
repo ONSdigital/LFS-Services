@@ -1,12 +1,12 @@
 {
 	"info": {
-		"_postman_id": "caa19905-14e6-4610-bfd9-0f28a3947feb",
+		"_postman_id": "931b9293-2c60-4f4a-bc83-c00ce05d2d10",
 		"name": "LFS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "SurveyFileUpload",
+			"name": "GB SurveyFileUpload",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -27,11 +27,6 @@
 					"mode": "formdata",
 					"formdata": [
 						{
-							"key": "fileSource",
-							"value": "GB",
-							"type": "text"
-						},
-						{
 							"key": "fileName",
 							"value": "paul",
 							"type": "text"
@@ -39,12 +34,12 @@
 						{
 							"key": "lfsFile",
 							"type": "file",
-							"src": "/home/paul/GolandProjects/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
+							"src": "/C:/Users/Paul/GolandProjects/LFS-Services/testdata/LFSwk18PERS_non_confidential.sav"
 						}
 					]
 				},
 				"url": {
-					"raw": "http://localhost:8000/imports/survey/gb/18/2014",
+					"raw": "http://localhost:8000/imports/survey/gb/2014/18",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -54,8 +49,59 @@
 						"imports",
 						"survey",
 						"gb",
-						"18",
-						"2014"
+						"2014",
+						"18"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "NI SurveyFileUpload",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/x-www-form-urlencoded"
+					},
+					{
+						"key": "",
+						"type": "text",
+						"value": "",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "fileName",
+							"value": "paul",
+							"type": "text"
+						},
+						{
+							"key": "lfsFile",
+							"type": "file",
+							"src": "/C:/Users/Paul/GolandProjects/LFS-Services/testdata/LFSwkJANUARYNI_non_confidential.SAV"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/imports/survey/ni/2019/01",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"imports",
+						"survey",
+						"ni",
+						"2019",
+						"01"
 					]
 				}
 			},
@@ -274,19 +320,61 @@
 			"response": []
 		},
 		{
-			"name": "Variable Definitions - All",
+			"name": "Value Labels All",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8000/audits",
+					"raw": "http://localhost:8000/value/labels",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
-						"audits"
+						"value",
+						"labels"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Value Labels Single",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/value/labels/fred",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"value",
+						"labels",
+						"fred"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Variable Definitions - All",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/variable/definitions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"variable",
+						"definitions"
 					]
 				}
 			},
@@ -298,14 +386,16 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8000/audits",
+					"raw": "http://localhost:8000/variable/definitions/HHNO",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
-						"audits"
+						"variable",
+						"definitions",
+						"HHNO"
 					]
 				}
 			},

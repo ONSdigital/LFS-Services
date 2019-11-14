@@ -6,10 +6,11 @@ import (
 	"services/db"
 	"services/importdata"
 	"services/types"
+	"services/util"
 	"strings"
 )
 
-func (vd VariableDefinitionsHandler) getAllVD() ([]types.VariableDefinitions, error) {
+func (vd VariableDefinitionsHandler) getAllVD() ([]types.VariableDefinitionsQuery, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
@@ -23,7 +24,7 @@ func (vd VariableDefinitionsHandler) getAllVD() ([]types.VariableDefinitions, er
 	return res, nil
 }
 
-func (vd VariableDefinitionsHandler) getVDByVariable(variable string) ([]types.VariableDefinitions, error) {
+func (vd VariableDefinitionsHandler) getVDByVariable(variable string) ([]types.VariableDefinitionsQuery, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
@@ -57,11 +58,11 @@ func (vd VariableDefinitionsHandler) parseVDUpload(tmpfile, fileName string) err
 		precision := intConversion(j.Precision)
 
 		v[i].Variable = strings.ToUpper(j.Variable)
-		v[i].Description = j.Description
+		v[i].Description = util.ToNullString(j.Description)
 		v[i].VariableType = vd.mapDataType(j.VariableType)
 		v[i].VariableLength = varLength
 		v[i].Precision = precision
-		v[i].Alias = j.Alias
+		v[i].Alias = util.ToNullString(j.Alias)
 		v[i].Editable = vd.mapBool(j.Editable)
 		v[i].Imputation = vd.mapBool(j.Imputation)
 		v[i].DV = vd.mapBool(j.DV)

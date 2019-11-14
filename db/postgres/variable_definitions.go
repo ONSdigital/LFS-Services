@@ -1,10 +1,12 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"services/config"
 	"services/types"
+	"services/util"
 	"upper.io/db.v3"
 )
 
@@ -28,10 +30,10 @@ func (s Postgres) PersistDefinitions(d types.VariableDefinitions) error {
 	return nil
 }
 
-func (s Postgres) GetAllDefinitions() ([]types.VariableDefinitions, error) {
+func (s Postgres) GetAllGBDefinitions() ([]types.VariableDefinitions, error) {
 
 	var definitions []types.VariableDefinitions
-	res := s.DB.Collection(definitionsTable).Find()
+	res := s.DB.Collection(definitionsTable).Find(db.Cond{"source": string(types.GBSource)})
 	err := res.All(&definitions)
 	if err != nil {
 		return nil, res.Err()
@@ -40,7 +42,50 @@ func (s Postgres) GetAllDefinitions() ([]types.VariableDefinitions, error) {
 	return definitions, nil
 }
 
-func (s Postgres) GetDefinitionsForVariable(variable string) ([]types.VariableDefinitions, error) {
+func (s Postgres) GetAllNIDefinitions() ([]types.VariableDefinitions, error) {
+
+	var definitions []types.VariableDefinitions
+	res := s.DB.Collection(definitionsTable).Find(db.Cond{"source": string(types.NISource)})
+	err := res.All(&definitions)
+	if err != nil {
+		return nil, res.Err()
+	}
+
+	return definitions, nil
+}
+
+func (s Postgres) GetAllDefinitions() ([]types.VariableDefinitionsQuery, error) {
+
+	var definitions []types.VariableDefinitions
+	res := s.DB.Collection(definitionsTable).Find()
+	err := res.All(&definitions)
+	if err != nil {
+		return nil, res.Err()
+	}
+
+	var d = make([]types.VariableDefinitionsQuery, 0, len(definitions))
+	for _, v := range definitions {
+		r := types.VariableDefinitionsQuery{
+			Variable:       v.Variable,
+			Label:          v.Label.String,
+			Source:         v.Source,
+			Description:    v.Description.String,
+			VariableType:   v.VariableType,
+			VariableLength: v.VariableLength,
+			Precision:      v.Precision,
+			Alias:          v.Alias.String,
+			Editable:       v.Editable,
+			Imputation:     v.Imputation,
+			DV:             v.DV,
+			ValidFrom:      v.ValidFrom,
+		}
+		d = append(d, r)
+	}
+
+	return d, nil
+}
+
+func (s Postgres) GetDefinitionsForVariable(variable string) ([]types.VariableDefinitionsQuery, error) {
 
 	var definitions []types.VariableDefinitions
 	res := s.DB.Collection(definitionsTable).Find(db.Cond{"variable": variable})
@@ -50,16 +95,43 @@ func (s Postgres) GetDefinitionsForVariable(variable string) ([]types.VariableDe
 		return nil, res.Err()
 	}
 
-	return definitions, nil
+	var d = make([]types.VariableDefinitionsQuery, 0, len(definitions))
+	for _, v := range definitions {
+		r := types.VariableDefinitionsQuery{
+			Variable:       v.Variable,
+			Label:          v.Label.String,
+			Source:         v.Source,
+			Description:    v.Description.String,
+			VariableType:   v.VariableType,
+			VariableLength: v.VariableLength,
+			Precision:      v.Precision,
+			Alias:          v.Alias.String,
+			Editable:       v.Editable,
+			Imputation:     v.Imputation,
+			DV:             v.DV,
+			ValidFrom:      v.ValidFrom,
+		}
+		d = append(d, r)
+	}
+
+	return d, nil
+
 }
 
 /* persist any new variable definitions.
 New is defined as any changes to the description
 */
-func (s Postgres) PersistVariableDefinitions(header []types.Header) error {
+func (s Postgres) PersistVariableDefinitions(header []types.Header, source types.FileSource) error {
 
 	// get existing items
-	all, err := s.GetAllDefinitions()
+	var all []types.VariableDefinitions
+	var err error
+	if source == types.GBSource {
+		all, err = s.GetAllGBDefinitions()
+	} else {
+		all, err = s.GetAllNIDefinitions()
+	}
+
 	if err != nil {
 		return err
 	}
@@ -73,15 +145,18 @@ func (s Postgres) PersistVariableDefinitions(header []types.Header) error {
 
 	for _, v := range header {
 		item, ok := newItems[v.VariableName]
-		if !ok || item.Description != v.VariableDescription {
+		sou := string(source)
+		if !ok || (item.Description.String != v.VariableDescription) {
 
 			r := types.VariableDefinitions{
 				Variable:       v.VariableName,
-				Description:    v.VariableDescription,
+				Label:          util.ToNullString(v.LabelName),
+				Source:         sou,
+				Description:    util.ToNullString(v.VariableDescription),
 				VariableType:   v.VariableType,
 				VariableLength: v.VariableLength,
 				Precision:      v.VariablePrecision,
-				Alias:          "",
+				Alias:          sql.NullString{String: "", Valid: false},
 				Editable:       false,
 				Imputation:     false,
 				DV:             false,

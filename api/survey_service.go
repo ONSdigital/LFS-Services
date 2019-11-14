@@ -63,8 +63,6 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 		return
 	}
 
-	headers, body := sav.SPSSDatatoArray(spssData)
-
 	si.Audit.ReferenceDate = time.Now()
 	si.Audit.NumObFile = spssData.RowCount
 	si.Audit.NumObLoaded = spssData.RowCount
@@ -76,7 +74,7 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 	si.Audit.Week = week
 	si.Audit.FileSource = types.GBSource
 
-	pipeline := filter.NewGBPipeLine(headers, body, &si.Audit)
+	pipeline := filter.NewGBPipeLine(spssData, &si.Audit)
 
 	columns, data, err := pipeline.RunPipeline()
 	if err != nil {
@@ -129,9 +127,11 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 		}
 	}()
 
+	// todo: add value labels here
+
 	go func() {
 		defer wg.Done()
-		if err := database.PersistVariableDefinitions(spssData.Header); err != nil {
+		if err := database.PersistVariableDefinitions(spssData.Header, types.GBSource); err != nil {
 			log.Error().
 				Err(err).
 				Str("datasetName", datasetName).
@@ -156,7 +156,7 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 
 	si.fileUploads.SetUploadStarted()
 
-	spssData, err := loadSav(tmpfile, types.GBSurveyInput{})
+	spssData, err := loadSav(tmpfile, types.NISurveyInput{})
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -166,8 +166,6 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 		si.fileUploads.SetUploadError(fmt.Sprintf("cannot import NI SAV file %s", err))
 		return
 	}
-
-	headers, body := sav.SPSSDatatoArray(spssData)
 
 	// calculate starting week for the month
 	weekNo := 1
@@ -191,7 +189,7 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 	si.Audit.Week = weekNo
 	si.Audit.FileSource = types.NISource
 
-	pipeline := filter.NewNIPipeLine(headers, body, &si.Audit)
+	pipeline := filter.NewNIPipeLine(spssData, &si.Audit)
 
 	columns, data, err := pipeline.RunPipeline()
 	if err != nil {
@@ -246,7 +244,7 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 
 	go func() {
 		defer wg.Done()
-		if err := database.PersistVariableDefinitions(spssData.Header); err != nil {
+		if err := database.PersistVariableDefinitions(spssData.Header, types.NISource); err != nil {
 			log.Error().
 				Err(err).
 				Str("datasetName", datasetName).

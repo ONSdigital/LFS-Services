@@ -28,7 +28,6 @@ func (ah *AddressImportHandler) AddressUploadHandler(w http.ResponseWriter, r *h
 
 	if ah.uploadInProgress {
 		log.Error().Msg("file is currently being uploaded")
-		w.WriteHeader(http.StatusBadRequest)
 		ErrorResponse{ErrorMessage: "address file is currently being uploaded"}.sendResponse(w, r)
 		ah.mutux.Unlock()
 		return

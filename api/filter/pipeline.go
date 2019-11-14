@@ -5,13 +5,15 @@ import (
 	"github.com/rs/zerolog/log"
 	"reflect"
 	"services/api/validate"
+	"services/importdata/sav"
 	"services/types"
 	"strings"
 )
 
+// TODO: Refactor to use SavImportData only
+
 type Pipeline struct {
-	headers    []string
-	data       [][]string
+	data       types.SavImportData
 	validation validate.Validation
 	filter     Filter
 	StructType interface{}
@@ -19,11 +21,11 @@ type Pipeline struct {
 	surveyType types.FileOrigin
 }
 
-func NewNIPipeLine(headers []string, rows [][]string, audit *types.Audit) Pipeline {
+func NewNIPipeLine(data types.SavImportData, audit *types.Audit) Pipeline {
+
 	return Pipeline{
-		headers:    headers,
-		data:       rows,
-		validation: validate.NewNISurveyValidation(headers, rows),
+		data:       data,
+		validation: nil,
 		filter:     NewNISurveyFilter(audit),
 		StructType: types.NISurveyInput{},
 		audit:      audit,
@@ -31,11 +33,10 @@ func NewNIPipeLine(headers []string, rows [][]string, audit *types.Audit) Pipeli
 	}
 }
 
-func NewGBPipeLine(headers []string, rows [][]string, audit *types.Audit) Pipeline {
+func NewGBPipeLine(data types.SavImportData, audit *types.Audit) Pipeline {
 	return Pipeline{
-		headers:    headers,
-		data:       rows,
-		validation: validate.NewGBSurveyValidation(headers, rows),
+		data:       data,
+		validation: nil,
 		filter:     NewGBSurveyFilter(audit),
 		StructType: types.GBSurveyInput{},
 		audit:      audit,
@@ -45,9 +46,16 @@ func NewGBPipeLine(headers []string, rows [][]string, audit *types.Audit) Pipeli
 
 func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 	var period int
+	var headers []string
+	var body [][]string
+
 	if p.surveyType == types.GB {
 		period = p.audit.Week
+		headers, body = sav.SPSSDatatoArray(p.data)
+		p.validation = validate.NewGBSurveyValidation(headers, body)
 	} else {
+		headers, body = sav.SPSSDatatoArray(p.data)
+		p.validation = validate.NewNISurveyValidation(headers, body)
 		period = p.audit.Month
 	}
 
@@ -62,13 +70,13 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 	}
 
 	// Skip rows
-	p.data, err = p.filter.SkipRowsFilter(p.headers, p.data)
+	data, err := p.filter.SkipRowsFilter(headers, body)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// add variables
-	newColumns, err := p.filter.AddVariables(p.headers, p.data)
+	newColumns, err := p.filter.AddVariables(headers, data)
 	if err != nil {
 		log.Error().
 			Err(err)
@@ -76,15 +84,15 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 	}
 
 	// rename variables
-	for k, v := range p.headers {
+	for k, v := range headers {
 		to, ok := p.filter.RenameColumns(v)
 		if ok {
-			p.headers[k] = to
+			headers[k] = to
 		}
 	}
 
 	t1 := reflect.TypeOf(p.StructType)
-	columns := make([]types.Column, len(p.headers))
+	columns := make([]types.Column, len(headers))
 
 	colNo := 1
 	for i := 0; i < t1.NumField(); i++ {
@@ -99,13 +107,14 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 
 		col.Skip = false
 		col.Kind = a.Type.Kind()
-		col.Name = a.Name
+		col.Name = headers[i]
 		col.ColNo = colNo
+		col.Label = p.data.Header[i].LabelName
 		colNo++
 		columns[i] = col
 	}
 
 	columns = append(columns, newColumns...)
 
-	return columns, p.data, nil
+	return columns, data, nil
 }

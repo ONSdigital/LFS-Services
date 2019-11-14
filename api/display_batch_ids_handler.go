@@ -56,7 +56,7 @@ func (i IdHandler) HandleAnnualBatchIdsRequest(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 
 	// Logging
 	log.Debug().
@@ -109,7 +109,7 @@ func (i IdHandler) HandleQuarterlyBatchIdsRequest(w http.ResponseWriter, r *http
 		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 
 }
 
@@ -156,6 +156,6 @@ func (i IdHandler) HandleMonthlyBatchIdsRequest(w http.ResponseWriter, r *http.R
 	}
 
 	// Return valid json or handle
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 
 }

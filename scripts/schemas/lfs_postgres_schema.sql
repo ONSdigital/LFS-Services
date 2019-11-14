@@ -11,6 +11,8 @@ drop table if exists survey_audit;
 drop table if exists status_values;
 drop table if exists definitions;
 drop table if exists variable_definitions;
+drop table if exists column_labels;
+drop table if exists value_labels;
 drop type if exists spss_types;
 
 create table addresses
@@ -207,13 +209,14 @@ create table survey
 alter table survey
     owner to lfs;
 
-create index survey_id_name_index
+create index survey_id_name_idx
     on survey (id);
 
-create index survey_period_index
+create index survey_period_idx
     on survey (year, month, week);
 
-create index survey_columns on survey using gin (columns);
+create index survey_columns_idx
+    on survey using gin (columns);
 
 create table survey_audit
 (
@@ -234,7 +237,7 @@ create table survey_audit
     foreign key (status) references status_values (id)
 );
 
-create index survey_audit_file_name_index
+create index survey_audit_file_name_idx
     on survey_audit (file_name);
 
 create table users
@@ -248,10 +251,28 @@ alter table users
 
 CREATE TYPE spss_types AS ENUM ('string', 'int8', 'int16', 'int32', 'float', 'double');
 
+create table value_labels
+(
+    id           integer generated always as identity primary key,
+    name         text       not null,
+    label        text,
+    source      varchar(2) not null,
+    type         spss_types not null default 'string',
+    last_updated timestamp           default NOW()
+);
+
+create index labels_name_idx
+    on value_labels (name);
+
+alter table value_labels
+    owner to lfs;
+
 create table variable_definitions
 (
     id          integer generated always as identity primary key,
     variable    text       not null,
+    label       text,
+    source      varchar(2) not null,
     description text,
     type        spss_types not null default 'string',
     valid_from  timestamp           default NOW(),
@@ -261,7 +282,14 @@ create table variable_definitions
     editable    bool                default false,
     imputation  bool                default false,
     dv          bool                default false
+
+--     foreign key (label) references value_labels (name)
 );
 
-create index definitions_name_index
-    on variable_definitions (variable);
+create index definitions_name_idx
+    on variable_definitions (variable, source);
+
+alter table variable_definitions
+    owner to lfs;
+
+

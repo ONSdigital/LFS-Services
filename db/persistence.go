@@ -48,7 +48,7 @@ type Persistence interface {
 
 	// Import
 	PersistSurvey(vo types.SurveyVO) error
-	PersistVariableDefinitions([]types.Header) error
+	PersistVariableDefinitions([]types.Header, types.FileSource) error
 	PersistDVChanges(definitions []types.VariableDefinitions) error
 	PersistAddresses(headers []string, rows [][]string, status *types.WSMessage) error
 
@@ -83,9 +83,18 @@ type Persistence interface {
 	GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Audit, error)
 
 	// Variable Definitions
-	GetAllDefinitions() ([]types.VariableDefinitions, error)
-	GetDefinitionsForVariable(variable string) ([]types.VariableDefinitions, error)
+	GetAllDefinitions() ([]types.VariableDefinitionsQuery, error)
+	PersistDefinitions(d types.VariableDefinitions) error
+	GetDefinitionsForVariable(variable string) ([]types.VariableDefinitionsQuery, error)
+	GetAllGBDefinitions() ([]types.VariableDefinitions, error)
+	GetAllNIDefinitions() ([]types.VariableDefinitions, error)
 
 	// Common SQL statements
 	DeleteFrom(table string) error
+
+	// Value Labels
+	GetAllValueLabels() ([]types.ValueLabelsRow, error)
+	GetLabelsForValue(variable string) ([]types.ValueLabelsRow, error)
+	PersistValues(types.ValueLabelsRow) error
+	PersistValueLabels([]types.ValueLabelsRow) error
 }

@@ -3,7 +3,7 @@ package importdata_test
 import (
 	conf "services/config"
 	im "services/importdata"
-	"services/types"
+	"services/importdata/sav"
 	"testing"
 )
 
@@ -46,16 +46,17 @@ func TestImportCSV(t *testing.T) {
 
 func TestImportSav(t *testing.T) {
 
-	var spssFile []types.GBSurveyInput
-
-	if err := im.ImportSavFile(testDirectory()+"LFSwk18PERS_non_confidential.sav", &spssFile); err != nil {
+	res, err := sav.ImportSav(testDirectory() + "LFSwkJANUARYNI_non_confidential.SAV")
+	if err != nil {
 		panic(err)
 	}
 
-	t.Logf("Starting test - spss reader")
+	headerCount := res.HeaderCount
+	rowCount := res.RowCount
+	labelsCount := res.LabelsCount
 
-	i := len(spssFile)
-
-	t.Logf("Total Items: %d\n", i)
+	t.Logf("Total Columns: %d\n", headerCount)
+	t.Logf("Total Rows: %d\n", rowCount)
+	t.Logf("Total Value Labels: %d\n", labelsCount)
 	t.Logf("Test finished - spss reader")
 }

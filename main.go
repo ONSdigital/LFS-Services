@@ -48,6 +48,7 @@ func main() {
 	auditHandler := api.NewAuditHandler()
 	loginHandler := api.NewLoginHandler()
 	vdHandler := api.NewVariableDefinitionsHandler()
+	varLabHandler := api.NewValueLabelsHandler()
 
 	// Dashboard
 	router.HandleFunc("/dashboard", dashboardHandler.HandleDashboardRequest).Methods(http.MethodGet)
@@ -63,10 +64,12 @@ func main() {
 	router.HandleFunc("/batches/display/monthly/{year}/{month}", idHandler.HandleMonthlyBatchIdsRequest).Methods(http.MethodGet)
 
 	// Imports
-	router.HandleFunc("/imports/survey/gb/{week}/{year}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
-	router.HandleFunc("/imports/survey/ni/{month}/{year}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/gb/{year}/{week}", surveyHandler.SurveyUploadGBHandler).Methods(http.MethodPost)
+	router.HandleFunc("/imports/survey/ni/{year}/{month}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/address", addressesHandler.AddressUploadHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/variable/definitions", vdHandler.HandleRequestVariableUpload).Methods(http.MethodPost)
+	// TODO: Value Labels Import -->
+	router.HandleFunc("/imports/value/labels", varLabHandler.HandleValLabRequestlUpload).Methods(http.MethodPost)
 
 	// Audits
 	router.HandleFunc("/audits", auditHandler.HandleAllAuditRequest).Methods(http.MethodGet)
@@ -77,6 +80,9 @@ func main() {
 	// Variable Definitions
 	router.HandleFunc("/variable/definitions/{variable}", vdHandler.HandleRequestVariable).Methods(http.MethodGet)
 	router.HandleFunc("/variable/definitions", vdHandler.HandleRequestAll).Methods(http.MethodGet)
+
+	router.HandleFunc("/value/labels/{value}", varLabHandler.HandleValLabRequestValue).Methods(http.MethodGet)
+	router.HandleFunc("/value/labels", varLabHandler.HandleValLabRequestAll).Methods(http.MethodGet)
 
 	// Other
 	router.HandleFunc("/login/{user}", loginHandler.LoginHandler).Methods(http.MethodGet)

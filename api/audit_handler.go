@@ -23,7 +23,7 @@ func (a AuditHandler) HandleAllAuditRequest(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 }
 
 func (a AuditHandler) HandleYearAuditRequest(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func (a AuditHandler) HandleYearAuditRequest(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 }
 
 func (a AuditHandler) HandleWeekAuditRequest(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +77,7 @@ func (a AuditHandler) HandleWeekAuditRequest(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 }
 
 func (a AuditHandler) HandleMonthAuditRequest(w http.ResponseWriter, r *http.Request) {
@@ -109,6 +109,6 @@ func (a AuditHandler) HandleMonthAuditRequest(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 
 }

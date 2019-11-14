@@ -22,7 +22,8 @@ func (s MySQL) GetUserID(user string) (types.UserCredentials, error) {
 	col := s.DB.Collection(userTable)
 	res := col.Find(db.Cond{"username": user})
 
-	if res == nil {
+	cnt, _ := res.Count()
+	if cnt == 0 {
 		return creds, fmt.Errorf("user %s not found", user)
 	}
 
