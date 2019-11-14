@@ -275,6 +275,23 @@ alter table users
 insert into users(username, password)
 values ('Admin', '$2a$04$Su7c9o6E9pLaGut2Nv9FqO2ZUbntDmUweOlO/Vj3hczi86qrnbKK2');
 
+# CREATE TYPE spss_types AS ENUM (‘string’, ‘int8’, ‘uint8’, ‘int’, ‘int32’, ‘uint32’,
+#    ‘int64’, ‘uint64’, ‘float32’, ‘float64’);
+
+create table definitions
+(
+    variable    text       not null,
+    description text,
+#     type        spss_types not null default ‘sad’,
+    type        int not null default 999,
+    length      integer,
+    prcsn       integer,
+    alias       text,
+    editable    bool                default false,
+    imputation  bool                default false,
+    dv          bool                default false
+);
+
 SET SQL_MODE = @OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS = @OLD_UNIQUE_CHECKS;
