@@ -52,8 +52,14 @@ func (s Postgres) GetAuditsByYear(year types.Year) ([]types.Audit, error) {
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
-	//res := dbAudit.Find("year", year)
 	res := dbAudit.Find(db.Cond{"year": year})
+	err := res.All(&audits)
+	// Error handling
+	if err != nil {
+		log.Debug().
+			Msg("GetAuditsByYear error: " + err.Error())
+		return nil, err
+	}
 
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {
@@ -71,8 +77,15 @@ func (s Postgres) GetAuditsByYearMonth(month types.Month, year types.Year) ([]ty
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
-	//res := dbAudit.Find("year", year, "month", month)
 	res := dbAudit.Find(db.Cond{"year": year, "month": month})
+	err := res.All(&audits)
+	// Error handling
+	if err != nil {
+		log.Debug().
+			Msg("GetAuditsByYearMonth error: " + err.Error())
+		return nil, err
+	}
+
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {
 		return nil, res.Err()
@@ -89,8 +102,14 @@ func (s Postgres) GetAuditsByYearWeek(week types.Week, year types.Year) ([]types
 		log.Error().Str("table", surveyAuditTable).Msg("Table does not exist")
 		return nil, fmt.Errorf("table: %s does not exist", surveyAuditTable)
 	}
-	//res := dbAudit.Find("year", year, "week", week)
 	res := dbAudit.Find(db.Cond{"year": year, "week": week})
+	err := res.All(&audits)
+	// Error handling
+	if err != nil {
+		log.Debug().
+			Msg("GetAuditsByYearWeek error: " + err.Error())
+		return nil, err
+	}
 
 	defer func() { _ = res.Close() }()
 	if res.Err() != nil {
