@@ -6,6 +6,8 @@ import (
 	"services/db"
 	"services/importdata"
 	"services/types"
+	"strconv"
+	"time"
 )
 
 func (vl ValueLabelsHandler) getAllVL() ([]types.ValueLabelsRow, error) {
@@ -36,8 +38,8 @@ func (vl ValueLabelsHandler) getValLabByValue(value string) ([]types.ValueLabels
 	return res, nil
 }
 
-func (vl ValueLabelsHandler) parseValLabUpload(tmpfile, fileName string) error {
-	var csvFile []types.ValueLabelsRow
+func (vl ValueLabelsHandler) parseValLabUpload(tmpfile, fileName string, source types.FileSource) error {
+	var csvFile []types.ValueLabelsImport
 
 	if err := importdata.ImportCSVFile(tmpfile, &csvFile); err != nil {
 		return err
@@ -61,7 +63,19 @@ func (vl ValueLabelsHandler) parseValLabUpload(tmpfile, fileName string) error {
 		return err
 	}
 
-	if err := dbase.PersistValueLabels(csvFile); err != nil {
+	var imp = make([]types.ValueLabelsRow, len(csvFile))
+	for i, j := range csvFile {
+		imp[i] = types.ValueLabelsRow{
+			Name:         j.Variable,
+			Label:        j.Label,
+			Value:        j.Value,
+			Source:       string(source),
+			VariableType: getSource(j.Value),
+			LastUpdated:  time.Now(),
+		}
+	}
+
+	if err := dbase.PersistValueLabels(imp); err != nil {
 		log.Error().
 			Err(err).
 			Str("fileName", fileName).
@@ -69,6 +83,18 @@ func (vl ValueLabelsHandler) parseValLabUpload(tmpfile, fileName string) error {
 	}
 
 	return nil
+}
+
+// we only consider string or float
+func getSource(val string) types.SavType {
+
+	_, err := strconv.ParseFloat(val, 64)
+	if err == nil {
+		return types.TypeDouble
+	}
+
+	return types.TypeString
+
 }
 
 // TODO: Get the list of types from Divya

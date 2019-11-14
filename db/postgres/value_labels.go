@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"services/config"
 	"services/types"
+	"time"
 	"upper.io/db.v3"
 )
 
@@ -77,9 +78,40 @@ func (s Postgres) GetLabelsForValue(value string) ([]types.ValueLabelsRow, error
 	return values, nil
 }
 
+func (s Postgres) PersistSavValueLabels(items map[string][]types.Labels, source types.FileSource) error {
+
+	var all = make([]types.ValueLabelsRow, 0, len(items))
+
+	for _, v := range items {
+		for _, j := range v {
+
+			item := types.ValueLabelsRow{
+				Id:           0,
+				Name:         j.Name,
+				Label:        j.Label,
+				Source:       string(source),
+				VariableType: j.VariableType,
+				LastUpdated:  time.Now(),
+			}
+
+			switch j.VariableType {
+			case types.TypeString:
+				item.Value = fmt.Sprintf("%s", j.Value)
+			case types.TypeInt8, types.TypeInt16, types.TypeInt32:
+				item.Value = fmt.Sprintf("%d", j.Value)
+			case types.TypeFloat, types.TypeDouble:
+				item.Value = fmt.Sprintf("%f", j.Value)
+			}
+
+			all = append(all, item)
+		}
+	}
+	return s.PersistValueLabels(all)
+}
+
 /* persist any new or changed value labels
  */
-func (s Postgres) PersistValueLabels(header []types.ValueLabelsRow) error {
+func (s Postgres) PersistValueLabels(data []types.ValueLabelsRow) error {
 
 	// get existing items
 	var all []types.ValueLabelsRow
@@ -97,15 +129,17 @@ func (s Postgres) PersistValueLabels(header []types.ValueLabelsRow) error {
 
 	changes := make([]types.ValueLabelsRow, 0)
 
-	for _, v := range header {
+	for _, v := range data {
 		item, ok := newItems[v.Name]
-		if !ok || item.Label != v.Label {
+		if !ok || (item.Label != v.Label && item.Name != v.Name && item.Value != v.Value) {
 
 			r := types.ValueLabelsRow{
 				Name:         v.Name,
 				Label:        v.Label,
 				Source:       v.Source,
 				VariableType: v.VariableType,
+				Value:        v.Value,
+				LastUpdated:  v.LastUpdated,
 			}
 			changes = append(changes, r)
 		}
@@ -142,9 +176,10 @@ func (s Postgres) persistValLabChanges(values []types.ValueLabelsRow) error {
 			return fmt.Errorf("insert into value_labels failed, error: %s", err)
 		}
 		log.Debug().
-			Str("value", j.Name).
+			Str("name", j.Name).
 			Str("label", j.Label).
-			Msg("Inserted value labels")
+			Str("value", j.Value).
+			Msg("Inserted value label")
 	}
 
 	if err := tx.Commit(); err != nil {
