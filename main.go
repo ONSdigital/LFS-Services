@@ -68,8 +68,7 @@ func main() {
 	router.HandleFunc("/imports/survey/ni/{year}/{month}", surveyHandler.SurveyUploadNIHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/address", addressesHandler.AddressUploadHandler).Methods(http.MethodPost)
 	router.HandleFunc("/imports/variable/definitions", vdHandler.HandleRequestVariableUpload).Methods(http.MethodPost)
-	// TODO: Value Labels Import -->
-	router.HandleFunc("/imports/value/labels", varLabHandler.HandleValLabRequestlUpload).Methods(http.MethodPost)
+	router.HandleFunc("/imports/value/labels/{source}", varLabHandler.HandleValLabRequestlUpload).Methods(http.MethodPost)
 
 	// Audits
 	router.HandleFunc("/audits", auditHandler.HandleAllAuditRequest).Methods(http.MethodGet)
@@ -81,6 +80,7 @@ func main() {
 	router.HandleFunc("/variable/definitions/{variable}", vdHandler.HandleRequestVariable).Methods(http.MethodGet)
 	router.HandleFunc("/variable/definitions", vdHandler.HandleRequestAll).Methods(http.MethodGet)
 
+	// Value labels
 	router.HandleFunc("/value/labels/{value}", varLabHandler.HandleValLabRequestValue).Methods(http.MethodGet)
 	router.HandleFunc("/value/labels", varLabHandler.HandleValLabRequestAll).Methods(http.MethodGet)
 
