@@ -51,6 +51,10 @@ type Persistence interface {
 	PersistVariableDefinitions([]types.Header, types.FileSource) error
 	PersistDVChanges(definitions []types.VariableDefinitions) error
 	PersistAddresses(headers []string, rows [][]string, status *types.WSMessage) error
+	// TODO: Value labels
+	PersistValueLabels([]types.ValueLabels) error
+	PersistValues(types.ValueLabels) error
+	PersistValLabChanges(value []types.ValueLabels) error
 
 	// User
 	GetUserID(user string) (types.UserCredentials, error)
@@ -91,4 +95,9 @@ type Persistence interface {
 
 	// Common SQL statements
 	DeleteFrom(table string) error
+
+	// TODO: Value Labels
+	// Value Labels
+	GetAllValueLabels() ([]types.ValueLabels, error)
+	GetLabelsForValue(variable string) ([]types.ValueLabels, error)
 }
