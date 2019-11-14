@@ -2,6 +2,7 @@ package validate
 
 import (
 	"fmt"
+	"services/types"
 	"time"
 )
 
@@ -9,7 +10,7 @@ type NISurveyValidation struct {
 	Validator
 }
 
-func NewNISurveyValidation(headers []string, rows [][]string) NISurveyValidation {
+func NewNISurveyValidation(headers []string, rows [][]string, data types.SavImportData) NISurveyValidation {
 	return NISurveyValidation{Validator: Validator{headers, rows}}
 }
 

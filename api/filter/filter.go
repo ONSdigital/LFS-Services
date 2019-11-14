@@ -7,11 +7,11 @@ import (
 )
 
 type Filter interface {
-	DropColumn(name string) bool
-	AddVariables(columns []string, data [][]string) ([]types.Column, error)
+	DropColumn(string) bool
+	AddVariables([]string, [][]string, types.SavImportData) ([]types.Column, error)
 	GetAudit() *types.Audit
-	SkipRowsFilter(header []string, data [][]string) ([][]string, error)
-	RenameColumns(column string) (string, bool)
+	SkipRowsFilter([]string, [][]string, types.SavImportData) ([][]string, error)
+	RenameColumns(string) (string, bool)
 }
 
 var dropColumns = conf.Config.DropColumns.Survey

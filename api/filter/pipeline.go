@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-// TODO: Refactor to use SavImportData only
-
 type Pipeline struct {
 	data       types.SavImportData
 	validation validate.Validation
@@ -52,10 +50,10 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 	if p.surveyType == types.GB {
 		period = p.audit.Week
 		headers, body = sav.SPSSDatatoArray(p.data)
-		p.validation = validate.NewGBSurveyValidation(headers, body)
+		p.validation = validate.NewGBSurveyValidation(headers, body, p.data)
 	} else {
 		headers, body = sav.SPSSDatatoArray(p.data)
-		p.validation = validate.NewNISurveyValidation(headers, body)
+		p.validation = validate.NewNISurveyValidation(headers, body, p.data)
 		period = p.audit.Month
 	}
 
@@ -70,13 +68,13 @@ func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
 	}
 
 	// Skip rows
-	data, err := p.filter.SkipRowsFilter(headers, body)
+	data, err := p.filter.SkipRowsFilter(headers, body, p.data)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// add variables
-	newColumns, err := p.filter.AddVariables(headers, data)
+	newColumns, err := p.filter.AddVariables(headers, data, p.data)
 	if err != nil {
 		log.Error().
 			Err(err)
