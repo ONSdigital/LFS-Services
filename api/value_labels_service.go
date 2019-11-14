@@ -6,10 +6,9 @@ import (
 	"services/db"
 	"services/importdata"
 	"services/types"
-	"strings"
 )
 
-func (vl ValueLabelsHandler) getAllVL() ([]types.ValueLabels, error) {
+func (vl ValueLabelsHandler) getAllVL() ([]types.ValueLabelsRow, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
@@ -23,14 +22,13 @@ func (vl ValueLabelsHandler) getAllVL() ([]types.ValueLabels, error) {
 	return res, nil
 }
 
-func (vl ValueLabelsHandler) getValLabByValue(value string) ([]types.ValueLabels, error) {
+func (vl ValueLabelsHandler) getValLabByValue(value string) ([]types.ValueLabelsRow, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
 		return nil, err
 	}
 
-	// TODO: Persistence
 	res, err := dbase.GetLabelsForValue(value)
 	if err != nil {
 		return nil, err
@@ -39,7 +37,7 @@ func (vl ValueLabelsHandler) getValLabByValue(value string) ([]types.ValueLabels
 }
 
 func (vl ValueLabelsHandler) parseValLabUpload(tmpfile, fileName string) error {
-	var csvFile []types.ValueLabels
+	var csvFile []types.ValueLabelsRow
 
 	if err := importdata.ImportCSVFile(tmpfile, &csvFile); err != nil {
 		return err
@@ -50,23 +48,6 @@ func (vl ValueLabelsHandler) parseValLabUpload(tmpfile, fileName string) error {
 			Str("method", "parseValLabUpload").
 			Msg("The CSV file is empty")
 		return fmt.Errorf("CSV file: %s, is empty", fileName)
-	}
-
-	// TODO: ....uuummmm.....
-	v := make([]types.ValueLabels, len(csvFile))
-	for i, j := range csvFile {
-		varLength := intConversion(j.VariableLength)
-		precision := intConversion(j.Precision)
-
-		v[i].Variable = strings.ToUpper(j.Variable)
-		v[i].Description = j.Description
-		v[i].VariableType = vl.mapDataType(j.VariableType)
-		v[i].VariableLength = varLength
-		v[i].Precision = precision
-		v[i].Alias = j.Alias
-		v[i].Editable = vl.mapBool(j.Editable)
-		v[i].Imputation = vl.mapBool(j.Imputation)
-		v[i].DV = vl.mapBool(j.DV)
 	}
 
 	log.Debug().
@@ -80,7 +61,7 @@ func (vl ValueLabelsHandler) parseValLabUpload(tmpfile, fileName string) error {
 		return err
 	}
 
-	if err := dbase.PersistValLabChanges(v); err != nil {
+	if err := dbase.PersistValueLabels(csvFile); err != nil {
 		log.Error().
 			Err(err).
 			Str("fileName", fileName).

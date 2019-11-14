@@ -1,20 +1,39 @@
 package types
 
-import "database/sql"
+import (
+	"database/sql"
+	"time"
+)
 
 type VariableDefinitions struct {
 	Id             int            `db:"id,omitempty"`
-	Variable       string         `db:"variable" json:"variable"`
-	Label          sql.NullString `db:"label,omitempty" json:"label"`
-	Source         string         `db:"source" json:"source"`
-	Description    sql.NullString `db:"description" json:"description"`
-	VariableType   SavType        `db:"type" json:"type"`
-	VariableLength int            `db:"length "json:"length"`
-	Precision      int            `db:"precision" json:"precision"`
-	Alias          sql.NullString `db:"alias" json:"alias"`
-	Editable       bool           `db:"editable" json:"editable"`
-	Imputation     bool           `db:"imputation" json:"imputation"`
-	DV             bool           `db:"dv" json:"dv"`
+	Variable       string         `db:"variable"`
+	Label          sql.NullString `db:"label,omitempty" `
+	Source         string         `db:"source" `
+	Description    sql.NullString `db:"description"`
+	VariableType   SavType        `db:"type"`
+	VariableLength int            `db:"length"`
+	Precision      int            `db:"precision"`
+	Alias          sql.NullString `db:"alias" `
+	Editable       bool           `db:"editable" `
+	Imputation     bool           `db:"imputation"`
+	DV             bool           `db:"dv" `
+	ValidFrom      time.Time      `db:"valid_from"`
+}
+
+type VariableDefinitionsQuery struct {
+	Variable       string    `json:"variable"`
+	Label          string    `json:"label"`
+	Source         string    `json:"source"`
+	Description    string    `json:"description"`
+	VariableType   SavType   `json:"type"`
+	VariableLength int       `json:"length"`
+	Precision      int       `json:"precision"`
+	Alias          string    `json:"alias"`
+	Editable       bool      `json:"editable"`
+	Imputation     bool      `json:"imputation"`
+	DV             bool      `json:"dv"`
+	ValidFrom      time.Time `json:"validFrom"`
 }
 
 type VariableDefinitionsImport struct {

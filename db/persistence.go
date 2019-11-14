@@ -51,10 +51,6 @@ type Persistence interface {
 	PersistVariableDefinitions([]types.Header, types.FileSource) error
 	PersistDVChanges(definitions []types.VariableDefinitions) error
 	PersistAddresses(headers []string, rows [][]string, status *types.WSMessage) error
-	// TODO: Value labels
-	PersistValueLabels([]types.ValueLabels) error
-	PersistValues(types.ValueLabels) error
-	PersistValLabChanges(value []types.ValueLabels) error
 
 	// User
 	GetUserID(user string) (types.UserCredentials, error)
@@ -87,17 +83,18 @@ type Persistence interface {
 	GetAuditsByYearWeek(week types.Week, year types.Year) ([]types.Audit, error)
 
 	// Variable Definitions
-	GetAllDefinitions() ([]types.VariableDefinitions, error)
+	GetAllDefinitions() ([]types.VariableDefinitionsQuery, error)
 	PersistDefinitions(d types.VariableDefinitions) error
-	GetDefinitionsForVariable(variable string) ([]types.VariableDefinitions, error)
+	GetDefinitionsForVariable(variable string) ([]types.VariableDefinitionsQuery, error)
 	GetAllGBDefinitions() ([]types.VariableDefinitions, error)
 	GetAllNIDefinitions() ([]types.VariableDefinitions, error)
 
 	// Common SQL statements
 	DeleteFrom(table string) error
 
-	// TODO: Value Labels
 	// Value Labels
-	GetAllValueLabels() ([]types.ValueLabels, error)
-	GetLabelsForValue(variable string) ([]types.ValueLabels, error)
+	GetAllValueLabels() ([]types.ValueLabelsRow, error)
+	GetLabelsForValue(variable string) ([]types.ValueLabelsRow, error)
+	PersistValues(types.ValueLabelsRow) error
+	PersistValueLabels([]types.ValueLabelsRow) error
 }

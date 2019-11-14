@@ -37,13 +37,25 @@ type OkayResponse struct {
 
 type SendDataResponse struct{}
 
+type NoRecordsFoundStatus struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+}
+
 type InProgressResponse struct {
 	Status  string `json:"status"`
 	When    string `json:"time"`
 	Message string `json:"message"`
 }
 
-func (re SendDataResponse) sendDataResponse(w http.ResponseWriter, r *http.Request, d interface{}) {
+func (re NoRecordsFoundStatus) sendResponse(w http.ResponseWriter, r *http.Request) {
+	re.Status = OK
+	re.Message = "no data found"
+	w.WriteHeader(http.StatusOK)
+	sendResponse(w, r, re)
+}
+
+func (re SendDataResponse) sendResponse(w http.ResponseWriter, r *http.Request, d interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(d); err != nil {

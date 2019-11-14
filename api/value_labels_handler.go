@@ -29,10 +29,8 @@ func (vl *ValueLabelsHandler) setUpload(val bool) {
 
 func (vl ValueLabelsHandler) HandleValLabRequestlUpload(w http.ResponseWriter, r *http.Request) {
 	if vl.uploadInProgress {
-		// TODO: Value Labels: Survey file? Correct error message for Value Labels?
-		log.Error().Msg("Survey file is currently being uploaded")
-		ErrorResponse{Status: Error, ErrorMessage: "survey file is currently being uploaded"}.sendResponse(w, r)
-		vl.setUpload(false)
+		log.Error().Msg("Value labels file is currently being uploaded")
+		ErrorResponse{Status: Error, ErrorMessage: "value labels file is currently being uploaded"}.sendResponse(w, r)
 		return
 	}
 
@@ -82,14 +80,20 @@ func (vl ValueLabelsHandler) HandleValLabRequestValue(w http.ResponseWriter, r *
 	res, err := vl.getValLabByValue(valueName)
 
 	if err != nil {
+		log.Error().Err(err).
+			Str("variable", valueName).
+			Msg("Get value label failed")
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
 	}
 
-	if res == nil {
-		ErrorResponse{Status: Error, ErrorMessage: "no results returned"}.sendResponse(w, r)
+	if len(res) == 0 {
+		log.Debug().Msg("No value labels found")
+		NoRecordsFoundStatus{}.sendResponse(w, r)
+		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 
 }
 
@@ -98,13 +102,17 @@ func (vl ValueLabelsHandler) HandleValLabRequestAll(w http.ResponseWriter, r *ht
 	res, err := vl.getAllVL()
 
 	if err != nil {
+		log.Error().Err(err).Msg("Get all value labels failed")
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
 	}
 
-	if res == nil {
-		ErrorResponse{Status: Error, ErrorMessage: "no value labels found"}.sendResponse(w, r)
+	if len(res) == 0 {
+		log.Debug().Msg("No value labels found")
+		NoRecordsFoundStatus{}.sendResponse(w, r)
+		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 
 }

@@ -256,6 +256,7 @@ create table value_labels
     id           integer generated always as identity primary key,
     name         text       not null,
     label        text,
+    source      varchar(2) not null,
     type         spss_types not null default 'string',
     last_updated timestamp           default NOW()
 );

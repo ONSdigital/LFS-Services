@@ -54,7 +54,7 @@ func (s Postgres) GetAllNIDefinitions() ([]types.VariableDefinitions, error) {
 	return definitions, nil
 }
 
-func (s Postgres) GetAllDefinitions() ([]types.VariableDefinitions, error) {
+func (s Postgres) GetAllDefinitions() ([]types.VariableDefinitionsQuery, error) {
 
 	var definitions []types.VariableDefinitions
 	res := s.DB.Collection(definitionsTable).Find()
@@ -63,10 +63,29 @@ func (s Postgres) GetAllDefinitions() ([]types.VariableDefinitions, error) {
 		return nil, res.Err()
 	}
 
-	return definitions, nil
+	var d = make([]types.VariableDefinitionsQuery, 0, len(definitions))
+	for _, v := range definitions {
+		r := types.VariableDefinitionsQuery{
+			Variable:       v.Variable,
+			Label:          v.Label.String,
+			Source:         v.Source,
+			Description:    v.Description.String,
+			VariableType:   v.VariableType,
+			VariableLength: v.VariableLength,
+			Precision:      v.Precision,
+			Alias:          v.Alias.String,
+			Editable:       v.Editable,
+			Imputation:     v.Imputation,
+			DV:             v.DV,
+			ValidFrom:      v.ValidFrom,
+		}
+		d = append(d, r)
+	}
+
+	return d, nil
 }
 
-func (s Postgres) GetDefinitionsForVariable(variable string) ([]types.VariableDefinitions, error) {
+func (s Postgres) GetDefinitionsForVariable(variable string) ([]types.VariableDefinitionsQuery, error) {
 
 	var definitions []types.VariableDefinitions
 	res := s.DB.Collection(definitionsTable).Find(db.Cond{"variable": variable})
@@ -76,7 +95,27 @@ func (s Postgres) GetDefinitionsForVariable(variable string) ([]types.VariableDe
 		return nil, res.Err()
 	}
 
-	return definitions, nil
+	var d = make([]types.VariableDefinitionsQuery, 0, len(definitions))
+	for _, v := range definitions {
+		r := types.VariableDefinitionsQuery{
+			Variable:       v.Variable,
+			Label:          v.Label.String,
+			Source:         v.Source,
+			Description:    v.Description.String,
+			VariableType:   v.VariableType,
+			VariableLength: v.VariableLength,
+			Precision:      v.Precision,
+			Alias:          v.Alias.String,
+			Editable:       v.Editable,
+			Imputation:     v.Imputation,
+			DV:             v.DV,
+			ValidFrom:      v.ValidFrom,
+		}
+		d = append(d, r)
+	}
+
+	return d, nil
+
 }
 
 /* persist any new variable definitions.

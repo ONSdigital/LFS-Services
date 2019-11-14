@@ -320,19 +320,61 @@
 			"response": []
 		},
 		{
-			"name": "Variable Definitions - All",
+			"name": "Value Labels All",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8000/audits",
+					"raw": "http://localhost:8000/value/labels",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
-						"audits"
+						"value",
+						"labels"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Value Labels Single",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/value/labels/fred",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"value",
+						"labels",
+						"fred"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Variable Definitions - All",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/variable/definitions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"variable",
+						"definitions"
 					]
 				}
 			},
@@ -344,14 +386,16 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8000/audits",
+					"raw": "http://localhost:8000/variable/definitions/HHNO",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
-						"audits"
+						"variable",
+						"definitions",
+						"HHNO"
 					]
 				}
 			},

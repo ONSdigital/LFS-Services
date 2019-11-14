@@ -30,6 +30,5 @@ type DatabaseConfiguration struct {
 	NiBatchTable        string
 	UserTable           string
 	DefinitionsTable    string
-	ColumnLabelsTable   string
 	ValueLabelsTable    string
 }

@@ -13,11 +13,11 @@ var valueLabelsTable string
 func init() {
 	valueLabelsTable = config.Config.Database.ValueLabelsTable
 	if valueLabelsTable == "" {
-		panic("definitions table configuration not set")
+		panic("value labels table configuration not set")
 	}
 }
 
-func (s Postgres) PersistValues(d types.ValueLabels) error {
+func (s Postgres) PersistValues(d types.ValueLabelsRow) error {
 
 	col := s.DB.Collection(valueLabelsTable)
 	_, err := col.Insert(d)
@@ -28,9 +28,33 @@ func (s Postgres) PersistValues(d types.ValueLabels) error {
 	return nil
 }
 
-func (s Postgres) GetAllValueLabels() ([]types.ValueLabels, error) {
+func (s Postgres) getAllGBValueLabels() ([]types.ValueLabelsRow, error) {
 
-	var valueLabels []types.ValueLabels
+	var valueLabels []types.ValueLabelsRow
+	res := s.DB.Collection(valueLabelsTable).Find(db.Cond{"source": string(types.GBSource)})
+	err := res.All(&valueLabels)
+	if err != nil {
+		return nil, res.Err()
+	}
+
+	return valueLabels, nil
+}
+
+func (s Postgres) getAllNIValueLabels() ([]types.ValueLabelsRow, error) {
+
+	var valueLabels []types.ValueLabelsRow
+	res := s.DB.Collection(valueLabelsTable).Find(db.Cond{"source": string(types.NISource)})
+	err := res.All(&valueLabels)
+	if err != nil {
+		return nil, res.Err()
+	}
+
+	return valueLabels, nil
+}
+
+func (s Postgres) GetAllValueLabels() ([]types.ValueLabelsRow, error) {
+
+	var valueLabels []types.ValueLabelsRow
 	res := s.DB.Collection(valueLabelsTable).Find()
 	err := res.All(&valueLabels)
 	if err != nil {
@@ -40,10 +64,10 @@ func (s Postgres) GetAllValueLabels() ([]types.ValueLabels, error) {
 	return valueLabels, nil
 }
 
-func (s Postgres) GetLabelsForValue(value string) ([]types.ValueLabels, error) {
+func (s Postgres) GetLabelsForValue(value string) ([]types.ValueLabelsRow, error) {
 
-	var values []types.ValueLabels
-	res := s.DB.Collection(valueLabelsTable).Find(db.Cond{"value": value})
+	var values []types.ValueLabelsRow
+	res := s.DB.Collection(valueLabelsTable).Find(db.Cond{"name": value})
 
 	err := res.All(&values)
 	if err != nil {
@@ -53,55 +77,50 @@ func (s Postgres) GetLabelsForValue(value string) ([]types.ValueLabels, error) {
 	return values, nil
 }
 
-/* persist any new value labelss.
-New is defined as any changes to the description
-//*/
-// TODO: Is this required for Value Labels?
-func (s Postgres) PersistValueLabels(header []types.ValueLabels) error {
+/* persist any new or changed value labels
+ */
+func (s Postgres) PersistValueLabels(header []types.ValueLabelsRow) error {
 
 	// get existing items
-	all, err := s.GetAllValueLabels()
+	var all []types.ValueLabelsRow
+	var err error
+	all, err = s.GetAllValueLabels()
+
 	if err != nil {
 		return err
 	}
 
-	var newItems = make(map[string]types.ValueLabels)
+	var newItems = make(map[string]types.ValueLabelsRow)
 	for _, v := range all {
-		newItems[v.Variable] = v
+		newItems[v.Name] = v
 	}
 
-	changes := make([]types.ValueLabels, 0)
+	changes := make([]types.ValueLabelsRow, 0)
 
-	// TODO: ....uummm....
-	//for _, v := range header {
-	//	item, ok := newItems[v.VariableName]
-	//	if !ok || item.Description != v.VariableDescription {
-	//
-	//		r := types.ValueLabels{
-	//			Variable:       v.VariableName,
-	//			Description:    v.VariableDescription,
-	//			VariableType:   v.VariableType,
-	//			VariableLength: v.VariableLength,
-	//			Precision:      v.VariablePrecision,
-	//			Alias:          "",
-	//			Editable:       false,
-	//			Imputation:     false,
-	//			DV:             false,
-	//		}
-	//		changes = append(changes, r)
-	//	}
-	//}
+	for _, v := range header {
+		item, ok := newItems[v.Name]
+		if !ok || item.Label != v.Label {
+
+			r := types.ValueLabelsRow{
+				Name:         v.Name,
+				Label:        v.Label,
+				Source:       v.Source,
+				VariableType: v.VariableType,
+			}
+			changes = append(changes, r)
+		}
+	}
 
 	if len(changes) > 0 {
-		return s.PersistValLabChanges(changes)
-	} else {
-		log.Info().Msg("No new or changed value labels")
+		return s.persistValLabChanges(changes)
 	}
+
+	log.Info().Msg("No new or changed value labels")
 
 	return nil
 }
 
-func (s Postgres) PersistValLabChanges(values []types.ValueLabels) error {
+func (s Postgres) persistValLabChanges(values []types.ValueLabelsRow) error {
 
 	tx, err := s.DB.NewTx(nil)
 	if err != nil {
@@ -123,8 +142,8 @@ func (s Postgres) PersistValLabChanges(values []types.ValueLabels) error {
 			return fmt.Errorf("insert into value_labels failed, error: %s", err)
 		}
 		log.Debug().
-			// TODO: Will need to change j.Variable when types.ValueLabels are correctly declared
-			Str("value", j.Variable).
+			Str("value", j.Name).
+			Str("label", j.Label).
 			Msg("Inserted value labels")
 	}
 
@@ -137,7 +156,7 @@ func (s Postgres) PersistValLabChanges(values []types.ValueLabels) error {
 
 	log.Info().
 		Int("numberItems", len(values)).
-		Msg("Persisted new or changed variable definitions")
+		Msg("Persisted new or changed value labels")
 
 	return nil
 }

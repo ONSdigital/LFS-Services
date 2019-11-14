@@ -29,10 +29,8 @@ func (vd *VariableDefinitionsHandler) setUpload(val bool) {
 
 func (vd VariableDefinitionsHandler) HandleRequestVariableUpload(w http.ResponseWriter, r *http.Request) {
 	if vd.uploadInProgress {
-		// TODO: Correct error message for Variable Definitions?
-		log.Error().Msg("Survey file is currently being uploaded")
-		ErrorResponse{Status: Error, ErrorMessage: "survey file is currently being uploaded"}.sendResponse(w, r)
-		vd.setUpload(false)
+		log.Error().Msg("Variable Definitions file is currently being uploaded")
+		ErrorResponse{Status: Error, ErrorMessage: "variable definitions file is currently being uploaded"}.sendResponse(w, r)
 		return
 	}
 
@@ -73,6 +71,7 @@ func (vd VariableDefinitionsHandler) HandleRequestVariable(w http.ResponseWriter
 	variableName := vars["variable"]
 
 	if variableName == "" {
+		log.Warn().Msg("variable not defined")
 		ErrorResponse{
 			Status:       Error,
 			ErrorMessage: fmt.Sprintf("variable not defined")}.sendResponse(w, r)
@@ -82,14 +81,17 @@ func (vd VariableDefinitionsHandler) HandleRequestVariable(w http.ResponseWriter
 	res, err := vd.getVDByVariable(variableName)
 
 	if err != nil {
+		log.Warn().Err(err).Msg("Cannot process Variable Definitions upload")
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
 	}
 
-	if res == nil {
-		ErrorResponse{Status: Error, ErrorMessage: "no results returned"}.sendResponse(w, r)
+	if len(res) == 0 {
+		NoRecordsFoundStatus{}.sendResponse(w, r)
+		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 
 }
 
@@ -98,13 +100,15 @@ func (vd VariableDefinitionsHandler) HandleRequestAll(w http.ResponseWriter, r *
 	res, err := vd.getAllVD()
 
 	if err != nil {
+		log.Error().Err(err).Msg("Get all variable definitions failed")
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
+		return
 	}
 
-	if res == nil {
-		ErrorResponse{Status: Error, ErrorMessage: "no variable definitions found"}.sendResponse(w, r)
+	if len(res) == 0 {
+		NoRecordsFoundStatus{}.sendResponse(w, r)
+		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
-
+	SendDataResponse{}.sendResponse(w, r, res)
 }

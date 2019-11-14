@@ -31,6 +31,6 @@ func (d DashboardHandler) HandleDashboardRequest(w http.ResponseWriter, r *http.
 		return
 	}
 
-	SendDataResponse{}.sendDataResponse(w, r, res)
+	SendDataResponse{}.sendResponse(w, r, res)
 
 }

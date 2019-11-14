@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func (vd VariableDefinitionsHandler) getAllVD() ([]types.VariableDefinitions, error) {
+func (vd VariableDefinitionsHandler) getAllVD() ([]types.VariableDefinitionsQuery, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
@@ -24,7 +24,7 @@ func (vd VariableDefinitionsHandler) getAllVD() ([]types.VariableDefinitions, er
 	return res, nil
 }
 
-func (vd VariableDefinitionsHandler) getVDByVariable(variable string) ([]types.VariableDefinitions, error) {
+func (vd VariableDefinitionsHandler) getVDByVariable(variable string) ([]types.VariableDefinitionsQuery, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
