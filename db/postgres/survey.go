@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
@@ -78,11 +77,8 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 
 	defer vo.Status.SetUploadFinished()
 
-	var kBuffer bytes.Buffer
-
 	for cnt, v := range body {
-		kBuffer.Reset()
-		kBuffer.WriteString("{")
+		var rowMap = make(map[string]*interface{})
 
 		for colNo, val := range v {
 
@@ -90,22 +86,32 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 				continue
 			}
 
-			kBuffer.WriteString("\"" + columns[colNo].Name + "\":")
-
 			columnKind := columns[colNo].Kind
 			switch columnKind {
 			case reflect.String:
 				if val == "NULL" || val == "" {
-					val = "null"
-					kBuffer.WriteString(val)
+					continue
+					//rowMap[columns[colNo].Name] = nil
 				} else {
-					kBuffer.WriteString("\"")
-					kBuffer.WriteString(jsonEscape(val))
-					kBuffer.WriteString("\"")
+					var ms interface{} = val
+					rowMap[columns[colNo].Name] = &ms
 				}
 
 			case reflect.Int8, reflect.Uint8, reflect.Int, reflect.Int32, reflect.Uint32, reflect.Int64, reflect.Uint64:
-				kBuffer.WriteString(val)
+				i64, err := strconv.ParseInt(val, 10, 64)
+				if err != nil {
+					log.Error().
+						Str("methodName", "PersistSurvey").
+						Int("type", int(columnKind)).
+						Msg("field is not an int")
+					return fmt.Errorf("field is not an int")
+				}
+				var ms interface{} = i64
+				if i64 == 0 {
+					continue
+					//ms = nil
+				}
+				rowMap[columns[colNo].Name] = &ms
 
 			case reflect.Float32, reflect.Float64:
 				if val == "" || val == "NULL" {
@@ -120,9 +126,11 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 					return fmt.Errorf("field is not a float")
 				}
 				if math.IsNaN(f) {
-					kBuffer.WriteString("null")
+					//rowMap[columns[colNo].Name] = nil
+					continue
 				} else {
-					kBuffer.WriteString(val)
+					var ms interface{} = f
+					rowMap[columns[colNo].Name] = &ms
 				}
 
 			default:
@@ -133,13 +141,15 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 				return fmt.Errorf("unknown type - possible corruption or structure does not map to file")
 			}
 
-			if colNo != len(v)-1 {
-				kBuffer.WriteString(",")
-			} else {
-				kBuffer.WriteString("}")
+			if colNo == len(v)-1 {
 				var perc = (float64(cnt) / float64(len(body))) * 100
 				vo.Status.SetPercentage(perc)
 			}
+		}
+
+		re, err := json.Marshal(rowMap)
+		if err != nil {
+			return fmt.Errorf("json marshall failed: %s", err)
 		}
 
 		row := types.SurveyRow{
@@ -149,7 +159,7 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 			Week:       vo.Audit.Week,
 			Month:      vo.Audit.Month,
 			Year:       vo.Audit.Year,
-			Columns:    kBuffer.String(),
+			Columns:    string(re),
 		}
 
 		if err := s.insertSurveyData(tx, row); err != nil {
@@ -191,15 +201,6 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 	}
 
 	return nil
-}
-
-func jsonEscape(i string) string {
-	b, err := json.Marshal(i)
-	if err != nil {
-		panic(err)
-	}
-	s := string(b)
-	return s[1 : len(s)-1]
 }
 
 func (s Postgres) insertSurveyData(tx sqlbuilder.Tx, survey types.SurveyRow) error {

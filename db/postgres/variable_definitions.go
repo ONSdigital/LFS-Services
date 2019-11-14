@@ -1,10 +1,12 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"services/config"
 	"services/types"
+	"services/util"
 	"upper.io/db.v3"
 )
 
@@ -105,17 +107,17 @@ func (s Postgres) PersistVariableDefinitions(header []types.Header, source types
 	for _, v := range header {
 		item, ok := newItems[v.VariableName]
 		sou := string(source)
-		if !ok || (item.Description != v.VariableDescription) {
+		if !ok || (item.Description.String != v.VariableDescription) {
 
 			r := types.VariableDefinitions{
 				Variable:       v.VariableName,
-				Label:          v.LabelName,
+				Label:          util.ToNullString(v.LabelName),
 				Source:         sou,
-				Description:    v.VariableDescription,
+				Description:    util.ToNullString(v.VariableDescription),
 				VariableType:   v.VariableType,
 				VariableLength: v.VariableLength,
 				Precision:      v.VariablePrecision,
-				Alias:          "",
+				Alias:          sql.NullString{String: "", Valid: false},
 				Editable:       false,
 				Imputation:     false,
 				DV:             false,

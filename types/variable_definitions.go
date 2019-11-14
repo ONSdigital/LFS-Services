@@ -1,18 +1,20 @@
 package types
 
+import "database/sql"
+
 type VariableDefinitions struct {
-	Id             int     `db:"id,omitempty"`
-	Variable       string  `db:"variable" json:"variable"`
-	Label          string  `db:"label,omitempty" json:"label"`
-	Source         string  `db:"source" json:"source"`
-	Description    string  `db:"description" json:"description"`
-	VariableType   SavType `db:"type" json:"type"`
-	VariableLength int     `db:"length "json:"length"`
-	Precision      int     `db:"precision" json:"precision"`
-	Alias          string  `db:"alias" json:"alias"`
-	Editable       bool    `db:"editable" json:"editable"`
-	Imputation     bool    `db:"imputation" json:"imputation"`
-	DV             bool    `db:"dv" json:"dv"`
+	Id             int            `db:"id,omitempty"`
+	Variable       string         `db:"variable" json:"variable"`
+	Label          sql.NullString `db:"label,omitempty" json:"label"`
+	Source         string         `db:"source" json:"source"`
+	Description    sql.NullString `db:"description" json:"description"`
+	VariableType   SavType        `db:"type" json:"type"`
+	VariableLength int            `db:"length "json:"length"`
+	Precision      int            `db:"precision" json:"precision"`
+	Alias          sql.NullString `db:"alias" json:"alias"`
+	Editable       bool           `db:"editable" json:"editable"`
+	Imputation     bool           `db:"imputation" json:"imputation"`
+	DV             bool           `db:"dv" json:"dv"`
 }
 
 type VariableDefinitionsImport struct {
