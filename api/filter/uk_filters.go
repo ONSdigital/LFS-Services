@@ -54,9 +54,8 @@ func (sf UKFilter) addHSerial(header []string, rows [][]string, data types.SavIm
 		return types.Column{}, err
 	}
 
-	for _, j := range rows {
-
-		var row = j
+	for i := 0; i < len(rows); i++ {
+		var row = rows[i]
 
 		quota, err := strconv.ParseFloat(row[quotaInx], 64)
 		if err != nil {
@@ -96,7 +95,7 @@ func (sf UKFilter) addHSerial(header []string, rows [][]string, data types.SavIm
 		n := (quota * 1000000000) + (week * 10000000) + (w1yr * 1000000) +
 			(qrtr * 100000) + (addr * 1000) + (wavfnd * 100) + (hhld + 1)
 
-		row = append(row, fmt.Sprintf("%f", int64(n)))
+		rows[i] = append(rows[i], fmt.Sprintf("%d", int64(n)))
 	}
 
 	column := types.Column{
@@ -148,9 +147,8 @@ func (sf UKFilter) addCaseno(header []string, rows [][]string, data types.SavImp
 		return types.Column{}, err
 	}
 
-	for _, j := range rows {
-
-		var row = j
+	for i := 0; i < len(rows); i++ {
+		var row = rows[i]
 
 		quota, err := strconv.ParseFloat(row[quotaInx], 64)
 		if err != nil {
@@ -195,7 +193,7 @@ func (sf UKFilter) addCaseno(header []string, rows [][]string, data types.SavImp
 		n := (quota * 100000000000) + (week * 1000000000) + (w1yr * 100000000) +
 			(qrtr * 10000000) + (addr * 100000) + (wavfnd * 10000) + (hhld * 100) + persno
 
-		row = append(row, fmt.Sprintf("%f", int64(n)))
+		rows[i] = append(rows[i], fmt.Sprintf("%d", int64(n)))
 	}
 
 	column := types.Column{
