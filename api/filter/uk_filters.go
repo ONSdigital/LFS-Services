@@ -2,7 +2,6 @@ package filter
 
 import (
 	"fmt"
-	"reflect"
 	"services/types"
 	"strconv"
 )
@@ -11,198 +10,205 @@ type UKFilter struct {
 	BaseFilter
 }
 
-func findPosition(headers []string, column string) (int, error) {
-	for i, j := range headers {
-		if j == column {
+func findPosition(data *types.SavImportData, column string) (int, error) {
+	for i, j := range data.Header {
+		if j.VariableName == column {
 			return i, nil
 		}
 	}
 	return 0, fmt.Errorf("column %s not found", column)
 }
 
-func (sf UKFilter) addHSerial(header []string, rows [][]string, data types.SavImportData) (types.Column, error) {
-
-	header = append(header, "HSERIAL")
+func (sf UKFilter) addHSerial(data *types.SavImportData) error {
 
 	// get indexes of items we are interested in for the calculation
-	quotaInx, err := findPosition(header, "QUOTA")
+	quotaInx, err := findPosition(data, "QUOTA")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	weekInx, err := findPosition(header, "WEEK")
+	weekInx, err := findPosition(data, "WEEK")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	w1yrInx, err := findPosition(header, "W1YR")
+	w1yrInx, err := findPosition(data, "W1YR")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	qrtrInx, err := findPosition(header, "QRTR")
+	qrtrInx, err := findPosition(data, "QRTR")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	addrInx, err := findPosition(header, "ADDR")
+	addrInx, err := findPosition(data, "ADDR")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	wavfndInx, err := findPosition(header, "WAVFND")
+	wavfndInx, err := findPosition(data, "WAVFND")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	hhldInx, err := findPosition(header, "HHLD")
+	hhldInx, err := findPosition(data, "HHLD")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
 
-	for i := 0; i < len(rows); i++ {
-		var row = rows[i]
+	for i := 0; i < data.RowCount; i++ {
+		var row = data.Rows[i]
 
-		quota, err := strconv.ParseFloat(row[quotaInx], 64)
+		quota, err := strconv.ParseFloat(row.RowData[quotaInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		week, err := strconv.ParseFloat(row[weekInx], 64)
+		week, err := strconv.ParseFloat(row.RowData[weekInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		w1yr, err := strconv.ParseFloat(row[w1yrInx], 64)
+		w1yr, err := strconv.ParseFloat(row.RowData[w1yrInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		qrtr, err := strconv.ParseFloat(row[qrtrInx], 64)
+		qrtr, err := strconv.ParseFloat(row.RowData[qrtrInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		addr, err := strconv.ParseFloat(row[addrInx], 64)
+		addr, err := strconv.ParseFloat(row.RowData[addrInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		wavfnd, err := strconv.ParseFloat(row[wavfndInx], 64)
+		wavfnd, err := strconv.ParseFloat(row.RowData[wavfndInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		hhld, err := strconv.ParseFloat(row[hhldInx], 64)
+		hhld, err := strconv.ParseFloat(row.RowData[hhldInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
 		n := (quota * 1000000000) + (week * 10000000) + (w1yr * 1000000) +
 			(qrtr * 100000) + (addr * 1000) + (wavfnd * 100) + (hhld + 1)
 
-		rows[i] = append(rows[i], fmt.Sprintf("%d", int64(n)))
+		row.RowData = append(row.RowData, fmt.Sprintf("%d", int64(n)))
+		data.Rows[i] = row
 	}
 
-	column := types.Column{
-		Name:  "HSERIAL",
-		Skip:  false,
-		ColNo: len(header),
-		Kind:  reflect.Int64,
-		Label: "HSERIAL",
+	column := types.Header{
+		VariableName:        "HSERIAL",
+		VariableDescription: "HSERIAL calculated column",
+		VariableType:        types.TypeDouble,
+		VariableLength:      8,
+		VariablePrecision:   0,
+		LabelName:           "",
+		Drop:                false,
 	}
+	data.Header = append(data.Header, column)
+	data.HeaderCount = data.HeaderCount + 1
 
-	return column, nil
+	return nil
 }
 
-func (sf UKFilter) addCaseno(header []string, rows [][]string, data types.SavImportData) (types.Column, error) {
-
-	header = append(header, "CASENO")
+func (sf UKFilter) addCaseno(data *types.SavImportData) error {
 
 	// get indexes of items we are interested in for the calculation
-	quotaInx, err := findPosition(header, "QUOTA")
+	quotaInx, err := findPosition(data, "QUOTA")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	weekInx, err := findPosition(header, "WEEK")
+	weekInx, err := findPosition(data, "WEEK")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	w1yrInx, err := findPosition(header, "W1YR")
+	w1yrInx, err := findPosition(data, "W1YR")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	qrtrInx, err := findPosition(header, "QRTR")
+	qrtrInx, err := findPosition(data, "QRTR")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	addrInx, err := findPosition(header, "ADDR")
+	addrInx, err := findPosition(data, "ADDR")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	wavfndInx, err := findPosition(header, "WAVFND")
+	wavfndInx, err := findPosition(data, "WAVFND")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	hhldInx, err := findPosition(header, "HHLD")
+	hhldInx, err := findPosition(data, "HHLD")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
-	persnoInx, err := findPosition(header, "PERSNO")
+	persnoInx, err := findPosition(data, "PERSNO")
 	if err != nil {
-		return types.Column{}, err
+		return err
 	}
 
-	for i := 0; i < len(rows); i++ {
-		var row = rows[i]
+	for i := 0; i < data.RowCount; i++ {
+		var row = data.Rows[i]
 
-		quota, err := strconv.ParseFloat(row[quotaInx], 64)
+		quota, err := strconv.ParseFloat(row.RowData[quotaInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		week, err := strconv.ParseFloat(row[weekInx], 64)
+		week, err := strconv.ParseFloat(row.RowData[weekInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		w1yr, err := strconv.ParseFloat(row[w1yrInx], 64)
+		w1yr, err := strconv.ParseFloat(row.RowData[w1yrInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		qrtr, err := strconv.ParseFloat(row[qrtrInx], 64)
+		qrtr, err := strconv.ParseFloat(row.RowData[qrtrInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		addr, err := strconv.ParseFloat(row[addrInx], 64)
+		addr, err := strconv.ParseFloat(row.RowData[addrInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		wavfnd, err := strconv.ParseFloat(row[wavfndInx], 64)
+		wavfnd, err := strconv.ParseFloat(row.RowData[wavfndInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		hhld, err := strconv.ParseFloat(row[hhldInx], 64)
+		hhld, err := strconv.ParseFloat(row.RowData[hhldInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
-		persno, err := strconv.ParseFloat(row[persnoInx], 64)
+		persno, err := strconv.ParseFloat(row.RowData[persnoInx], 64)
 		if err != nil {
-			return types.Column{}, err
+			return err
 		}
 
 		n := (quota * 100000000000) + (week * 1000000000) + (w1yr * 100000000) +
 			(qrtr * 10000000) + (addr * 100000) + (wavfnd * 10000) + (hhld * 100) + persno
 
-		rows[i] = append(rows[i], fmt.Sprintf("%d", int64(n)))
+		row.RowData = append(row.RowData, fmt.Sprintf("%d", int64(n)))
+		data.Rows[i] = row
 	}
 
-	column := types.Column{
-		Name:  "CASENO",
-		Skip:  false,
-		ColNo: len(header),
-		Kind:  reflect.Int64,
-		Label: "CASENO",
+	column := types.Header{
+		VariableName:        "CASENO",
+		VariableDescription: "CASENO calculated column",
+		VariableType:        types.TypeDouble,
+		VariableLength:      8,
+		VariablePrecision:   0,
+		LabelName:           "",
+		Drop:                false,
 	}
 
-	return column, nil
+	data.Header = append(data.Header, column)
+	data.HeaderCount = data.HeaderCount + 1
+
+	return nil
 }

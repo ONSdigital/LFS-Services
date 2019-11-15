@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"math"
-	"reflect"
 	"services/config"
 	"services/types"
 	"strconv"
@@ -71,38 +70,33 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 		return fmt.Errorf("cannot start a transaction, error: %s", err)
 	}
 
-	body := vo.Records[1:]
-
-	columns := vo.Columns
+	body := vo.Data.Rows
+	columns := vo.Data.Header
 
 	defer vo.Status.SetUploadFinished()
 
 	for cnt, v := range body {
 		var rowMap = make(map[string]*interface{})
 
-		for colNo, val := range v {
+		for colNo, val := range v.RowData {
 
-			if columns[colNo].Skip {
-				continue
-			}
-
-			columnKind := columns[colNo].Kind
+			columnKind := columns[colNo].VariableType
 			switch columnKind {
-			case reflect.String:
+			case types.TypeString:
 				if val == "NULL" || val == "" {
 					continue
 					//rowMap[columns[colNo].Name] = nil
 				} else {
 					var ms interface{} = val
-					rowMap[columns[colNo].Name] = &ms
+					rowMap[columns[colNo].VariableName] = &ms
 				}
 
-			case reflect.Int8, reflect.Uint8, reflect.Int, reflect.Int32, reflect.Uint32, reflect.Int64, reflect.Uint64:
+			case types.TypeInt8, types.TypeInt16, types.TypeInt32:
 				i64, err := strconv.ParseInt(val, 10, 64)
 				if err != nil {
 					log.Error().
 						Str("methodName", "PersistSurvey").
-						Int("type", int(columnKind)).
+						Str("type", string(columnKind)).
 						Msg("field is not an int")
 					return fmt.Errorf("field is not an int")
 				}
@@ -111,9 +105,9 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 					continue
 					//ms = nil
 				}
-				rowMap[columns[colNo].Name] = &ms
+				rowMap[columns[colNo].VariableName] = &ms
 
-			case reflect.Float32, reflect.Float64:
+			case types.TypeFloat, types.TypeDouble:
 				if val == "" || val == "NULL" {
 					val = "0.0"
 				}
@@ -121,7 +115,10 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 				if err != nil {
 					log.Error().
 						Str("methodName", "PersistSurvey").
-						Int("type", int(columnKind)).
+						Str("type", string(columnKind)).
+						Str("variable", columns[colNo].VariableName).
+						Str("value", val).
+						Int("index", colNo).
 						Msg("field is not a float")
 					return fmt.Errorf("field is not a float")
 				}
@@ -130,18 +127,18 @@ func (s Postgres) PersistSurvey(vo types.SurveyVO) error {
 					continue
 				} else {
 					var ms interface{} = f
-					rowMap[columns[colNo].Name] = &ms
+					rowMap[columns[colNo].VariableName] = &ms
 				}
 
 			default:
 				log.Error().
 					Str("methodName", "PersistSurvey").
-					Int("type", int(columnKind)).
+					Str("type", string(columnKind)).
 					Msg("Unknown type - possible corruption or structure does not map to file")
 				return fmt.Errorf("unknown type - possible corruption or structure does not map to file")
 			}
 
-			if colNo == len(v)-1 {
+			if colNo == len(v.RowData)-1 {
 				var perc = (float64(cnt) / float64(len(body))) * 100
 				vo.Status.SetPercentage(perc)
 			}

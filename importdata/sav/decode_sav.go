@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 	"services/io/spss"
-	"services/types"
 )
 
 type Reader interface {
@@ -46,32 +45,19 @@ func (f FileInput) Read(out interface{}) error {
 		return errors.New("no spss struct tags found")
 	}
 
-	headers, body := SPSSDatatoArray(spssData)
-
-	spssHeadersLabels := make(map[int]*spss.FieldInfo, len(outInnerStructInfo.Fields)) // Used to store the corresponding header <-> position in CSV
+	spssHeadersLabels := make(map[int]*spss.FieldInfo, len(outInnerStructInfo.Fields)) // Used to store the corresponding header <-> position in sav
 
 	headerCount := map[string]int{}
-	for i, csvColumnHeader := range headers {
-		curHeaderCount := headerCount[csvColumnHeader]
-		if fieldInfo := getCSVFieldPosition(csvColumnHeader, outInnerStructInfo, curHeaderCount); fieldInfo != nil {
+	for i, h := range spssData.Header {
+		curHeaderCount := headerCount[h.VariableName]
+		if fieldInfo := getCSVFieldPosition(h.VariableName, outInnerStructInfo, curHeaderCount); fieldInfo != nil {
 			spssHeadersLabels[i] = fieldInfo
 		}
 	}
 
-	if spss.FailIfUnmatchedStructTags {
-		if err := maybeMissingStructFields(outInnerStructInfo.Fields, headers); err != nil {
-			return err
-		}
-	}
-	if spss.FailIfDoubleHeaderNames {
-		if err := maybeDoubleHeaderNames(headers); err != nil {
-			return err
-		}
-	}
-
-	for i, csvRow := range body {
+	for i, csvRow := range spssData.Rows {
 		outInner := createNewOutInner(outInnerWasPointer, outInnerType)
-		for j, csvColumnContent := range csvRow {
+		for j, csvColumnContent := range csvRow.RowData {
 			if fieldInfo, ok := spssHeadersLabels[j]; ok { // Position found accordingly to header name
 				if err := setInnerField(&outInner, outInnerWasPointer, fieldInfo.IndexChain, csvColumnContent, fieldInfo.OmitEmpty); err != nil { // Set field of struct
 					return &csv.ParseError{
@@ -85,23 +71,6 @@ func (f FileInput) Read(out interface{}) error {
 		outValue.Index(i).Set(outInner)
 	}
 	return nil
-}
-
-func SPSSDatatoArray(spssData types.SavImportData) ([]string, [][]string) {
-	headers := make([]string, spssData.HeaderCount)
-	for i, val := range spssData.Header {
-		headers[i] = val.VariableName
-	}
-
-	body := make([][]string, spssData.RowCount)
-	for i, _ := range spssData.Rows {
-		z := make([]string, spssData.HeaderCount)
-		for j, y := range spssData.Rows[i].RowData {
-			z[j] = y
-		}
-		body[i] = z
-	}
-	return headers, body
 }
 
 func mismatchStructFields(structInfo []spss.FieldInfo, headers []string) []string {

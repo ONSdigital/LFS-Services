@@ -28,6 +28,7 @@ type Header struct {
 	VariableLength      int
 	VariablePrecision   int
 	LabelName           string
+	Drop                bool
 }
 
 type Rows struct {
@@ -56,10 +57,9 @@ type SavImportData struct {
 }
 
 type SurveyVO struct {
-	Audit   *Audit
-	Records [][]string
-	Columns []Column
-	Status  *WSMessage
+	Audit  *Audit
+	Data   SavImportData
+	Status *WSMessage
 }
 
 type SurveyRow struct {

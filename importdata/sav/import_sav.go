@@ -63,6 +63,7 @@ func ImportSav(fileName string) (types.SavImportData, error) {
 			VariableLength:      int(z.length),
 			VariablePrecision:   int(z.precision),
 			LabelName:           strings.ToUpper(C.GoString(z.label_name)),
+			Drop:                false,
 		}
 	}
 
