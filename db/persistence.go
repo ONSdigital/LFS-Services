@@ -91,6 +91,7 @@ type Persistence interface {
 
 	// Common SQL statements
 	DeleteFrom(table string) error
+	CountRows(table string) (int, error)
 
 	// Value Labels
 	GetAllValueLabels() ([]types.ValueLabelsRow, error)
