@@ -113,7 +113,7 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
@@ -127,7 +127,17 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 		}
 	}()
 
-	// todo: add value labels here
+	go func() {
+		defer wg.Done()
+		if err := database.PersistSavValueLabels(spssData.Labels, types.GBSource); err != nil {
+			log.Error().
+				Err(err).
+				Str("datasetName", datasetName).
+				Msg("Cannot persist sav value labels (GB)")
+			si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist variable definitions (GB): %s", err))
+			return
+		}
+	}()
 
 	go func() {
 		defer wg.Done()
@@ -228,7 +238,7 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
@@ -238,6 +248,18 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 				Str("datasetName", datasetName).
 				Msg("Cannot persist NI survey data")
 			si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist NI survey data: %s", err))
+			return
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if err := database.PersistSavValueLabels(spssData.Labels, types.NISource); err != nil {
+			log.Error().
+				Err(err).
+				Str("datasetName", datasetName).
+				Msg("Cannot persist sav value labels (NI)")
+			si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist sav value labels (NI): %s", err))
 			return
 		}
 	}()

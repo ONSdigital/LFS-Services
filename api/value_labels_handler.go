@@ -6,6 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
+	"services/types"
+	"strings"
 	"sync"
 )
 
@@ -34,6 +36,18 @@ func (vl ValueLabelsHandler) HandleValLabRequestlUpload(w http.ResponseWriter, r
 		return
 	}
 
+	vars := mux.Vars(r)
+	source := vars["source"]
+	source = strings.ToUpper(source)
+
+	if source == "" || (source != string(types.GBSource) && source != string(types.NISource)) {
+		log.Warn().Msg("source must be either gb or ni")
+		ErrorResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("source not defined")}.sendResponse(w, r)
+		return
+	}
+
 	vl.setUpload(true)
 
 	fileName := r.FormValue("fileName")
@@ -56,7 +70,7 @@ func (vl ValueLabelsHandler) HandleValLabRequestlUpload(w http.ResponseWriter, r
 		_ = os.Remove(tmpfile)
 	}()
 
-	if err := vl.parseValLabUpload(tmpfile, fileName); err != nil {
+	if err := vl.parseValLabUpload(tmpfile, fileName, types.FileSource(source)); err != nil {
 		log.Debug().Msg("Cannot process Value Upload upload")
 		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return

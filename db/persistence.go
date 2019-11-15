@@ -98,4 +98,5 @@ type Persistence interface {
 	GetLabelsForValue(variable string) ([]types.ValueLabelsRow, error)
 	PersistValues(types.ValueLabelsRow) error
 	PersistValueLabels([]types.ValueLabelsRow) error
+	PersistSavValueLabels(map[string][]types.Labels, types.FileSource) error
 }

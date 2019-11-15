@@ -301,6 +301,81 @@
 			"response": []
 		},
 		{
+			"name": "GB Upload Value Labels",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "fileName",
+							"value": "GB Value Label Changes",
+							"type": "text"
+						},
+						{
+							"key": "lfsFile",
+							"type": "file",
+							"src": "/C:/Users/Paul/GolandProjects/LFS-Services/testdata/value_labels_for_illst17_r4c.csv",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/imports/value/labels/gb",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"imports",
+						"value",
+						"labels",
+						"gb"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "NI Upload Value Labels",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "fileName",
+							"value": "NI Value Label Changes",
+							"type": "text"
+						},
+						{
+							"key": "lfsFile",
+							"type": "file",
+							"src": "/C:/Users/Paul/GolandProjects/LFS-Services/testdata/value_labels_for_illst17_r4c.csv"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/imports/value/labels/ni",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"imports",
+						"value",
+						"labels",
+						"ni"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Audit - All",
 			"request": {
 				"method": "GET",
