@@ -74,10 +74,9 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 	si.Audit.Week = week
 	si.Audit.FileSource = types.GBSource
 
-	pipeline := filter.NewGBPipeLine(spssData, &si.Audit)
+	pipeline := filter.NewGBPipeLine(&spssData, &si.Audit)
 
-	columns, data, err := pipeline.RunPipeline()
-	if err != nil {
+	if err := pipeline.RunPipeline(); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
@@ -106,10 +105,9 @@ func (si SurveyImportHandler) parseGBSurveyFile(tmpfile, datasetName string, wee
 	}
 
 	surveyVo := types.SurveyVO{
-		Audit:   &si.Audit,
-		Records: data,
-		Columns: columns,
-		Status:  si.fileUploads,
+		Audit:  &si.Audit,
+		Status: si.fileUploads,
+		Data:   spssData,
 	}
 
 	var wg sync.WaitGroup
@@ -199,10 +197,9 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 	si.Audit.Week = weekNo
 	si.Audit.FileSource = types.NISource
 
-	pipeline := filter.NewNIPipeLine(spssData, &si.Audit)
+	pipeline := filter.NewNIPipeLine(&spssData, &si.Audit)
 
-	columns, data, err := pipeline.RunPipeline()
-	if err != nil {
+	if err := pipeline.RunPipeline(); err != nil {
 		log.Error().
 			Err(err).
 			Str("datasetName", datasetName).
@@ -230,53 +227,38 @@ func (si SurveyImportHandler) parseNISurveyFile(tmpfile, datasetName string, mon
 		return
 	}
 
-	surveyVo := types.SurveyVO{
-		Audit:   &si.Audit,
-		Records: data,
-		Columns: columns,
-		Status:  si.fileUploads,
+	if err := database.PersistVariableDefinitions(spssData.Header, types.NISource); err != nil {
+		log.Error().
+			Err(err).
+			Str("datasetName", datasetName).
+			Msg("Cannot persist variable definitions (NI)")
+		si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist variable definitions (NI): %s", err))
+		return
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(3)
+	if err := database.PersistSavValueLabels(spssData.Labels, types.NISource); err != nil {
+		log.Error().
+			Err(err).
+			Str("datasetName", datasetName).
+			Msg("Cannot persist sav value labels (NI)")
+		si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist sav value labels (NI): %s", err))
+		return
+	}
 
-	go func() {
-		defer wg.Done()
-		if err := database.PersistSurvey(surveyVo); err != nil {
-			log.Error().
-				Err(err).
-				Str("datasetName", datasetName).
-				Msg("Cannot persist NI survey data")
-			si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist NI survey data: %s", err))
-			return
-		}
-	}()
+	surveyVo := types.SurveyVO{
+		Audit:  &si.Audit,
+		Status: si.fileUploads,
+		Data:   spssData,
+	}
 
-	go func() {
-		defer wg.Done()
-		if err := database.PersistSavValueLabels(spssData.Labels, types.NISource); err != nil {
-			log.Error().
-				Err(err).
-				Str("datasetName", datasetName).
-				Msg("Cannot persist sav value labels (NI)")
-			si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist sav value labels (NI): %s", err))
-			return
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		if err := database.PersistVariableDefinitions(spssData.Header, types.NISource); err != nil {
-			log.Error().
-				Err(err).
-				Str("datasetName", datasetName).
-				Msg("Cannot persist variable definitions (NI)")
-			si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist variable definitions (NI): %s", err))
-			return
-		}
-	}()
-
-	wg.Wait()
+	if err := database.PersistSurvey(surveyVo); err != nil {
+		log.Error().
+			Err(err).
+			Str("datasetName", datasetName).
+			Msg("Cannot persist NI survey data")
+		si.fileUploads.SetUploadError(fmt.Sprintf("cannot persist NI survey data: %s", err))
+		return
+	}
 
 	log.Debug().
 		Str("datasetName", datasetName).

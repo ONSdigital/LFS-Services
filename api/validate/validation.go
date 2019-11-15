@@ -3,6 +3,7 @@ package validate
 import (
 	"fmt"
 	"math"
+	"services/types"
 	"strconv"
 )
 
@@ -25,35 +26,32 @@ type Validation interface {
 	Validate(period, year int) (ValidationResponse, error)
 }
 
+func (v Validator) findRowIndex(colName string) (int, bool) {
+	for i, col := range v.data.Header {
+		if col.VariableName == colName {
+			return i, true
+		}
+	}
+	return 0, false
+}
+
 /*
 Base validation. To use this, use composition in concrete structs
 */
 type Validator struct {
-	headers []string
-	rows    [][]string
+	data *types.SavImportData
 }
 
 func (v Validator) GetRowsAsDouble(colName string) ([]float64, error) {
 	var res []float64
-	headers := v.headers
-	rows := v.rows
 
-	findRow := func() (int, bool) {
-		for i, col := range headers {
-			if col == colName {
-				return i, true
-			}
-		}
-		return 0, false
-	}
-
-	a, ok := findRow()
+	a, ok := v.findRowIndex(colName)
 	if !ok {
 		return nil, fmt.Errorf("cannot find column %s", colName)
 	}
 
-	for _, b := range rows {
-		elem := b[a]
+	for _, b := range v.data.Rows {
+		elem := b.RowData[a]
 		val, err := strconv.ParseFloat(elem, 64)
 		if err != nil {
 			return nil, err
@@ -67,22 +65,13 @@ func (v Validator) GetRowsAsDouble(colName string) ([]float64, error) {
 func (v Validator) GetRowsAsString(colName string) ([]string, error) {
 	var res []string
 
-	findRow := func() (int, bool) {
-		for i, col := range v.headers {
-			if col == colName {
-				return i, true
-			}
-		}
-		return 0, false
-	}
-
-	a, ok := findRow()
+	a, ok := v.findRowIndex(colName)
 	if !ok {
 		return nil, fmt.Errorf("cannot find column %s", colName)
 	}
 
-	for _, b := range v.rows {
-		res = append(res, b[a])
+	for _, b := range v.data.Rows {
+		res = append(res, b.RowData[a])
 	}
 
 	return res, nil

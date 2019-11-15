@@ -7,11 +7,10 @@ import (
 )
 
 type Filter interface {
-	DropColumn(name string) bool
-	AddVariables(columns []string, data [][]string) ([]types.Column, error)
-	GetAudit() *types.Audit
-	SkipRowsFilter(header []string, data [][]string) ([][]string, error)
-	RenameColumns(column string) (string, bool)
+	DropColumn(string) bool
+	AddVariables(*types.SavImportData) error
+	SkipRowsFilter(*types.SavImportData) error
+	RenameColumns(string) (string, bool)
 }
 
 var dropColumns = conf.Config.DropColumns.Survey
@@ -29,13 +28,7 @@ func init() {
 	}
 }
 
-type BaseFilter struct {
-	Audit *types.Audit
-}
-
-func (bf BaseFilter) GetAudit() *types.Audit {
-	return bf.Audit
-}
+type BaseFilter struct{}
 
 /*
 Generic drop columns functionality - based on the name of columns to drop in the configuration file
@@ -43,10 +36,7 @@ Generic drop columns functionality - based on the name of columns to drop in the
 func (bf BaseFilter) DropColumn(name string) bool {
 	for _, j := range dropColumns.ColumnNames {
 		if j == name {
-			log.Debug().
-				Str("columnName", name).
-				Msg("Dropping column")
-			bf.Audit.NumVarLoaded = bf.Audit.NumVarLoaded - 1
+			log.Debug().Str("columnName", name).Msg("Dropping column")
 			return true
 		}
 	}
@@ -59,10 +49,7 @@ Generic rename columns functionality - based on the name of columns to drop in t
 func (bf BaseFilter) RenameColumns(column string) (string, bool) {
 	item, ok := renameColumns[column]
 	if ok {
-		log.Debug().
-			Str("from", column).
-			Str("to", item).
-			Msg("Renaming column")
+		log.Debug().Str("from", column).Str("to", item).Msg("Renaming column")
 		return item, true
 	}
 	return "", false

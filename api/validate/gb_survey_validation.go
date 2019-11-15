@@ -2,6 +2,7 @@ package validate
 
 import (
 	"fmt"
+	"services/types"
 	"time"
 )
 
@@ -11,8 +12,8 @@ type GBSurveyValidation struct {
 	Validator
 }
 
-func NewGBSurveyValidation(headers []string, rows [][]string) GBSurveyValidation {
-	return GBSurveyValidation{Validator: Validator{headers, rows}}
+func NewGBSurveyValidation(data *types.SavImportData) GBSurveyValidation {
+	return GBSurveyValidation{Validator: Validator{data}}
 }
 
 func (sf GBSurveyValidation) Validate(period, year int) (ValidationResponse, error) {

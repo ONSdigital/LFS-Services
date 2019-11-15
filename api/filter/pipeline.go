@@ -3,118 +3,112 @@ package filter
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"reflect"
 	"services/api/validate"
-	"services/importdata/sav"
 	"services/types"
 	"strings"
 )
 
-// TODO: Refactor to use SavImportData only
-
 type Pipeline struct {
-	data       types.SavImportData
+	data       *types.SavImportData
 	validation validate.Validation
 	filter     Filter
-	StructType interface{}
 	audit      *types.Audit
 	surveyType types.FileOrigin
 }
 
-func NewNIPipeLine(data types.SavImportData, audit *types.Audit) Pipeline {
+func NewNIPipeLine(data *types.SavImportData, audit *types.Audit) Pipeline {
 
 	return Pipeline{
 		data:       data,
 		validation: nil,
-		filter:     NewNISurveyFilter(audit),
-		StructType: types.NISurveyInput{},
+		filter:     NewNISurveyFilter(),
 		audit:      audit,
 		surveyType: types.NI,
 	}
 }
 
-func NewGBPipeLine(data types.SavImportData, audit *types.Audit) Pipeline {
+func NewGBPipeLine(data *types.SavImportData, audit *types.Audit) Pipeline {
 	return Pipeline{
 		data:       data,
 		validation: nil,
-		filter:     NewGBSurveyFilter(audit),
-		StructType: types.GBSurveyInput{},
+		filter:     NewGBSurveyFilter(),
 		audit:      audit,
 		surveyType: types.GB,
 	}
 }
 
-func (p Pipeline) RunPipeline() ([]types.Column, [][]string, error) {
+func (p Pipeline) RunPipeline() error {
 	var period int
-	var headers []string
-	var body [][]string
 
 	if p.surveyType == types.GB {
 		period = p.audit.Week
-		headers, body = sav.SPSSDatatoArray(p.data)
-		p.validation = validate.NewGBSurveyValidation(headers, body)
+		p.validation = validate.NewGBSurveyValidation(p.data)
 	} else {
-		headers, body = sav.SPSSDatatoArray(p.data)
-		p.validation = validate.NewNISurveyValidation(headers, body)
+		p.validation = validate.NewNISurveyValidation(p.data)
 		period = p.audit.Month
 	}
 
 	response, err := p.validation.Validate(period, p.audit.Year)
 
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
 	if response.ValidationResult == validate.ValidationFailed {
-		return nil, nil, fmt.Errorf(response.ErrorMessage)
+		return fmt.Errorf(response.ErrorMessage)
 	}
 
-	// Skip rows
-	data, err := p.filter.SkipRowsFilter(headers, body)
-	if err != nil {
-		return nil, nil, err
+	// Skip rows filter
+	if err := p.filter.SkipRowsFilter(p.data); err != nil {
+		return err
 	}
 
 	// add variables
-	newColumns, err := p.filter.AddVariables(headers, data)
+	err = p.filter.AddVariables(p.data)
 	if err != nil {
-		log.Error().
-			Err(err)
-		return nil, nil, err
+		log.Error().Err(err)
+		return err
 	}
 
 	// rename variables
-	for k, v := range headers {
-		to, ok := p.filter.RenameColumns(v)
+	for k, v := range p.data.Header {
+		to, ok := p.filter.RenameColumns(v.VariableName)
 		if ok {
-			headers[k] = to
+			p.data.Header[k].VariableName = to
 		}
 	}
 
-	t1 := reflect.TypeOf(p.StructType)
-	columns := make([]types.Column, len(headers))
+	// drop unwanted columns
+	headers := make([]types.Header, 0, p.data.HeaderCount)
+	rowsToDrop := make(map[int]bool, p.data.HeaderCount)
 
-	colNo := 1
-	for i := 0; i < t1.NumField(); i++ {
-		a := t1.Field(i)
-		col := types.Column{}
-		// skip columns that are marked as being dropped
-		if p.filter.DropColumn(strings.ToUpper(a.Name)) {
-			col.Skip = true
-			columns[i] = col
+	// mark columns of rows to drop
+	for i, j := range p.data.Header {
+		if p.filter.DropColumn(strings.ToUpper(j.VariableName)) {
+			rowsToDrop[i] = true
 			continue
 		}
-
-		col.Skip = false
-		col.Kind = a.Type.Kind()
-		col.Name = headers[i]
-		col.ColNo = colNo
-		col.Label = p.data.Header[i].LabelName
-		colNo++
-		columns[i] = col
+		headers = append(headers, j)
+		rowsToDrop[i] = false
 	}
 
-	columns = append(columns, newColumns...)
+	// now drop them
+	for i, j := range p.data.Rows {
+		newRowData := make([]string, 0, p.data.HeaderCount)
+		for col, z := range j.RowData {
+			if rowsToDrop[col] {
+				continue
+			}
+			newRowData = append(newRowData, z)
+		}
+		p.data.Rows[i].RowData = newRowData
+	}
 
-	return columns, data, nil
+	p.data.Header = headers
+	p.data.HeaderCount = len(headers)
+
+	p.audit.NumObLoaded = p.data.RowCount
+	p.audit.NumVarLoaded = p.data.HeaderCount
+
+	return nil
 }
