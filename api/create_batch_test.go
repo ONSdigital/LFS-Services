@@ -228,9 +228,7 @@ func TestAnnual2017AlreadyExistsXFail(t *testing.T) {
 	tearDown(t)
 	setupMonthlyTables(t, 1, 12, 2017, 4)  // Jan-Dec 2017 status 4
 	setupQuarterlyTables(t, 1, 4, 2017, 4) // Q1-Q4 2017 status 4
-	// TODO: SET UP ANNUAL TABLE
-	setupAnnualTables(t, 2017, 4) // Q1-Q4 2017 status 4
-	// TODO: SET UP ANNUAL TABLE
+	setupAnnualTables(t, 2017, 4)          // Q1-Q4 2017 status 4
 	assertAnnualStatusCodeEqual(t, &tc)
 }
 
@@ -289,6 +287,25 @@ func TestAnnualValidQuarterlyBatchesXFail(t *testing.T) {
 	assertAnnualStatusCodeEqual(t, &tc)
 }
 
+func TestFinalTearDown(t *testing.T) {
+	tearDown(t)
+}
+
+func countRows(t *testing.T, tableName string) int {
+	// Establish DB connection
+	dbase, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	count, err := dbase.CountRows(tableName)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	return count
+}
+
 func assertMonthlyStatusCodeEqual(t *testing.T, tc *testCase) {
 	r := httptest.NewRequest("POST", "/batches/monthly/", nil)
 	w := httptest.NewRecorder()
@@ -299,6 +316,11 @@ func assertMonthlyStatusCodeEqual(t *testing.T, tc *testCase) {
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\nERROR: %s", w.Body.String())
 	}
+
+	// Database Updated
+	if tc.expectedCode == 200 {
+		assert.Equal(t, 1, countRows(t, "monthly_batch"))
+	}
 }
 
 func assertQuarterlyStatusCodeEqual(t *testing.T, tc *testCase) {
@@ -308,8 +330,14 @@ func assertQuarterlyStatusCodeEqual(t *testing.T, tc *testCase) {
 
 	BatchHandler{}.CreateQuarterlyBatchHandler(w, r)
 
+	// Status Code
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\nERROR: %s", w.Body.String())
+	}
+
+	// Database Updated
+	if tc.expectedCode == 200 {
+		assert.Equal(t, 1, countRows(t, "quarterly_batch"))
 	}
 }
 
@@ -322,6 +350,11 @@ func assertAnnualStatusCodeEqual(t *testing.T, tc *testCase) {
 
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\nERROR: %s", w.Body.String())
+	}
+
+	// Database Updated
+	if tc.expectedCode == 200 {
+		assert.Equal(t, 1, countRows(t, "annual_batch"))
 	}
 }
 
