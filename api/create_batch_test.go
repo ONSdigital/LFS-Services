@@ -315,8 +315,7 @@ func assertCreateMonthlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	actual := countRows(t, "monthly_batch")
 	if tc.expectedCode == 200 {
 		if !assert.Equal(t, 1, actual) {
-			t.Fatalf("\n\n>>>>> Expected %v row/s in monthly_batch. Actual number of row/s updated were %v",
-				1,
+			t.Fatalf("\n\n>>>>> Expected 1 row in monthly_batch. Actual number of row/s updated were %v",
 				actual)
 		}
 		t.Log(">>>>> PASS: monthly_batch table was updated as expected")

@@ -170,14 +170,17 @@ func assertMonthlyBatchInfoStatusCodeEqual(t *testing.T, tc *testCase) {
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
+	t.Log(">>>>> PASS: Response code from HandleMonthlyBatchIdsRequest() received as expected")
 
 	// Assert number of batches returned in JSON
+	actual := bytes.Count(w.Body.Bytes(), []byte("{"))
 	if w.Code == 200 {
-		if !assert.Equal(t, bytes.Count(w.Body.Bytes(), []byte("{")), tc.expectedItems) {
+		if !assert.Equal(t, actual, tc.expectedItems) {
 			t.Fatalf("\n\n>>>>> Expected %v batches. Actual number of retrieved batches were %v",
 				tc.expectedItems,
-				bytes.Count(w.Body.Bytes(), []byte("{")))
+				actual)
 		}
+		t.Log(">>>>> PASS: Response returned correct number of batches")
 	}
 
 	t.Log("\n")
@@ -194,6 +197,7 @@ func assertQuarterlyBatchInfoStatusCodeEqual(t *testing.T, tc *testCase) {
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
+	t.Log(">>>>> PASS: Response code from HandleQuarterlyBatchIdsRequest() received as expected")
 
 	t.Log("\n")
 
