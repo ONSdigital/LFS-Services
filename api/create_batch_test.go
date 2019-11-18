@@ -4,17 +4,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"net/http/httptest"
-	"services/config"
-	"services/db"
-	"services/types"
 	"testing"
 )
-
-type testCase struct {
-	year         string
-	period       string
-	expectedCode int
-}
 
 func TestMonthlyMay2014Success(t *testing.T) {
 	var tc = testCase{
@@ -23,7 +14,7 @@ func TestMonthlyMay2014Success(t *testing.T) {
 		expectedCode: 200,
 	}
 	tearDown(t)
-	assertMonthlyStatusCodeEqual(t, &tc)
+	assertCreateMonthlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestMonthlyJan2016Success(t *testing.T) {
@@ -33,7 +24,7 @@ func TestMonthlyJan2016Success(t *testing.T) {
 		expectedCode: 200,
 	}
 	tearDown(t)
-	assertMonthlyStatusCodeEqual(t, &tc)
+	assertCreateMonthlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestMonthlyDec2018Success(t *testing.T) {
@@ -43,7 +34,7 @@ func TestMonthlyDec2018Success(t *testing.T) {
 		expectedCode: 200,
 	}
 	tearDown(t)
-	assertMonthlyStatusCodeEqual(t, &tc)
+	assertCreateMonthlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestMonthlyAlreadyExistsXFail(t *testing.T) {
@@ -55,7 +46,7 @@ func TestMonthlyAlreadyExistsXFail(t *testing.T) {
 	tearDown(t)
 	setupMonthlyTables(t, 1, 12, 2018, 0)
 
-	assertMonthlyStatusCodeEqual(t, &tc)
+	assertCreateMonthlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestMonthlyInvalidMonthIntXFail(t *testing.T) {
@@ -65,7 +56,7 @@ func TestMonthlyInvalidMonthIntXFail(t *testing.T) {
 		expectedCode: 400,
 	}
 	tearDown(t)
-	assertMonthlyStatusCodeEqual(t, &tc)
+	assertCreateMonthlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestMonthlyInvalidMonthStringXFail(t *testing.T) {
@@ -75,7 +66,7 @@ func TestMonthlyInvalidMonthStringXFail(t *testing.T) {
 		expectedCode: 400,
 	}
 	tearDown(t)
-	assertMonthlyStatusCodeEqual(t, &tc)
+	assertCreateMonthlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestMonthlyInvalidYearStringXFail(t *testing.T) {
@@ -85,7 +76,7 @@ func TestMonthlyInvalidYearStringXFail(t *testing.T) {
 		expectedCode: 400,
 	}
 	tearDown(t)
-	assertMonthlyStatusCodeEqual(t, &tc)
+	assertCreateMonthlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestQuarterlyQ42017Success(t *testing.T) {
@@ -96,7 +87,7 @@ func TestQuarterlyQ42017Success(t *testing.T) {
 	}
 	tearDown(t)
 	setupMonthlyTables(t, 10, 3, 2017, 4) // Oct-Dec 2017 status 4
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestQuarterlyQ32017Success(t *testing.T) {
@@ -107,7 +98,7 @@ func TestQuarterlyQ32017Success(t *testing.T) {
 	}
 	tearDown(t)
 	setupMonthlyTables(t, 7, 3, 2017, 4)
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestQuarterlyQ22017Success(t *testing.T) {
@@ -118,7 +109,7 @@ func TestQuarterlyQ22017Success(t *testing.T) {
 	}
 	tearDown(t)
 	setupMonthlyTables(t, 4, 3, 2017, 4) // Jan-Jun 2017
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 
 }
 
@@ -130,7 +121,7 @@ func TestQuarterlyQ12017Success(t *testing.T) {
 	}
 	tearDown(t)
 	setupMonthlyTables(t, 1, 3, 2017, 4)
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestQuarterlyQ42017XFail(t *testing.T) {
@@ -143,7 +134,7 @@ func TestQuarterlyQ42017XFail(t *testing.T) {
 	tearDown(t)
 	setupMonthlyTables(t, 1, 3, 2017, 4)
 	setupQuarterlyTables(t, 1, 1, 2017, 4)
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestQuarterlyQ42010XFail(t *testing.T) {
@@ -154,7 +145,7 @@ func TestQuarterlyQ42010XFail(t *testing.T) {
 		expectedCode: 400,
 	}
 	tearDown(t)
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestQuarterlyQ12015XFail(t *testing.T) {
@@ -166,7 +157,7 @@ func TestQuarterlyQ12015XFail(t *testing.T) {
 	}
 	tearDown(t)
 	setupMonthlyTables(t, 1, 2, 2015, 0) // Jan-Feb 2015
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestQuarterlyQ12016XFail(t *testing.T) {
@@ -179,7 +170,7 @@ func TestQuarterlyQ12016XFail(t *testing.T) {
 	tearDown(t)
 	setupMonthlyTables(t, 1, 2, 2016, 4) // Jan-Feb 2016
 	setupMonthlyTables(t, 3, 1, 2016, 0) // Mar 2016
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestQuarterlyInvalidQuarterIntXFail(t *testing.T) {
@@ -188,7 +179,7 @@ func TestQuarterlyInvalidQuarterIntXFail(t *testing.T) {
 		period:       "4",
 		expectedCode: 400,
 	}
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestQuarterlyInvalidQuarterXFail(t *testing.T) {
@@ -197,7 +188,7 @@ func TestQuarterlyInvalidQuarterXFail(t *testing.T) {
 		period:       "Q5",
 		expectedCode: 400,
 	}
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestQuarterlyInvalidYearXFail(t *testing.T) {
@@ -206,7 +197,7 @@ func TestQuarterlyInvalidYearXFail(t *testing.T) {
 		period:       "Q4",
 		expectedCode: 400,
 	}
-	assertQuarterlyStatusCodeEqual(t, &tc)
+	assertCreateQuarterlyBatchStatusCodeEqual(t, &tc)
 }
 
 func TestAnnual2017Success(t *testing.T) {
@@ -217,7 +208,7 @@ func TestAnnual2017Success(t *testing.T) {
 	tearDown(t)
 	setupMonthlyTables(t, 1, 12, 2017, 4)  // Jan-Dec 2017 status 4
 	setupQuarterlyTables(t, 1, 4, 2017, 4) // Q1-Q4 2017 status 4
-	assertAnnualStatusCodeEqual(t, &tc)
+	assertCreateAnnualBatchStatusCodeEqual(t, &tc)
 }
 
 func TestAnnual2017AlreadyExistsXFail(t *testing.T) {
@@ -228,22 +219,20 @@ func TestAnnual2017AlreadyExistsXFail(t *testing.T) {
 	tearDown(t)
 	setupMonthlyTables(t, 1, 12, 2017, 4)  // Jan-Dec 2017 status 4
 	setupQuarterlyTables(t, 1, 4, 2017, 4) // Q1-Q4 2017 status 4
-	// TODO: SET UP ANNUAL TABLE
-	setupAnnualTables(t, 2017, 4) // Q1-Q4 2017 status 4
-	// TODO: SET UP ANNUAL TABLE
-	assertAnnualStatusCodeEqual(t, &tc)
+	setupAnnualTables(t, 2017, 4)          // Q1-Q4 2017 status 4
+	assertCreateAnnualBatchStatusCodeEqual(t, &tc)
 }
 
-func TestAnnualZeroMonhlyBatchesXFail(t *testing.T) {
+func TestAnnualZeroMonthlyBatchesXFail(t *testing.T) {
 	var tc = testCase{
 		year:         "2014",
 		expectedCode: 400,
 	}
 	tearDown(t)
-	assertAnnualStatusCodeEqual(t, &tc)
+	assertCreateAnnualBatchStatusCodeEqual(t, &tc)
 }
 
-func TestAnnualMonhlyBatchesXFail(t *testing.T) {
+func TestAnnualMonthlyBatchesXFail(t *testing.T) {
 	// 12 monthly batches required
 	var tc = testCase{
 		year:         "2014",
@@ -251,10 +240,10 @@ func TestAnnualMonhlyBatchesXFail(t *testing.T) {
 	}
 	tearDown(t)
 	setupMonthlyTables(t, 1, 5, 2014, 0) // Jan-May 2014
-	assertAnnualStatusCodeEqual(t, &tc)
+	assertCreateAnnualBatchStatusCodeEqual(t, &tc)
 }
 
-func TestAnnualValidMonhlyBatchesXFail(t *testing.T) {
+func TestAnnualValidMonthlyBatchesXFail(t *testing.T) {
 	// 12 VALID monthly batches required
 	var tc = testCase{
 		year:         "2014",
@@ -262,7 +251,7 @@ func TestAnnualValidMonhlyBatchesXFail(t *testing.T) {
 	}
 	tearDown(t)
 	setupMonthlyTables(t, 1, 5, 2014, 4) // Jan-May 2014
-	assertAnnualStatusCodeEqual(t, &tc)
+	assertCreateAnnualBatchStatusCodeEqual(t, &tc)
 }
 
 func TestAnnualQuarterlyBatchesXFail(t *testing.T) {
@@ -273,7 +262,7 @@ func TestAnnualQuarterlyBatchesXFail(t *testing.T) {
 	}
 	tearDown(t)
 	setupMonthlyTables(t, 1, 12, 2014, 4) // Jan-Dec 2014
-	assertAnnualStatusCodeEqual(t, &tc)
+	assertCreateAnnualBatchStatusCodeEqual(t, &tc)
 }
 
 func TestAnnualValidQuarterlyBatchesXFail(t *testing.T) {
@@ -286,10 +275,10 @@ func TestAnnualValidQuarterlyBatchesXFail(t *testing.T) {
 	setupMonthlyTables(t, 1, 12, 2014, 4)  // Jan-Dec 2014
 	setupQuarterlyTables(t, 1, 2, 2014, 4) // Q1-Q2 2014 - complete
 	setupQuarterlyTables(t, 3, 2, 2014, 0) // Q3-Q4 2014 - open
-	assertAnnualStatusCodeEqual(t, &tc)
+	assertCreateAnnualBatchStatusCodeEqual(t, &tc)
 }
 
-func assertMonthlyStatusCodeEqual(t *testing.T, tc *testCase) {
+func assertCreateMonthlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	r := httptest.NewRequest("POST", "/batches/monthly/", nil)
 	w := httptest.NewRecorder()
 	r = mux.SetURLVars(r, map[string]string{"year": tc.year, "month": tc.period})
@@ -299,9 +288,11 @@ func assertMonthlyStatusCodeEqual(t *testing.T, tc *testCase) {
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\nERROR: %s", w.Body.String())
 	}
+
+	t.Log("\n")
 }
 
-func assertQuarterlyStatusCodeEqual(t *testing.T, tc *testCase) {
+func assertCreateQuarterlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	r := httptest.NewRequest("POST", "/batches/quarterly/", nil)
 	w := httptest.NewRecorder()
 	r = mux.SetURLVars(r, map[string]string{"year": tc.year, "quarter": tc.period})
@@ -311,9 +302,11 @@ func assertQuarterlyStatusCodeEqual(t *testing.T, tc *testCase) {
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\nERROR: %s", w.Body.String())
 	}
+
+	t.Log("\n")
 }
 
-func assertAnnualStatusCodeEqual(t *testing.T, tc *testCase) {
+func assertCreateAnnualBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	r := httptest.NewRequest("POST", "/batches/annual/", nil)
 	w := httptest.NewRecorder()
 	r = mux.SetURLVars(r, map[string]string{"year": tc.year})
@@ -323,106 +316,6 @@ func assertAnnualStatusCodeEqual(t *testing.T, tc *testCase) {
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\nERROR: %s", w.Body.String())
 	}
-}
 
-func tearDown(t *testing.T) {
-	// Establish DB connection
-	dbase, err := db.GetDefaultPersistenceImpl()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	gbBatchTable := config.Config.Database.GbBatchTable
-	niBatchTable := config.Config.Database.NiBatchTable
-	batchTable := config.Config.Database.MonthlyBatchTable
-	quarterlyBatchTable := config.Config.Database.QuarterlyBatchTable
-	annualBatchTable := config.Config.Database.AnnualBatchTable
-
-	tables := []string{gbBatchTable, niBatchTable, batchTable, quarterlyBatchTable, annualBatchTable}
-
-	// For each table: confirm configuration is set and then cleanse
-	for _, table := range tables {
-		if table == "" {
-			t.Fatal("table configuration not set")
-		}
-		if err := dbase.DeleteFrom(table); err != nil {
-			t.Fatalf(err.Error())
-		}
-	}
-}
-
-func setupMonthlyTables(t *testing.T, month, count, year, status int) {
-	// Establish DB connection
-	dbase, err := db.GetDefaultPersistenceImpl()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	batchTable := config.Config.Database.MonthlyBatchTable
-	if batchTable == "" {
-		t.Fatal("monthly_batch table configuration not set")
-	}
-	// Insert a load of mock data
-	month -= 1
-	for c := 1; c <= count; c++ {
-		batch := types.MonthlyBatch{
-			Year:        year,
-			Month:       month + c,
-			Status:      status,
-			Description: "Mock data for Testing",
-		}
-		if err := dbase.CreateMonthlyBatch(batch); err != nil {
-			t.Fatalf(err.Error())
-		}
-	}
-}
-
-func setupQuarterlyTables(t *testing.T, quarter, count, year, status int) {
-	// Establish DB connection
-	dbase, err := db.GetDefaultPersistenceImpl()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	quarterlyTable := config.Config.Database.QuarterlyBatchTable
-	if quarterlyTable == "" {
-		t.Fatal("quarterly_batch table configuration not set")
-	}
-
-	// Insert a load of mock data and set status to 4
-	quarter -= 1
-	for c := 1; c <= count; c++ {
-		batch := types.QuarterlyBatch{
-			Quarter:     quarter + c,
-			Year:        year,
-			Status:      status,
-			Description: "Mock data for Testing",
-		}
-		if err := dbase.CreateQuarterlyBatch(batch); err != nil {
-			t.Fatalf(err.Error())
-		}
-	}
-}
-
-func setupAnnualTables(t *testing.T, year, status int) {
-	// Establish DB connection
-	dbase, err := db.GetDefaultPersistenceImpl()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	annualTable := config.Config.Database.AnnualBatchTable
-	if annualTable == "" {
-		t.Fatal("annual_batch table configuration not set")
-	}
-
-	// Insert a load of mock data and set status to 4
-	batch := types.AnnualBatch{
-		Year:        year,
-		Status:      status,
-		Description: "Mock data for Testing",
-	}
-	if err := dbase.CreateAnnualBatch(batch); err != nil {
-		t.Fatalf(err.Error())
-	}
+	t.Log("\n")
 }
