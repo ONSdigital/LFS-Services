@@ -10,8 +10,9 @@ drop table if exists monthly_batch;
 drop table if exists survey_audit;
 drop table if exists status_values;
 drop table if exists definitions;
-drop table if exists variable_definitions;
 drop table if exists column_labels;
+drop view if exists value_labels_v;
+drop table if exists variable_definitions;
 drop table if exists value_labels;
 drop type if exists spss_types;
 
@@ -256,7 +257,7 @@ create table value_labels
     id           integer generated always as identity primary key,
     name         text       not null,
     label        text       not null,
-    value        text       not null,
+    value        int8       not null,
     source       varchar(2) not null,
     type         spss_types not null default 'string',
     last_updated timestamp           default NOW()
@@ -267,6 +268,7 @@ create index labels_name_idx
 
 alter table value_labels
     owner to lfs;
+
 
 create table variable_definitions
 (
@@ -293,4 +295,14 @@ create index definitions_name_idx
 alter table variable_definitions
     owner to lfs;
 
-
+create view value_labels_v as
+select vd.variable,
+       vd.label label_name,
+       vl.source,
+       vl.value label_value,
+       vl.label label_description,
+       vl.last_updated
+from variable_definitions vd,
+     value_labels vl
+where vl.name = vd.label
+order by vd.variable, vl.label, vl.value;

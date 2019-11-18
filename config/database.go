@@ -31,4 +31,5 @@ type DatabaseConfiguration struct {
 	UserTable           string
 	DefinitionsTable    string
 	ValueLabelsTable    string
+	ValueLabelsView     string
 }
