@@ -309,10 +309,17 @@ func assertCreateMonthlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
+	t.Log(">>>>> PASS: Response code from CreateMonthlyBatchHandler() received as expected")
 
 	// Database Updated
+	actual := countRows(t, "monthly_batch")
 	if tc.expectedCode == 200 {
-		assert.Equal(t, 1, countRows(t, "monthly_batch"))
+		if !assert.Equal(t, 1, actual) {
+			t.Fatalf("\n\n>>>>> Expected %v row/s in monthly_batch. Actual number of row/s updated were %v",
+				1,
+				actual)
+		}
+		t.Log(">>>>> PASS: monthly_batch table was updated as expected")
 	}
 
 	t.Log("\n")
@@ -329,10 +336,15 @@ func assertCreateQuarterlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
+	t.Log(">>>>> PASS: Response code from CreateQuarterlyBatchHandler() received as expected")
 
 	// Database Updated
+	actual := countRows(t, "quarterly_batch")
 	if tc.expectedCode == 200 {
-		assert.Equal(t, 1, countRows(t, "quarterly_batch"))
+		if !assert.Equal(t, 1, actual) {
+			t.Fatalf("\n\n>>>>> Expected 1 row in quarterly_batch. Actual number of row/s updated were %v", actual)
+		}
+		t.Log(">>>>> PASS: quarterly_batch table was updated as expected")
 	}
 
 	t.Log("\n")
@@ -349,10 +361,15 @@ func assertCreateAnnualBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
+	t.Log(">>>>> PASS: Response code from CreateAnnualBatchHandler() received as expected")
 
 	// Database Updated
+	actual := countRows(t, "annual_batch")
 	if tc.expectedCode == 200 {
-		assert.Equal(t, 1, countRows(t, "annual_batch"))
+		if !assert.Equal(t, 1, actual) {
+			t.Fatalf("\n\n>>>>> Expected 1 row in annual_batch. Actual number of row/s updated were %v", actual)
+		}
+		t.Log(">>>>> PASS: annual_batch table was updated as expected")
 	}
 
 	t.Log("\n")
