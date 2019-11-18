@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"net/http/httptest"
+	"services/db"
 	"testing"
 )
 
@@ -297,7 +298,6 @@ func countRows(t *testing.T, tableName string) int {
 	return count
 }
 
-func assertMonthlyStatusCodeEqual(t *testing.T, tc *testCase) {
 func assertCreateMonthlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	r := httptest.NewRequest("POST", "/batches/monthly/", nil)
 	w := httptest.NewRecorder()
@@ -354,7 +354,6 @@ func assertCreateAnnualBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	if tc.expectedCode == 200 {
 		assert.Equal(t, 1, countRows(t, "annual_batch"))
 	}
-}
 
 	t.Log("\n")
 }
