@@ -9,9 +9,6 @@ import (
 )
 
 var batchTable string
-
-//var gbBatchTable string
-//var niBatchTable string
 var quarterlyBatchTable string
 var annualBatchTable string
 
@@ -20,17 +17,6 @@ func init() {
 	if batchTable == "" {
 		panic("monthly batch table configuration not set")
 	}
-
-	// TODO: Ask Matthew - does the dashboard need to display GB/NI or just monthly?
-	//gbBatchTable = config.Config.Database.GbBatchTable
-	//if gbBatchTable == "" {
-	//	panic("gb batch table configuration not set")
-	//}
-	//
-	//niBatchTable = config.Config.Database.NiBatchTable
-	//if niBatchTable == "" {
-	//	panic("ni batch table configuration not set")
-	//}
 
 	quarterlyBatchTable = config.Config.Database.QuarterlyBatchTable
 	if quarterlyBatchTable == "" {
@@ -143,17 +129,16 @@ func assertDashboardTest(t *testing.T, tc *testCase) {
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
+	t.Log(">>>>> PASS: Response code from HandleDashboardRequest() received as expected")
 
 	// Assert number of batches returned in JSON
-	if w.Code == 200 {
-		actual := bytes.Count(w.Body.Bytes(), []byte("{"))
-		if !assert.Equal(t, actual, tc.expectedItems) {
-			t.Fatalf("\n\n>>>>> Expected %v batches. Actual number of retrieved batches were %v",
-				tc.expectedItems,
-				actual)
-		}
+	actual := bytes.Count(w.Body.Bytes(), []byte("{"))
+	if !assert.Equal(t, actual, tc.expectedItems) {
+		t.Fatalf("\n\n>>>>> Expected %v batches. Actual number of retrieved batches were %v",
+			tc.expectedItems,
+			actual)
 	}
-
+	t.Log(">>>>> PASS: Response returned correct number of batches")
 	t.Log("\n")
 
 }
