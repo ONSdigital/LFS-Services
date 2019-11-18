@@ -18,3 +18,14 @@ func (s Postgres) DeleteFrom(table string) error {
 
 	return err
 }
+
+func (s Postgres) CountRows(table string) (int, error) {
+	var count int
+
+	row, _ := s.DB.QueryRow("SELECT COUNT(*) FROM " + table)
+	err := row.Scan(&count)
+	if err != nil {
+		return -1, err
+	}
+	return count, nil
+}

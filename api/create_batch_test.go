@@ -278,6 +278,26 @@ func TestAnnualValidQuarterlyBatchesXFail(t *testing.T) {
 	assertCreateAnnualBatchStatusCodeEqual(t, &tc)
 }
 
+func TestFinalTearDown(t *testing.T) {
+	tearDown(t)
+}
+
+func countRows(t *testing.T, tableName string) int {
+	// Establish DB connection
+	dbase, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	count, err := dbase.CountRows(tableName)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	return count
+}
+
+func assertMonthlyStatusCodeEqual(t *testing.T, tc *testCase) {
 func assertCreateMonthlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	r := httptest.NewRequest("POST", "/batches/monthly/", nil)
 	w := httptest.NewRecorder()
@@ -285,8 +305,14 @@ func assertCreateMonthlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 
 	BatchHandler{}.CreateMonthlyBatchHandler(w, r)
 
+	// Status code
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
+	}
+
+	// Database Updated
+	if tc.expectedCode == 200 {
+		assert.Equal(t, 1, countRows(t, "monthly_batch"))
 	}
 
 	t.Log("\n")
@@ -299,8 +325,14 @@ func assertCreateQuarterlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 
 	BatchHandler{}.CreateQuarterlyBatchHandler(w, r)
 
+	// Status Code
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
+	}
+
+	// Database Updated
+	if tc.expectedCode == 200 {
+		assert.Equal(t, 1, countRows(t, "quarterly_batch"))
 	}
 
 	t.Log("\n")
@@ -313,9 +345,16 @@ func assertCreateAnnualBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 
 	BatchHandler{}.CreateAnnualBatchHandler(w, r)
 
+	// Status code
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
 		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
+
+	// Database Updated
+	if tc.expectedCode == 200 {
+		assert.Equal(t, 1, countRows(t, "annual_batch"))
+	}
+}
 
 	t.Log("\n")
 }

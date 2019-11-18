@@ -40,9 +40,9 @@ func (b BatchHandler) CreateMonthlyBatchHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	res := b.generateMonthBatchId(mth, yr, description)
-	if res != nil {
-		ErrorResponse{Status: Error, ErrorMessage: res.Error()}.sendResponse(w, r)
+	err := b.generateMonthBatchId(mth, yr, description)
+	if err != nil {
+		ErrorResponse{Status: Error, ErrorMessage: err.Error()}.sendResponse(w, r)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (b BatchHandler) CreateQuarterlyBatchHandler(w http.ResponseWriter, r *http
 	if res != nil {
 		BadDataResponse{
 			Status:       Error,
-			ErrorMessage: fmt.Sprintf("3 valid months for Q%d, %d required", q, yr),
+			ErrorMessage: fmt.Sprintf(qErr.Error()),
 			Result:       res,
 		}.sendResponse(w, r)
 		return
@@ -114,7 +114,11 @@ func (b BatchHandler) CreateAnnualBatchHandler(w http.ResponseWriter, r *http.Re
 	// Do
 	res, aErr := b.generateYearBatchId(yr, description)
 	if res != nil {
-		BadDataResponse{}.sendResponse(w, r)
+		BadDataResponse{
+			Status:       Error,
+			ErrorMessage: fmt.Sprintf("12 valid months for %d required", yr),
+			Result:       res,
+		}.sendResponse(w, r)
 		return
 	}
 	if aErr != nil {
@@ -123,6 +127,4 @@ func (b BatchHandler) CreateAnnualBatchHandler(w http.ResponseWriter, r *http.Re
 			ErrorMessage: aErr.Error()}.sendResponse(w, r)
 		return
 	}
-
-	OkayResponse{OK}.sendResponse(w, r)
 }
