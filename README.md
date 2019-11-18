@@ -1,5 +1,5 @@
 
-## LFS Services REST API
+## LFS Imports REST API
 
 Provides the APIs for the LFS services.
 
@@ -37,4 +37,5 @@ overidden by the following environment variables:
 
 ### Dockerfile
 
-Coming soon...
+Two dockerfiles are provided. The first `dockerfile.debug` is for running a delve server in docker and the second, 
+`Dockerfile.dev` is for running the service under docker in development mode. 

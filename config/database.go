@@ -11,7 +11,7 @@ type Pool struct {
 }
 
 type DatabaseConfiguration struct {
-	Server              string `env:"DB_SERVER" envDefault:"localhost"`
+	Server              string `env:"DB_SERVER"`
 	User                string `env:"DB_USER"`
 	Password            string `env:"DB_PASSWORD"`
 	Database            string `env:"DB_DATABASE"`

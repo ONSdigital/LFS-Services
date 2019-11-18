@@ -1,13 +1,13 @@
 package sav
 
-// #cgo windows amd64 CFLAGS: -O3 -IC:/msys64/mingw64/include
-// #cgo windows LDFLAGS: -LC:/msys64/mingw64/libs -lreadstat
+// #include <stdlib.h>
+// #include "sav_reader.h"
+// #cgo windows amd64 CFLAGS: -IC:/msys64/mingw64/include
+// #cgo windows LDFLAGS: -LC:/msys64/mingw64/lib -lreadstat
 // #cgo darwin amd64 CFLAGS: -g
 // #cgo darwin LDFLAGS: -lreadstat
 // #cgo linux amd64 CFLAGS: -I/usr/local/include -g
 // #cgo linux LDFLAGS: -L/usr/local/lib -lreadstat
-// #include <stdlib.h>
-// #include "sav_reader.h"
 import "C"
 
 import (
@@ -169,9 +169,9 @@ func getType(savType int) types.SavType {
 
 var spssReader = DefaultSPSSReader
 
-type SavFileImport struct{}
+type SPSSFileImport struct{}
 
-func (SavFileImport) Import(fileName string, out interface{}) error {
+func (SPSSFileImport) Import(fileName string, out interface{}) error {
 	return spssReader(fileName).Read(out)
 }
 

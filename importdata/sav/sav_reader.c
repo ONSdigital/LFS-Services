@@ -28,7 +28,6 @@ void add_to_row(struct Data *data, const char *value) {
 
     struct Rows *current_row = data->rows[data->row_count - 1];
     int position = current_row->row_position;
-    int row_length = current_row->row_length;
 
     char *var = malloc(strlen(value) + 1);
     strcpy(var, value);

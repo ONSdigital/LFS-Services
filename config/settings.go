@@ -72,7 +72,7 @@ func init() {
 }
 
 func fileName() string {
-	runEnv := os.Getenv("ENV")
+	runEnv := os.Getenv("CONFIG")
 
 	if len(runEnv) == 0 {
 		runEnv = "development"

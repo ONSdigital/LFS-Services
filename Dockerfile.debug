@@ -1,0 +1,51 @@
+FROM golang:alpine3.10 as builder
+
+LABEL stage=builder
+WORKDIR /app
+
+RUN mkdir /user && \
+    echo 'nobody:x:65534:65534:nobody:/:' > /user/passwd && \
+    echo 'nobody:x:65534:' > /user/group
+
+RUN apk add --update alpine-sdk autoconf automake build-base clang cmake \
+    libtool make m4 zlib-dev git gettext && \
+    rm -rf /var/cache/apk/* && \
+    git clone https://github.com/jmcnamara/libxlsxwriter.git && \
+    cd libxlsxwriter && make && make install && \
+    cd .. && rm -rf libxlsxwriter && \
+    wget https://github.com/WizardMac/ReadStat/releases/download/v1.1.0/readstat-1.1.0.tar.gz && \
+    zcat readstat-1.1.0.tar.gz | tar xvf - && \
+    cd readstat-1.1.0 && ./configure && make && make install && mkdir -p /app/src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . /app
+
+RUN go build -gcflags "all=-N -l" -a -installsuffix cgo -o /lfs-imports .
+
+# Compile Delve
+RUN apk add --no-cache git
+RUN go get -u github.com/go-delve/delve/cmd/dlv
+
+# Final stage
+FROM alpine:3.7
+
+# Port 8000 belongs to our application, 40000 belongs to Delve
+EXPOSE 8000 40000
+
+# Allow delve to run on Alpine based containers.
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /
+
+COPY --from=builder /lfs-imports /
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /go/bin/dlv /
+COPY --from=builder /usr/local/lib/libreadstat* /usr/local/lib/
+COPY --from=builder /app/config/config.docker-development.toml /app/config/
+
+ENV CONFIG docker-development
+
+# Run delve
+CMD ["/dlv", "--listen=:40000", "--headless=true", "--api-version=2", "exec", "/lfs-imports"]

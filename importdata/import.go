@@ -17,5 +17,5 @@ func importFile(i Importer) ImportFunction {
 	}
 }
 
-var ImportSavFile = importFile(sav.SavFileImport{})
+var ImportSavFile = importFile(sav.SPSSFileImport{})
 var ImportCSVFile = importFile(csv.ImportCSV{})
