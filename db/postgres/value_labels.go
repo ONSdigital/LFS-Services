@@ -5,15 +5,21 @@ import (
 	"github.com/rs/zerolog/log"
 	"services/config"
 	"services/types"
+	"strconv"
 	"time"
 	"upper.io/db.v3"
 )
 
 var valueLabelsTable string
+var valueLabelsView string
 
 func init() {
 	valueLabelsTable = config.Config.Database.ValueLabelsTable
 	if valueLabelsTable == "" {
+		panic("value labels table configuration not set")
+	}
+	valueLabelsView = config.Config.Database.ValueLabelsView
+	if valueLabelsView == "" {
 		panic("value labels table configuration not set")
 	}
 }
@@ -29,10 +35,10 @@ func (s Postgres) PersistValues(d types.ValueLabelsRow) error {
 	return nil
 }
 
-func (s Postgres) getAllGBValueLabels() ([]types.ValueLabelsRow, error) {
+func (s Postgres) getAllGBValueLabels() ([]types.ValueLabelsView, error) {
 
-	var valueLabels []types.ValueLabelsRow
-	res := s.DB.Collection(valueLabelsTable).Find(db.Cond{"source": string(types.GBSource)})
+	var valueLabels []types.ValueLabelsView
+	res := s.DB.Collection(valueLabelsView).Find(db.Cond{"source": string(types.GBSource)})
 	err := res.All(&valueLabels)
 	if err != nil {
 		return nil, res.Err()
@@ -41,10 +47,10 @@ func (s Postgres) getAllGBValueLabels() ([]types.ValueLabelsRow, error) {
 	return valueLabels, nil
 }
 
-func (s Postgres) getAllNIValueLabels() ([]types.ValueLabelsRow, error) {
+func (s Postgres) getAllNIValueLabels() ([]types.ValueLabelsView, error) {
 
-	var valueLabels []types.ValueLabelsRow
-	res := s.DB.Collection(valueLabelsTable).Find(db.Cond{"source": string(types.NISource)})
+	var valueLabels []types.ValueLabelsView
+	res := s.DB.Collection(valueLabelsView).Find(db.Cond{"source": string(types.NISource)})
 	err := res.All(&valueLabels)
 	if err != nil {
 		return nil, res.Err()
@@ -53,7 +59,19 @@ func (s Postgres) getAllNIValueLabels() ([]types.ValueLabelsRow, error) {
 	return valueLabels, nil
 }
 
-func (s Postgres) GetAllValueLabels() ([]types.ValueLabelsRow, error) {
+func (s Postgres) GetAllValueLabels() ([]types.ValueLabelsView, error) {
+
+	var valueLabels []types.ValueLabelsView
+	res := s.DB.Collection(valueLabelsView).Find()
+	err := res.All(&valueLabels)
+	if err != nil {
+		return nil, res.Err()
+	}
+
+	return valueLabels, nil
+}
+
+func (s Postgres) getAllValueLabelsRow() ([]types.ValueLabelsRow, error) {
 
 	var valueLabels []types.ValueLabelsRow
 	res := s.DB.Collection(valueLabelsTable).Find()
@@ -65,10 +83,10 @@ func (s Postgres) GetAllValueLabels() ([]types.ValueLabelsRow, error) {
 	return valueLabels, nil
 }
 
-func (s Postgres) GetLabelsForValue(value string) ([]types.ValueLabelsRow, error) {
+func (s Postgres) GetLabelsForValue(value string) ([]types.ValueLabelsView, error) {
 
-	var values []types.ValueLabelsRow
-	res := s.DB.Collection(valueLabelsTable).Find(db.Cond{"name": value})
+	var values []types.ValueLabelsView
+	res := s.DB.Collection(valueLabelsView).Find(db.Cond{"variable": value})
 
 	err := res.All(&values)
 	if err != nil {
@@ -96,11 +114,18 @@ func (s Postgres) PersistSavValueLabels(items map[string][]types.Labels, source 
 
 			switch j.VariableType {
 			case types.TypeString:
-				item.Value = fmt.Sprintf("%s", j.Value)
+				val := fmt.Sprintf("%s", j.Value)
+				i, err := strconv.ParseInt(val, 10, 64)
+				if err != nil {
+					return fmt.Errorf("cannot convert to an int, %s", err)
+				}
+				item.Value = i
 			case types.TypeInt8, types.TypeInt16, types.TypeInt32:
-				item.Value = fmt.Sprintf("%d", j.Value)
+				f := j.Value.(int64)
+				item.Value = f
 			case types.TypeFloat, types.TypeDouble:
-				item.Value = fmt.Sprintf("%f", j.Value)
+				f := j.Value.(float64)
+				item.Value = int64(f)
 			}
 
 			all = append(all, item)
@@ -116,7 +141,7 @@ func (s Postgres) PersistValueLabels(data []types.ValueLabelsRow) error {
 	// get existing items
 	var all []types.ValueLabelsRow
 	var err error
-	all, err = s.GetAllValueLabels()
+	all, err = s.getAllValueLabelsRow()
 
 	if err != nil {
 		return err
@@ -178,7 +203,7 @@ func (s Postgres) persistValLabChanges(values []types.ValueLabelsRow) error {
 		log.Debug().
 			Str("name", j.Name).
 			Str("label", j.Label).
-			Str("value", j.Value).
+			Int64("value", j.Value).
 			Msg("Inserted value label")
 	}
 

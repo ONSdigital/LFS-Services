@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (vl ValueLabelsHandler) getAllVL() ([]types.ValueLabelsRow, error) {
+func (vl ValueLabelsHandler) getAllVL() ([]types.ValueLabelsView, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
@@ -24,7 +24,7 @@ func (vl ValueLabelsHandler) getAllVL() ([]types.ValueLabelsRow, error) {
 	return res, nil
 }
 
-func (vl ValueLabelsHandler) getValLabByValue(value string) ([]types.ValueLabelsRow, error) {
+func (vl ValueLabelsHandler) getValLabByValue(value string) ([]types.ValueLabelsView, error) {
 	dbase, err := db.GetDefaultPersistenceImpl()
 	if err != nil {
 		log.Error().Err(err)
@@ -65,10 +65,15 @@ func (vl ValueLabelsHandler) parseValLabUpload(tmpfile, fileName string, source 
 
 	var imp = make([]types.ValueLabelsRow, len(csvFile))
 	for i, j := range csvFile {
+		val, err := strconv.ParseInt(j.Value, 10, 64)
+		if err != nil {
+			log.Error().Err(err)
+			return err
+		}
 		imp[i] = types.ValueLabelsRow{
 			Name:         j.Variable,
 			Label:        j.Label,
-			Value:        j.Value,
+			Value:        val,
 			Source:       string(source),
 			VariableType: getSource(j.Value),
 			LastUpdated:  time.Now(),

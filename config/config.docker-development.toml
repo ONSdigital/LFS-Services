@@ -26,6 +26,7 @@ niBatchTable="ni_batch_item"
 userTable="users"
 definitionsTable="variable_definitions"
 valueLabelsTable="value_labels"
+valueLabelsView="value_labels_v"
 
 # connections configuration
 server = "host.docker.internal" # set by environment variables

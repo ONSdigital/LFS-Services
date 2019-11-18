@@ -94,8 +94,8 @@ type Persistence interface {
 	CountRows(table string) (int, error)
 
 	// Value Labels
-	GetAllValueLabels() ([]types.ValueLabelsRow, error)
-	GetLabelsForValue(variable string) ([]types.ValueLabelsRow, error)
+	GetAllValueLabels() ([]types.ValueLabelsView, error)
+	GetLabelsForValue(variable string) ([]types.ValueLabelsView, error)
 	PersistValues(types.ValueLabelsRow) error
 	PersistValueLabels([]types.ValueLabelsRow) error
 	PersistSavValueLabels(map[string][]types.Labels, types.FileSource) error
