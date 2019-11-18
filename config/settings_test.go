@@ -29,8 +29,8 @@ func TestConfig(t *testing.T) {
 	}
 
 	databaseName := conf.Config.Database.Database
-	if databaseName != "LFS" {
-		t.Errorf("database name = %s; want LFS", databaseName)
+	if databaseName != "lfs" {
+		t.Errorf("database name = %s; want lfs", databaseName)
 	} else {
 		t.Logf("database name %s\n", databaseName)
 	}
@@ -43,14 +43,14 @@ func TestConfig(t *testing.T) {
 	}
 
 	columnsTable := conf.Config.Database.SurveyTable
-	if columnsTable != "columns" {
-		t.Errorf("columnsTable = %s, want columns", columnsTable)
+	if columnsTable != "survey" {
+		t.Errorf("surveyTable = %s, want survey", columnsTable)
 	} else {
-		t.Logf("columnsTable %s\n", columnsTable)
+		t.Logf("surveyTable %s\n", columnsTable)
 	}
 
 	address := conf.Config.Service.ListenAddress
-	expected := "127.0.0.1:8000"
+	expected := ":8000"
 	if address != expected {
 		t.Errorf("address = %s, want %s", address, expected)
 	} else {

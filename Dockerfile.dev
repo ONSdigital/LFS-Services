@@ -1,4 +1,5 @@
 FROM golang:alpine3.10 as builder
+
 LABEL stage=builder
 WORKDIR /app
 
@@ -16,22 +17,30 @@ RUN apk add --update alpine-sdk autoconf automake build-base clang cmake \
     zcat readstat-1.1.0.tar.gz | tar xvf - && \
     cd readstat-1.1.0 && ./configure && make && make install && mkdir -p /app/src
 
-COPY . /app/src
-WORKDIR /app/src
-RUN go mod download && CGO_ENABLED=1 GOPATH=/app GOOS=linux GOARCH=amd64 go build -i -v -o libgo-spss.so -ldflags="-s -w -lreadstat"
-WORKDIR /app/src/service
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o main .
+COPY go.mod go.sum ./
+RUN go mod download
 
-# using this multi-stage build reduces the image size from ~1GB to ~8MB
+COPY . /app
 
-FROM scratch
-WORKDIR /app
+RUN go build -gcflags "all=-N -l" -a -installsuffix cgo -o /server .
 
-COPY --from=builder /user/group /user/passwd /etc/
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /app/src/service/main /
+# Final stage
+FROM alpine:3.7
+
+# Port 8000 belongs to our application, 40000 belongs to Delve
+EXPOSE 8000
+
+# Allow delve to run on Alpine based containers.
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /
-USER nobody:nobody
-ENTRYPOINT ["/main"]
-EXPOSE 8000
+
+COPY --from=builder /server /
+COPY --from=builder /usr/local/lib/libreadstat* /usr/local/lib/
+COPY --from=builder /app/config/config.development.toml /app/config/
+
+ENV CONFIG development
+# to talk to postgres running on localhost
+ENV DB_SERVER host.docker.internal
+
+CMD [ "/server"]
