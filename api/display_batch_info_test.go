@@ -168,7 +168,7 @@ func assertMonthlyBatchInfoStatusCodeEqual(t *testing.T, tc *testCase) {
 	IdHandler{}.HandleMonthlyBatchIdsRequest(w, r)
 
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
-		t.Fatalf("\nERROR: %s", w.Body.String())
+		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
 
 	// Assert number of batches returned in JSON
@@ -192,10 +192,8 @@ func assertQuarterlyBatchInfoStatusCodeEqual(t *testing.T, tc *testCase) {
 	IdHandler{}.HandleQuarterlyBatchIdsRequest(w, r)
 
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
-		t.Fatalf("\nERROR: %s", w.Body.String())
+		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
-
-	// TODO: Assert 1 item in JSON
 
 	t.Log("\n")
 
@@ -209,10 +207,8 @@ func assertAnnualBatchInfoStatusCodeEqual(t *testing.T, tc *testCase) {
 	IdHandler{}.HandleAnnualBatchIdsRequest(w, r)
 
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
-		t.Fatalf("\nERROR: %s", w.Body.String())
+		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
-
-	// TODO: Assert 1 item in JSON
 
 	t.Log("\n")
 }

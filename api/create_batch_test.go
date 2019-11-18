@@ -286,7 +286,7 @@ func assertCreateMonthlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	BatchHandler{}.CreateMonthlyBatchHandler(w, r)
 
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
-		t.Fatalf("\nERROR: %s", w.Body.String())
+		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
 
 	t.Log("\n")
@@ -300,7 +300,7 @@ func assertCreateQuarterlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	BatchHandler{}.CreateQuarterlyBatchHandler(w, r)
 
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
-		t.Fatalf("\nERROR: %s", w.Body.String())
+		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
 
 	t.Log("\n")
@@ -314,7 +314,7 @@ func assertCreateAnnualBatchStatusCodeEqual(t *testing.T, tc *testCase) {
 	BatchHandler{}.CreateAnnualBatchHandler(w, r)
 
 	if !assert.Equal(t, tc.expectedCode, w.Code) {
-		t.Fatalf("\nERROR: %s", w.Body.String())
+		t.Fatalf("\n\n>>>>>ERROR: %s", w.Body.String())
 	}
 
 	t.Log("\n")
