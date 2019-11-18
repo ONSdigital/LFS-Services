@@ -115,3 +115,18 @@ func setupAnnualTables(t *testing.T, year, status int) {
 		t.Fatalf(err.Error())
 	}
 }
+
+func countRows(t *testing.T, tableName string) int {
+	// Establish DB connection
+	dbase, err := db.GetDefaultPersistenceImpl()
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	count, err := dbase.CountRows(tableName)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	return count
+}

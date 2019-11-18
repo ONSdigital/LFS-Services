@@ -4,7 +4,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"net/http/httptest"
-	"services/db"
 	"testing"
 )
 
@@ -281,21 +280,6 @@ func TestAnnualValidQuarterlyBatchesXFail(t *testing.T) {
 
 func TestFinalTearDown(t *testing.T) {
 	tearDown(t)
-}
-
-func countRows(t *testing.T, tableName string) int {
-	// Establish DB connection
-	dbase, err := db.GetDefaultPersistenceImpl()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	count, err := dbase.CountRows(tableName)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-
-	return count
 }
 
 func assertCreateMonthlyBatchStatusCodeEqual(t *testing.T, tc *testCase) {
