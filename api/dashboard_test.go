@@ -120,6 +120,10 @@ func TestDashboardSuccess4(t *testing.T) {
 	assertDashboardTest(t, &tc)
 }
 
+func TestDashboardFinalTearDown(t *testing.T) {
+	tearDown(t)
+}
+
 func assertDashboardTest(t *testing.T, tc *testCase) {
 	r := httptest.NewRequest("GET", "/dashboard", nil)
 	w := httptest.NewRecorder()

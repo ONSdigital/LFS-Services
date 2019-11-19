@@ -278,7 +278,7 @@ func TestAnnualValidQuarterlyBatchesXFail(t *testing.T) {
 	assertCreateAnnualBatchStatusCodeEqual(t, &tc)
 }
 
-func TestFinalTearDown(t *testing.T) {
+func TestCreateBatchFinalTearDown(t *testing.T) {
 	tearDown(t)
 }
 

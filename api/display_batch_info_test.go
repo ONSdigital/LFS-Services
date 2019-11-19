@@ -160,6 +160,10 @@ func TestAnnualBatchInfoFailYear(t *testing.T) {
 	assertAnnualBatchInfoStatusCodeEqual(t, &tc)
 }
 
+func TestDisplayBatchFinalTearDown(t *testing.T) {
+	tearDown(t)
+}
+
 func assertMonthlyBatchInfoStatusCodeEqual(t *testing.T, tc *testCase) {
 	r := httptest.NewRequest("POST", "/batches/display/monthly/", nil)
 	w := httptest.NewRecorder()
